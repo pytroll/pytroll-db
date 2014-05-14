@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012, 2013 Martin Raspaud
+# Copyright (c) 2012, 2013, 2014 Martin Raspaud
 
 # Author(s):
 
@@ -23,17 +23,13 @@
 """Records new files into the database system.
 """
 
-# TODO: remove old hanging subscriptions
-
-
-from posttroll.subscriber import Subscriber
-from db.pytroll_db import DCManager
-from db.hl_file import File
+from posttroll.subscriber import NSSubscriber
+from doobie.pytroll_db import DCManager
+from doobie.hl_file import File
 from pyorbital.orbital import Orbital
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy.orm.exc import NoResultFound
-import np.nameclient as nc
 from threading import Thread
 from ConfigParser import ConfigParser
 
@@ -51,45 +47,24 @@ class DBRecorder(object):
     to the database.
     """
 
-    def __init__(self,
-                 (nameserver_address, nameserver_port)=("localhost", 16543),
-                 config_file="db.cfg"):
-        self.subscriber = Subscriber([], [])
-        address = "tcp://"+nameserver_address+":"+str(nameserver_port)
-        self.listener = Subscriber([address], [])
-        self.listener_thread = Thread(target=self.listen)
+    def __init__(self, config_file="db.cfg"):
+        self.nssubscriber = NSSubscriber("", ["GeoTIFF", "PNG", "JPEG"],
+                                         addr_listener=True)
+        self.subscriber = None
         self.db_thread = Thread(target=self.record)
         self.dbm = None
         self.loop = True
         self._config_file = config_file
-        
+
     def start(self):
         """Starts the logging.
         """
+        self.subscriber = self.nssubscriber.start()
         config = ConfigParser()
         config.read(self._config_file)
         mode = config.get("default", "mode")
         self.dbm = DCManager(config.get(mode, "uri"))
-        self.listener_thread.start()
         self.db_thread.start()
-        
-    def listen(self):
-        """Listen to incomming messages.
-        """
-        for addr in nc.get_address(""):
-            LOG.info("Listening to " + str(addr["URI"]) +
-                         " (" + str(addr["type"]) + ")")
-            self.subscriber.add(addr["URI"], addr["type"])
-        
-        for msg in self.listener.recv(1):
-            if msg:
-                LOG.info("Now listening to " + str(msg.data["URI"]) +
-                             " (" + str(msg.data["type"]) + ")")
-                # add new address to subscriber
-                self.subscriber.add(msg.data["URI"], msg.data["type"])
-            if not self.loop:
-                break
-        LOG.info("Stop listening")
 
     def insert_line(self, msg):
         """Insert the line corresponding to *msg* in the database.
@@ -111,7 +86,7 @@ class DBRecorder(object):
             except NoResultFound:
                 LOG.warning("Cannot process: " + str(msg))
                 return
-            
+
             LOG.debug("adding :" + str(msg))
 
             for key, val in msg.data.items():
@@ -130,7 +105,7 @@ class DBRecorder(object):
             satname = msg.data["satellite"]
             sat = Orbital(sat_lookup.get(satname, satname))
             dt_ = timedelta(seconds=10)
-            current_time = msg.data["start_time"] 
+            current_time = msg.data["start_time"]
             lonlat_list = []
             while current_time <= msg.data["end_time"]:
                 pos = sat.get_lonlatalt(current_time)
@@ -153,15 +128,16 @@ class DBRecorder(object):
             if not self.loop:
                 LOG.info("Stop recording")
                 break
-    
+
     def stop(self):
         """Stop the machine.
         """
         self.loop = False
+        self.nssubscriber.stop()
 
 if __name__ == '__main__':
     import time
-    from logger import ColoredFormatter
+    from logging import Formatter
 
     LOG = logging.getLogger("db_recorder")
     LOG.setLevel(logging.DEBUG)
@@ -169,7 +145,7 @@ if __name__ == '__main__':
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
 
-    formatter = ColoredFormatter("[%(asctime)s %(levelname)-19s] %(message)s")
+    formatter = Formatter("[%(asctime)s %(levelname)s %(name)s] %(message)s")
     ch.setFormatter(formatter)
     LOG.addHandler(ch)
 
@@ -185,7 +161,7 @@ if __name__ == '__main__':
 
 ### insert a line
 
-# pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 {u'satellite': u'NOAA 15', u'format': u'HRPT', u'start_time': 2013-01-15T14:03:55, u'level': u'0', u'orbit_number': 76310, u'uri': u'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', u'filename': u'20130115140355_NOAA_15.hmf', u'end_time': 2013-01-15T14:19:07), u'type': u'binary'} 
+# pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 {u'satellite': u'NOAA 15', u'format': u'HRPT', u'start_time': 2013-01-15T14:03:55, u'level': u'0', u'orbit_number': 76310, u'uri': u'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', u'filename': u'20130115140355_NOAA_15.hmf', u'end_time': 2013-01-15T14:19:07), u'type': u'binary'}
 
 # from db_recorder import DBRecorder
 # rec = DBRecorder()
