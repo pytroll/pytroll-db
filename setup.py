@@ -29,7 +29,7 @@ import imp
 version = imp.load_source('doobie.version', 'doobie/version.py')
 
 
-requirements = ['geoalchemy', 'sqlalchemy==0.8.1', 'posttroll']
+requirements = ['geoalchemy', 'sqlalchemy==0.8.1', 'posttroll', 'shapely', 'psycopg2']
 
 setup(name="doobie",
       version=version.__version__,
