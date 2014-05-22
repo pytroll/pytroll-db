@@ -48,8 +48,7 @@ class DBRecorder(object):
     """
 
     def __init__(self, config_file="db.cfg"):
-        self.nssubscriber = NSSubscriber("", ["GeoTIFF", "PNG", "JPEG"],
-                                         addr_listener=True)
+        self.nssubscriber = NSSubscriber("", addr_listener=True)
         self.subscriber = None
         self.db_thread = Thread(target=self.record)
         self.dbm = None
