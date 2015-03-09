@@ -27,13 +27,13 @@ ALTER TABLE "file_format" ADD CONSTRAINT "file_format_id" PRIMARY KEY("file_form
 
 DROP TABLE IF EXISTS "file" CASCADE;
 CREATE TABLE "file" (
-"filename" character varying(255) NOT NULL,
+"uid" character varying(255) NOT NULL,
 "file_type_id" int references file_type(file_type_id),
 "file_format_id" int NOT NULL,
 "is_archived" bool NOT NULL,
 "created_time" timestamp NOT NULL
 ) WITH OIDS;
-ALTER TABLE "file" ADD CONSTRAINT "filename" PRIMARY KEY("filename");
+ALTER TABLE "file" ADD CONSTRAINT "uid" PRIMARY KEY("uid");
 
 DROP TABLE IF EXISTS "parameter" CASCADE;
 CREATE TABLE "parameter" (
@@ -54,7 +54,7 @@ ALTER TABLE "parameter_type" ADD CONSTRAINT "parameter_type_id" PRIMARY KEY("par
 
 DROP TABLE IF EXISTS "parameter_value" CASCADE;
 CREATE TABLE "parameter_value" (
-"filename" character varying(255),
+"uid" character varying(255),
 "parameter_id" int,
 "creation_time" timestamp NOT NULL,
 "data_value" character varying(3000) NOT NULL
@@ -62,7 +62,7 @@ CREATE TABLE "parameter_value" (
 
 DROP TABLE IF EXISTS "parameter_track" CASCADE;
 CREATE TABLE "parameter_track" (
-"filename" character varying(255),
+"uid" character varying(255),
 "parameter_id" int,
 "creation_time" timestamp NOT NULL,
 "track" geography(linestring) NOT NULL
@@ -79,7 +79,7 @@ ALTER TABLE "boundary" ADD CONSTRAINT "boundary_id" PRIMARY KEY("boundary_id");
 
 DROP TABLE IF EXISTS "data_boundary" CASCADE;
 CREATE TABLE "data_boundary" (
-"filename" character varying(255),
+"uid" character varying(255),
 "boundary_id" int,
 "creation_time" timestamp NOT NULL
 ) WITH OIDS;
@@ -101,7 +101,7 @@ CREATE TABLE "file_type_tag" (
 DROP TABLE IF EXISTS "file_tag" CASCADE;
 CREATE TABLE "file_tag" (
 "tag_id" int,
-"filename" character varying(255),
+"uid" character varying(255),
 "creation_time" timestamp NOT NULL
 ) WITH OIDS;
 
@@ -134,10 +134,10 @@ ALTER TABLE "parameter" ADD CONSTRAINT "parameter_fkey1" FOREIGN KEY ("parameter
 ALTER TABLE "parameter_value" ADD CONSTRAINT "parameter_value_fkey1" FOREIGN KEY ("parameter_id") REFERENCES "parameter"("parameter_id") ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --ALTER TABLE "parameter_value" DROP CONSTRAINT "parameter_value_fkey2" CASCADE;
-ALTER TABLE "parameter_value" ADD CONSTRAINT "parameter_value_fkey2" FOREIGN KEY ("filename") REFERENCES "file"("filename") ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE "parameter_value" ADD CONSTRAINT "parameter_value_fkey2" FOREIGN KEY ("uid") REFERENCES "file"("uid") ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --ALTER TABLE "parameter_track" DROP CONSTRAINT "parameter_track_fkey1" CASCADE;
-ALTER TABLE "parameter_track" ADD CONSTRAINT "parameter_track_fkey1" FOREIGN KEY ("filename") REFERENCES "file"("filename") ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE "parameter_track" ADD CONSTRAINT "parameter_track_fkey1" FOREIGN KEY ("uid") REFERENCES "file"("uid") ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --ALTER TABLE "parameter_track" DROP CONSTRAINT "parameter_track_fkey2" CASCADE;
 ALTER TABLE "parameter_track" ADD CONSTRAINT "parameter_track_fkey2" FOREIGN KEY ("parameter_id") REFERENCES "parameter"("parameter_id") ON UPDATE RESTRICT ON DELETE RESTRICT;
@@ -164,7 +164,7 @@ ALTER TABLE "file_type_parameter" ADD CONSTRAINT "file_type_parameter_fkey1" FOR
 ALTER TABLE "file_type_parameter" ADD CONSTRAINT "file_type_parameter_fkey2" FOREIGN KEY ("file_type_id") REFERENCES "file_type"("file_type_id") ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --ALTER TABLE "data_boundary" DROP CONSTRAINT "data_boundary_fkey2" CASCADE;
-ALTER TABLE "data_boundary" ADD CONSTRAINT "data_boundary_fkey2" FOREIGN KEY ("filename") REFERENCES "file"("filename") ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE "data_boundary" ADD CONSTRAINT "data_boundary_fkey2" FOREIGN KEY ("uid") REFERENCES "file"("uid") ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 -- End Relation's declaration
 

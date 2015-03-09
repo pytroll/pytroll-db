@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2014.
+# Copyright (c) 2010-2015.
 
 # Author(s):
 
@@ -24,17 +24,17 @@
 
 import datetime
 
-#from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
+# from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
 #                       create_engine, ForeignKey, Table
 from sqlalchemy import Integer, String, Boolean, DateTime,\
-                       create_engine, ForeignKey
+    create_engine, ForeignKey
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref, sessionmaker
 
 #from geoalchemy.postgis import PGComparator
 from geoalchemy import *
-#from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
+# from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
 #        GeometryDDL, WKTSpatialElement, DBSpatialElement, GeometryExtensionColumn,
 #        WKBSpatialElement)
 
@@ -46,45 +46,45 @@ from sqltypes import LINESTRING, POLYGON
 
 Base = declarative_base()
 
-#relation table
+# relation table
 data_boundary = Table('data_boundary', Base.metadata,
-                      Column('filename', String,
-                             ForeignKey('file.filename', ondelete="CASCADE")),
+                      Column('uid', String,
+                             ForeignKey('file.uid', ondelete="CASCADE")),
                       Column('boundary_id', Integer,
                              ForeignKey('boundary.boundary_id')))
 
-#relation table
+# relation table
 file_type_parameter = Table('file_type_parameter', Base.metadata,
                             Column('file_type_id', Integer,
                                    ForeignKey('file_type.file_type_id')),
                             Column('parameter_id', Integer,
                                    ForeignKey('parameter.parameter_id')))
 
-#relation table
+# relation table
 file_tag = Table('file_tag', Base.metadata,
                  Column('tag_id', Integer,
                         ForeignKey('tag.tag_id')),
-                 Column('filename', String,
-                        ForeignKey('file.filename', ondelete="CASCADE")))
+                 Column('uid', String,
+                        ForeignKey('file.uid', ondelete="CASCADE")))
 
-#relation table
+# relation table
 file_type_tag = Table('file_type_tag', Base.metadata,
                       Column('tag_id', Integer,
                              ForeignKey('tag.tag_id')),
                       Column('file_type_id', Integer,
                              ForeignKey('file_type.file_type_id')))
 
-        
 
 class ParameterType(Base):
+
     """Mapping the DB-table parameter_type to a python object
-    """ 
+    """
     __tablename__ = 'parameter_type'
 
-    #mapping
+    # mapping
     parameter_type_id = Column(Integer, primary_key=True)
     parameter_type_name = Column(String)
-    parameter_location = Column(String)    
+    parameter_location = Column(String)
 
     def __init__(self, parameter_type_id, parameter_type_name, parameter_location):
         self.parameter_type_id = parameter_type_id
@@ -95,12 +95,13 @@ class ParameterType(Base):
 class Parameter(Base):
     __tablename__ = 'parameter'
 
-    #mapping
+    # mapping
     parameter_id = Column(Integer, primary_key=True)
-    parameter_type_id = Column(Integer, ForeignKey('parameter_type.parameter_type_id'))
+    parameter_type_id = Column(
+        Integer, ForeignKey('parameter_type.parameter_type_id'))
     parameter_name = Column(String)
     description = Column(String)
-    
+
     def __init__(self, parameter_id, parameter_type_id, parameter_name, description):
         self.parameter_id = parameter_id
         self.parameter_type_id = parameter_type_id
@@ -111,11 +112,11 @@ class Parameter(Base):
 class Tag(Base):
     __tablename__ = 'tag'
 
-    #mapping
+    # mapping
     tag_id = Column(Integer, primary_key=True)
     tag = Column(String)
 
-    def __init__(self,tag_id, tag):
+    def __init__(self, tag_id, tag):
         self.tag_id = tag_id
         self.tag = tag
 
@@ -123,22 +124,21 @@ class Tag(Base):
 class FileFormat(Base):
     __tablename__ = 'file_format'
 
-    #mapping
+    # mapping
     file_format_id = Column(Integer, primary_key=True)
     file_format_name = Column(String)
     description = Column(String)
-    
-    def __init__(self,file_format_id, file_format_name, description):
+
+    def __init__(self, file_format_id, file_format_name, description):
         self.file_format_id = file_format_id
         self.file_format_name = file_format_name
         self.description = description
 
 
-
 class FileType(Base):
     __tablename__ = 'file_type'
 
-    #mapping
+    # mapping
     file_type_id = Column(Integer, primary_key=True)
     file_type_name = Column(String)
     description = Column(String)
@@ -152,15 +152,15 @@ class FileType(Base):
 class File(Base):
     __tablename__ = 'file'
 
-    #mapping
-    filename = Column(String, primary_key=True)
+    # mapping
+    uid = Column(String, primary_key=True)
     file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'))
     file_format_id = Column(Integer, ForeignKey('file_format.file_format_id'))
     is_archived = Column(Boolean)
     creation_time = Column(DateTime)
-    
-    def __init__(self, filename, file_type, file_format, is_archived, creation_time):
-        self.filename = filename
+
+    def __init__(self, uid, file_type, file_format, is_archived, creation_time):
+        self.uid = uid
         self.file_type = file_type
         self.file_format = file_format
         self.is_archived = is_archived
@@ -170,12 +170,12 @@ class File(Base):
 class Boundary(Base):
     __tablename__ = 'boundary'
 
-    #mapping
+    # mapping
     boundary_id = Column(Integer, primary_key=True)
     boundary_name = Column(String)
-    boundary = Column(POLYGON())    
+    boundary = Column(POLYGON())
     creation_time = Column(DateTime)
-    
+
     def __init__(self, boundary_id, boundary_name, boundary, creation_time=None):
         self.boundary_id = boundary_id
         self.boundary_name = boundary_name
@@ -188,9 +188,11 @@ class Boundary(Base):
 class ParameterLinestring(Base):
     __tablename__ = 'parameter_linestring'
 
-    #mapping
-    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
-    parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
+    # mapping
+    uid = Column(
+        String, ForeignKey('file.uid', ondelete="CASCADE"), primary_key=True)
+    parameter_id = Column(
+        Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     creation_time = Column(DateTime)
     data_value = Column(LINESTRING())
     #data_value = GeometryColumn(LineString(2))
@@ -205,9 +207,11 @@ class ParameterLinestring(Base):
 class ParameterValue(Base):
     __tablename__ = "parameter_value"
 
-    #mapping
-    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
-    parameter_id = Column(Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
+    # mapping
+    uid = Column(
+        String, ForeignKey('file.uid', ondelete="CASCADE"), primary_key=True)
+    parameter_id = Column(
+        Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     data_value = Column(String)
     creation_time = Column(DateTime)
 
@@ -221,64 +225,76 @@ class ParameterValue(Base):
 class FileAccessURI(Base):
     __tablename__ = "file_access_uri"
 
-    #mapping
-    file_type_id = Column(Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
-    file_format_id = Column(Integer, ForeignKey('file_format.file_format_id'), primary_key=True)
+    # mapping
+    file_type_id = Column(
+        Integer, ForeignKey('file_type.file_type_id'), primary_key=True)
+    file_format_id = Column(
+        Integer, ForeignKey('file_format.file_format_id'), primary_key=True)
     sequence = Column(Integer, primary_key=True)
     uri = Column(String, primary_key=True)
-    
+
     def __init__(self, file_type, file_format, sequence, uri):
         self.file_type = file_type
         self.file_format = file_format
         self.sequence = sequence
         self.uri = uri
 
+
 class FileURI(Base):
     __tablename__ = "file_uri"
 
-    #mapping
-    filename = Column(String, ForeignKey('file.filename', ondelete="CASCADE"), primary_key=True)
+    # mapping
+    uid = Column(
+        String, ForeignKey('file.uid', ondelete="CASCADE"), primary_key=True)
     uri = Column(String, primary_key=True)
-    
-    def __init__(self, filename, uri):
-        self.filename = filename
+
+    def __init__(self, uid, uri):
+        self.uid = uid
         self.uri = uri
 
 
-#GeometryDDL(ParameterLinestring.__table__)
+# GeometryDDL(ParameterLinestring.__table__)
 
 #
-#Relations
+# Relations
 
-#ParameterType
+# ParameterType
 ParameterType.parameters = relation(Parameter, backref='parameter_type')
 
-#Parameter
+# Parameter
 Parameter.parameter_values = relation(ParameterValue, backref='parameter')
-Parameter.parameter_linestrings = relation(ParameterLinestring, backref='parameter')
+Parameter.parameter_linestrings = relation(
+    ParameterLinestring, backref='parameter')
 
-#FileFormat
+# FileFormat
 FileFormat.file_uris = relation(FileAccessURI, backref='file_format')
 FileFormat.file_objs = relation(File, backref='file_format')
 
-#FileType
-FileType.parameters = relation(Parameter, secondary=file_type_parameter, backref='file_types')
+# FileType
+FileType.parameters = relation(
+    Parameter, secondary=file_type_parameter, backref='file_types')
 FileType.file_uris = relation(FileAccessURI, backref='file_type')
 FileType.file_objs = relation(File, backref='file_type')
-FileType.file_type_tags = relation(Tag, secondary=file_type_tag, backref='file_types')
+FileType.file_type_tags = relation(
+    Tag, secondary=file_type_tag, backref='file_types')
 
 
-#File
-File.parameter_values = relation(ParameterValue, backref='file_obj', cascade="all, delete, delete-orphan")
-File.parameter_linestrings = relation(ParameterLinestring, backref='file_obj', cascade="all, delete, delete-orphan")
-File.file_tags = relation(Tag, secondary=file_tag, backref='file_objs', cascade="all, delete")
-File.boundary = relation(Boundary, secondary=data_boundary, backref='file_objs', cascade="all, delete")
+# File
+File.parameter_values = relation(
+    ParameterValue, backref='file_obj', cascade="all, delete, delete-orphan")
+File.parameter_linestrings = relation(
+    ParameterLinestring, backref='file_obj', cascade="all, delete, delete-orphan")
+File.file_tags = relation(
+    Tag, secondary=file_tag, backref='file_objs', cascade="all, delete")
+File.boundary = relation(
+    Boundary, secondary=data_boundary, backref='file_objs', cascade="all, delete")
 
-#FileURI
+# FileURI
 FileURI.file_obj = relation(File, backref='uris')
 
 
 class DCManager(object):
+
     """Data Center Manager
     """
 
@@ -290,7 +306,7 @@ class DCManager(object):
 
     @property
     def engine(self):
-        return self._engine 
+        return self._engine
 
     @property
     def session(self):
@@ -316,25 +332,27 @@ class DCManager(object):
         self._session.add(file_format)
         return file_format
 
-    def create_file_uri(self, filename, URI):
-        file_uri = FileURI(filename, URI)
+    def create_file_uri(self, uid, URI):
+        file_uri = FileURI(uid, URI)
         self._session.add(file_uri)
         return file_uri
 
     def create_parameter_type(self, parameter_type_id, parameter_type_name, parameter_location):
-        parameter_type = ParameterType(parameter_type_id, parameter_type_name, parameter_location)
+        parameter_type = ParameterType(
+            parameter_type_id, parameter_type_name, parameter_location)
         self._session.add(parameter_type)
         return parameter_type
 
     def create_parameter(self, parameter_id, parameter_type, parameter_name, description):
-        parameter = Parameter(parameter_id, parameter_type, parameter_name, description)
+        parameter = Parameter(
+            parameter_id, parameter_type, parameter_name, description)
         self._session.add(parameter)
         return parameter
 
-    def create_file_type_parameter(self, file_type=None, 
-            file_type_name=None, 
-            parameters=None, 
-            parameter_names=None):
+    def create_file_type_parameter(self, file_type=None,
+                                   file_type_name=None,
+                                   parameters=None,
+                                   parameter_names=None):
         """ Creates a relation between a filetype and a parameter
 
             Parameters : 
@@ -359,7 +377,7 @@ class DCManager(object):
                 file_type = self.get_file_type(file_type_name)
             else:
                 raise TypeError("No FileType reference defined")
-        
+
         if parameters:
             for param in parameters:
                 file_type.parameters.append(param)
@@ -369,15 +387,15 @@ class DCManager(object):
                 file_type.parameters.append(parameter)
         else:
             raise TypeError("No FileType reference defined")
-        
+
         return file_type
 
     def create_parameter_value(self, data_value,
-            file_obj=None,
-            filename=None,
-            parameter=None,
-            parameter_name=None,
-            creation_time=None):
+                               file_obj=None,
+                               uid=None,
+                               parameter=None,
+                               parameter_name=None,
+                               creation_time=None):
         """Creates a ParameterValue object from a data value and File and
         Parameter references.
 
@@ -385,7 +403,7 @@ class DCManager(object):
                 data_value :
                     data value corresponding to parameter type
                 file_obj : File object
-                filename : str
+                uid : str
                     File object name
                 parameter : Parameter object
                 parameter_name : str
@@ -397,17 +415,17 @@ class DCManager(object):
                     ParameterValue Object
 
         Notice : 
-            Either file_obj or filename must be provided
+            Either file_obj or uid must be provided
             Either parameter or parameter_name must be provided
 
         """
-        
+
         if not creation_time:
             creation_time = datetime.datetime.utcnow()
 
         if not file_obj:
-            if filename:
-                file_obj = self.get_file(filename)
+            if uid:
+                file_obj = self.get_file(uid)
             else:
                 raise TypeError("No file reference defined")
 
@@ -417,23 +435,24 @@ class DCManager(object):
             else:
                 raise TypeError("No parameter reference defined")
 
-        parameter_value = ParameterValue(file_obj, parameter, data_value, creation_time)         
+        parameter_value = ParameterValue(
+            file_obj, parameter, data_value, creation_time)
         self._session.add(parameter_value)
         return parameter_value
 
-    def create_parameter_linestring(self, linestring, 
-            file_obj=None, 
-            filename=None,
-            parameter=None,
-            parameter_name=None,
-            creation_time=None):
+    def create_parameter_linestring(self, linestring,
+                                    file_obj=None,
+                                    uid=None,
+                                    parameter=None,
+                                    parameter_name=None,
+                                    creation_time=None):
         """Creates a ParameterLinestring object from a linestring and File and
         Parameter references.
 
             Parameters:
                 linestring : shapely linestring object
                 file_obj : File object
-                filename : str
+                uid : str
                     File object name
                 parameter : Parameter object
                 parameter_name : str
@@ -445,17 +464,17 @@ class DCManager(object):
                     ParameterLinestring Object
 
         Notice : 
-            Either file_obj or filename must be provided
+            Either file_obj or uid must be provided
             Either parameter or parameter_name must be provided
 
         """
-       
+
         if not creation_time:
             creation_time = datetime.datetime.utcnow()
 
         if not file_obj:
-            if filename:
-                file_obj = self.get_file(filename)
+            if uid:
+                file_obj = self.get_file(uid)
             else:
                 raise TypeError("No file reference defined")
 
@@ -465,14 +484,16 @@ class DCManager(object):
             else:
                 raise TypeError("No parameter reference defined")
 
-        parameter_linestring = ParameterLinestring(file_obj, parameter, linestring, creation_time)         
+        parameter_linestring = ParameterLinestring(
+            file_obj, parameter, linestring, creation_time)
         self._session.add(parameter_linestring)
         return parameter_linestring
 
     def create_boundary(self, boundary_id, boundary_name, boundary, creation_time=None):
         if creation_time is None:
             creation_time = datetime.datetime.utcnow()
-        boundary_obj = Boundary(boundary_id, boundary_name, boundary, creation_time)         
+        boundary_obj = Boundary(
+            boundary_id, boundary_name, boundary, creation_time)
         self._session.add(boundary_obj)
         return boundary_obj
 
@@ -483,21 +504,21 @@ class DCManager(object):
 
     def get_file_type(self, file_type_name):
         return self._session.query(FileType).\
-               filter(FileType.file_type_name == file_type_name).one()
+            filter(FileType.file_type_name == file_type_name).one()
 
     def get_file_format(self, file_format_name):
         return self._session.query(FileFormat).\
-               filter(FileFormat.file_format_name == file_format_name).one()
+            filter(FileFormat.file_format_name == file_format_name).one()
 
     def get_parameter(self, parameter_name):
         return self._session.query(Parameter).\
-               filter(Parameter.parameter_name == parameter_name).one()
+            filter(Parameter.parameter_name == parameter_name).one()
 
-    def get_file(self, filename):
+    def get_file(self, uid):
         return self._session.query(File).\
-               filter(File.filename == filename).one()
+            filter(File.uid == uid).one()
 
-    def get_files(self, file_type_name=None, oldest_creation_time=None, 
+    def get_files(self, file_type_name=None, oldest_creation_time=None,
                   newest_creation_time=None):
         if newest_creation_time is None:
             newest_creation_time = datetime.datetime.utcnow()
@@ -506,14 +527,14 @@ class DCManager(object):
 
         if file_type_name is None:
             return self._session.query(File).\
-                   filter(File.creation_time > oldest_creation_time).\
-                   filter(File.creation_time < newest_creation_time).all() 
-        
+                filter(File.creation_time > oldest_creation_time).\
+                filter(File.creation_time < newest_creation_time).all()
+
         return self._session.query(File).\
             filter(FileType.file_type_name == file_type_name).\
             filter(File.file_type_id == FileType.file_type_id).\
             filter(File.creation_time > oldest_creation_time).\
-            filter(File.creation_time < newest_creation_time).all() 
+            filter(File.creation_time < newest_creation_time).all()
 
     def get_within_area_of_interest(self, boundingbox, file_type_name=None, distance=0):
         """Get all files within *distance* of area of interest.
@@ -521,47 +542,46 @@ class DCManager(object):
         distance in km.
         """
 
-        #retv = self._session.query(ParameterLinestring).\
+        # retv = self._session.query(ParameterLinestring).\
         #    filter(ParameterLinestring.data_value.intersects(boundingbox)).count()
-        #retv = self._session.query(ParameterLinestring).\
+        # retv = self._session.query(ParameterLinestring).\
         #    filter(ParameterLinestring.data_value.intersects(boundingbox) == True).all()
-        #retv = self._session.query(ParameterLinestring).\
+        # retv = self._session.query(ParameterLinestring).\
         #    filter(ParameterLinestring.data_value.distance(boundingbox)/1000. <= 0.).all()
-        #retv = self._session.query(File).from_statement(
+        # retv = self._session.query(File).from_statement(
         #    "select f.* from file f, parameter_linestring pl where ST_Distance(ST_GeomFromText(:bbox), pl.data_value) < 1000000.").\
-        #             params(bbox=boundingbox).all() 
-        #retv = self._session.query(File).from_statement(
+        #             params(bbox=boundingbox).all()
+        # retv = self._session.query(File).from_statement(
         #    "select f.* from file f, parameter_linestring pl where ST_Distance(pl.data_value, ST_GeomFromText(:bbox)) < 1.").\
         #    params(bbox=boundingbox).all()
-        #retv = self._session.query(File).from_statement(
-        #    "select * from (select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
+        # retv = self._session.query(File).from_statement(
+        #    "select * from (select uid, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring) dlist where dlist.dist < 1000").all()
 
         polypoints = boundingbox + [boundingbox[0]]
 
         poly = "POLYGON ((" + ", ".join(str(item[0]) + " " + str(item[1])
                                         for item in polypoints) + "))"
-        
+
         retv = self._session.query(File).from_statement(
-            "select * from (select filename, ST_Distance(data_value, '" +
+            "select * from (select uid, ST_Distance(data_value, '" +
             poly + "':: geography)/1000. as dist from parameter_linestring) " +
             "dlist where dlist.dist <= " + str(distance)).all()
 
         return retv
 
-#select * from
+# select * from
 #(
-#select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.#7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring
+# select uid, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.#7, 1.7  54.8))':: geography)/1000. as dist from parameter_linestring
 #) dlist where dlist.dist < 1000
 
-        #return self._session.query(File).\
+        # return self._session.query(File).\
         #    filter(File.file_type_id == FileType.file_type_id).\
-#select * from
+# select * from
 #(
-#select filename, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: ge#ography)/1000. as dist from parameter_linestring
+# select uid, ST_Distance(data_value, 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))':: ge#ography)/1000. as dist from parameter_linestring
 #) dlist where dlist.dist < 1000
 
-
-    def create_file(self, filename,
+    def create_file(self, uid,
                     is_archived=False,
                     creation_time=datetime.datetime.utcnow(),
                     file_type=None,
@@ -597,27 +617,28 @@ class DCManager(object):
             Either file_format or file_format_id or file_format_name must be provided
 
         """
-        
+
         if not file_type:
             if file_type_id:
                 file_type = self._session.query(FileType).\
-                            filter(FileType.file_type_id == file_type_id).one()
+                    filter(FileType.file_type_id == file_type_id).one()
             elif file_type_name:
                 file_type = self.get_file_type(file_type_name)
             else:
-                raise TypeError("file_type not defined") 
+                raise TypeError("file_type not defined")
 
         if not file_format:
             if file_format_id:
                 file_format = self._session.query(FileType).\
-                            filter(FileFormat.file_format_id == file_format_id).one()
+                    filter(FileFormat.file_format_id == file_format_id).one()
             elif file_format_name:
                 file_format = self.get_file_format(file_format_name)
             else:
-                raise TypeError("file_format not defined") 
+                raise TypeError("file_format not defined")
 
-        file_obj = File(filename,file_type, file_format, is_archived, creation_time)
-        
+        file_obj = File(
+            uid, file_type, file_format, is_archived, creation_time)
+
         self._session.add(file_obj)
         return file_obj
 
@@ -627,15 +648,14 @@ class DCManager(object):
 if __name__ == '__main__':
     #rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
     #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
-    
+
     dcm = DCManager('postgresql://polar:polar@safe:5432/sat_db')
     boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
-    
+
     res = dcm.get_within_area_of_interest(boundingbox)
-    print res[0].filename
+    print res[0].uid
 
     #f = rm.get_file()
     #pl = f.parameter_linestrings[0]
-    #print type(pl.data_value)
-    #print pl.data_value.wkt
-    
+    # print type(pl.data_value)
+    # print pl.data_value.wkt

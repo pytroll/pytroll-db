@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2012, 2013, 2014 Martin Raspaud
+# Copyright (c) 2012, 2013, 2014, 2015 Martin Raspaud
 
 # Author(s):
 
@@ -38,6 +38,7 @@ LOG = logging.getLogger(__name__)
 
 sat_lookup = {"NPP": "SUOMI NPP",
               }
+
 
 class DBRecorder(object):
 
@@ -79,7 +80,7 @@ class DBRecorder(object):
                     return
 
             try:
-                file_obj = File(msg.data["filename"], self.dbm,
+                file_obj = File(msg.data["uid"], self.dbm,
                                 filetype=msg.data.get("type", None),
                                 fileformat=msg.data.get("format", None))
             except NoResultFound:
@@ -89,7 +90,7 @@ class DBRecorder(object):
             LOG.debug("adding :" + str(msg))
 
             for key, val in msg.data.items():
-                if key in ["filename", "type"]:
+                if key in ["uid", "type"]:
                     continue
                 if key == "uri":
                     file_obj["URIs"] += [val]
@@ -98,7 +99,6 @@ class DBRecorder(object):
                     file_obj[key] = val
                 except NoResultFound:
                     LOG.warning("Cannot add: " + str((key, val)))
-
 
             # compute sub_satellite_track
             satname = msg.data["satellite"]
@@ -117,12 +117,12 @@ class DBRecorder(object):
 
             LOG.debug("Added sub-satellite track")
 
-
     def record(self):
         """Log stuff.
         """
         for msg in self.subscriber.recv(1):
             if msg:
+                LOG.debug("received: %s", str(msg))
                 self.insert_line(msg)
             if not self.loop:
                 LOG.info("Stop recording")
@@ -158,16 +158,22 @@ if __name__ == '__main__':
         print "Thanks for using pytroll/db_recorder. See you soon on www.pytroll.org!"
 
 
-### insert a line
+# insert a line
 
-# pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 {u'satellite': u'NOAA 15', u'format': u'HRPT', u'start_time': 2013-01-15T14:03:55, u'level': u'0', u'orbit_number': 76310, u'uri': u'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', u'filename': u'20130115140355_NOAA_15.hmf', u'end_time': 2013-01-15T14:19:07), u'type': u'binary'}
+# pytroll://oper/polar/direct_readout/norrköping file
+# safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 {u'satellite':
+# u'NOAA 15', u'format': u'HRPT', u'start_time': 2013-01-15T14:03:55,
+# u'level': u'0', u'orbit_number': 76310, u'uri':
+# u'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf',
+# u'uid': u'20130115140355_NOAA_15.hmf', u'end_time':
+# 2013-01-15T14:19:07), u'type': u'binary'}
 
 # from db_recorder import DBRecorder
 # rec = DBRecorder()
 # rec.start()
 
 
-# mystr = """pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 v1.01 application/json "{'satellite': 'NOAA 15', 'format': 'HRPT', 'start_time': datetime.datetime(2013, 1, 15, 14, 3, 55), 'level': '0', 'orbit_number': 76310, 'uri': 'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', 'filename': '20130115140355_NOAA_15.hmf', 'end_time': datetime.datetime(2013, 1, 15, 14, 19, 7), 'type': 'binary'}" """
+# mystr = """pytroll://oper/polar/direct_readout/norrköping file safusr.u@lxserv248.smhi.se 2013-01-15T14:19:19.135161 v1.01 application/json "{'satellite': 'NOAA 15', 'format': 'HRPT', 'start_time': datetime.datetime(2013, 1, 15, 14, 3, 55), 'level': '0', 'orbit_number': 76310, 'uri': 'ssh://pps.smhi.se//san1/polar_in/direct_readout/hrpt/20130115140355_NOAA_15.hmf', 'uid': '20130115140355_NOAA_15.hmf', 'end_time': datetime.datetime(2013, 1, 15, 14, 19, 7), 'type': 'binary'}" """
 
 # from posttroll.message import Message
 # m = Message(rawstr=mystr)

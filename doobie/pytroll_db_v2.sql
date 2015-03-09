@@ -80,12 +80,12 @@ CREATE TABLE public.file_type_parameter (
 
 
 CREATE TABLE public.file (
-                filename VARCHAR(255) NOT NULL,
+                uid VARCHAR(255) NOT NULL,
                 file_type_id INTEGER NOT NULL,
                 file_format_id INTEGER NOT NULL,
                 is_archived BOOLEAN NOT NULL,
                 creation_time TIMESTAMP NOT NULL,
-                CONSTRAINT file_pk PRIMARY KEY (filename)
+                CONSTRAINT file_pk PRIMARY KEY (uid)
 );
 
 
@@ -94,41 +94,41 @@ CREATE INDEX file_idx
  ( file_type_id, file_format_id );
 
 CREATE TABLE public.file_uri (
-                filename VARCHAR(255) NOT NULL,
+                uid VARCHAR(255) NOT NULL,
                 uri VARCHAR(255) NOT NULL,
-                CONSTRAINT file_uri_pk PRIMARY KEY (filename, uri)
+                CONSTRAINT file_uri_pk PRIMARY KEY (uid, uri)
 );
 
 
 CREATE TABLE public.data_boundary (
-                filename VARCHAR(255) NOT NULL,
+                uid VARCHAR(255) NOT NULL,
                 boundary_id INTEGER NOT NULL,
-                CONSTRAINT data_boundary_pk PRIMARY KEY (filename)
+                CONSTRAINT data_boundary_pk PRIMARY KEY (uid)
 );
 
 
 CREATE TABLE public.parameter_linestring (
-                filename VARCHAR(255) NOT NULL,
+                uid VARCHAR(255) NOT NULL,
                 parameter_id INTEGER NOT NULL,
                 data_value geography(linestring) NOT NULL,
                 creation_time TIMESTAMP NOT NULL,
-                CONSTRAINT parameter_linestring_pk PRIMARY KEY (filename, parameter_id)
+                CONSTRAINT parameter_linestring_pk PRIMARY KEY (uid, parameter_id)
 );
 
 
 CREATE TABLE public.parameter_value (
-                filename VARCHAR(255) NOT NULL,
+                uid VARCHAR(255) NOT NULL,
                 parameter_id INTEGER NOT NULL,
                 data_value VARCHAR(3000) NOT NULL,
                 creation_time TIMESTAMP NOT NULL,
-                CONSTRAINT parameter_value_pk PRIMARY KEY (filename, parameter_id)
+                CONSTRAINT parameter_value_pk PRIMARY KEY (uid, parameter_id)
 );
 
 
 CREATE TABLE public.file_tag (
                 tag_id INTEGER NOT NULL,
-                filename VARCHAR(255) NOT NULL,
-                CONSTRAINT file_tag_pk PRIMARY KEY (tag_id, filename)
+                uid VARCHAR(255) NOT NULL,
+                CONSTRAINT file_tag_pk PRIMARY KEY (tag_id, uid)
 );
 
 
@@ -240,36 +240,36 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.file_tag ADD CONSTRAINT file_file_tag_fk
-FOREIGN KEY (filename)
-REFERENCES public.file (filename)
+FOREIGN KEY (uid)
+REFERENCES public.file (uid)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.parameter_value ADD CONSTRAINT file_parameter_value_fk
-FOREIGN KEY (filename)
-REFERENCES public.file (filename)
+FOREIGN KEY (uid)
+REFERENCES public.file (uid)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.parameter_linestring ADD CONSTRAINT file_parameter_track_fk
-FOREIGN KEY (filename)
-REFERENCES public.file (filename)
+FOREIGN KEY (uid)
+REFERENCES public.file (uid)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.data_boundary ADD CONSTRAINT file_data_boundary_fk
-FOREIGN KEY (filename)
-REFERENCES public.file (filename)
+FOREIGN KEY (uid)
+REFERENCES public.file (uid)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.file_uri ADD CONSTRAINT file_file_uri_fk
-FOREIGN KEY (filename)
-REFERENCES public.file (filename)
+FOREIGN KEY (uid)
+REFERENCES public.file (uid)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
