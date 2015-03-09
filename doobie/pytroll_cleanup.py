@@ -7,16 +7,20 @@ import pytroll_db
 
 DB = "postgresql://safusr.u:NWCsaf22@postgresutv01/sat_db"
 
+
 def delete_product(filename):
     dcm = pytroll_db.DCManager(DB)
-    
+
     file_obj = dcm.get_file(filename)
     dcm.delete(file_obj)
     dcm.save()
 
+
 def sync_product_db(file_type_name, dirname, glob_filter):
-    # Syncronize DB content with filesystem so no files exist in DB which are not present in filesystem
-    filename_list = [os.path.basename(item) for item in glob.glob('%s/%s' % (dirname, glob_filter))]
+    # Syncronize DB content with filesystem so no files exist in DB which are
+    # not present in filesystem
+    filename_list = [
+        os.path.basename(item) for item in glob.glob('%s/%s' % (dirname, glob_filter))]
     print 'filenames: ', filename_list
     dcm = pytroll_db.DCManager(DB)
     file_type = dcm.get_file_type(file_type_name)
@@ -25,14 +29,15 @@ def sync_product_db(file_type_name, dirname, glob_filter):
         if file_obj.filename not in filename_list:
             dcm.delete(file_obj)
     dcm.save()
- 
+
 
 def clean_old_entries_in_db(file_type_name, timestamp_utc):
     """Clean the DB for products of a given type with creation time older 
     than a given threshold"""
 
     dcm = pytroll_db.DCManager(DB)
-    file_list = dcm.get_files(file_type_name, newest_creation_time=timestamp_utc)
+    file_list = dcm.get_files(
+        file_type_name, newest_creation_time=timestamp_utc)
     for file_obj in file_list:
         dcm.delete(file_obj)
     dcm.save()
@@ -46,6 +51,7 @@ logins = {}
 
 import ConfigParser
 
+
 def load_logins():
     cfg = ConfigParser.ConfigParser()
     cfg.read("access.cfg")
@@ -55,10 +61,11 @@ def load_logins():
     for host in cfg.sections():
         logins[host] = (cfg.get(host, "username"),
                         cfg.get(host, "password"))
-    
+
 
 class ConnectionError(Exception):
     pass
+
 
 def check_file_ssh(uri):
     parsed = urlparse(uri)
@@ -80,7 +87,7 @@ def check_file_ssh(uri):
                               + str(username) + " on "
                               + str(parsed.hostname))
     ftp = ssh.open_sftp()
-    
+
     try:
         ftp.stat(parsed.path)
     except IOError:
@@ -89,6 +96,7 @@ def check_file_ssh(uri):
         return True
 
 connexions = {}
+
 
 def cached_check_file_ssh(uri):
     global connexions
@@ -123,6 +131,7 @@ def cached_check_file_ssh(uri):
     else:
         return True
 
+
 def close_ssh_all():
     global connexion
     del connexion
@@ -130,7 +139,34 @@ def close_ssh_all():
 
 from threading import Thread, Condition
 from Queue import Queue, Empty
+
+
+class LocalChecker(Thread):
+
+    """Check if a file is there locally.
+    """
+
+    def __init__(self, queue, returnqueue):
+        Thread.__init__(self)
+        self.queue = queue
+        self.returnqueue = returnqueue
+        self.loop = True
+
+    def stop(self):
+        self.loop = False
+
+    def run(self):
+        while self.loop:
+            try:
+                uri = self.queue.get(timeout=1)
+            except Empty:
+                continue
+            parsed = urlparse(uri)
+            self.returnqueue.put((uri, os.path.exists(parsed.path)))
+
+
 class SSHChecker(Thread):
+
     """Check if a file is there via SSH.
     """
 
@@ -172,28 +208,32 @@ class SSHChecker(Thread):
                 self.returnqueue.put((uri, False))
             else:
                 self.returnqueue.put((uri, True))
-                
+
     def stop(self):
         self.loop = False
 
 connexions = {}
 returnqueue = Queue()
 
+
 def check_file_threaded(uri):
     global connexions
     parsed = urlparse(uri)
+    hostname = parsed.hostname
     if parsed.scheme == "file":
-        print "skipping", uri
-        return
-    if parsed.scheme != "ssh":
+        hostname = "localhost"
+        if "localhost" not in connexions:
+            connexions[hostname] = LocalChecker(Queue(), returnqueue)
+            connexions[hostname].start()
+    elif parsed.scheme != "ssh":
         raise ValueError("Protocol should be ssh, not " + str(parsed.scheme))
-    if parsed.hostname not in connexions:
-        connexions[parsed.hostname] = SSHChecker(parsed.hostname,
-                                                 Queue(),
-                                                 returnqueue)
-        connexions[parsed.hostname].start()
-    connexions[parsed.hostname].queue.put(uri)
-        
+    elif hostname not in connexions:
+        connexions[hostname] = SSHChecker(parsed.hostname,
+                                          Queue(),
+                                          returnqueue)
+        connexions[hostname].start()
+    connexions[hostname].queue.put(uri)
+
 
 def is_there_dict(file_list):
     cnt = 0
@@ -211,7 +251,8 @@ def is_there_dict(file_list):
                 connexions[connexion].stop()
             return values
         values[res[0]] = res[1]
-        
+
+
 def threaded_check_all():
     dcm = pytroll_db.DCManager(DB)
     file_list = dcm.get_files()
@@ -225,17 +266,22 @@ def threaded_check_all():
     for filename in file_list:
         uris_remove = []
         for uri in filename.uris:
-            cnt += 1
-            is_there = result[uri.uri]
-            if not is_there:
-                removed += 1
-                uris_remove.append(uri)
+            try:
+                is_there = result[uri.uri]
+                cnt += 1
+                if not is_there:
+                    removed += 1
+                    uris_remove.append(uri)
+            except KeyError:
+                print "error, skipping", uri.uri
         if len(uris_remove) == len(filename.uris):
             dcm.delete(filename)
         for uri in uris_remove:
             dcm.delete(uri)
+            print "removing", uri
     dcm.save()
     print "Removed", removed, "out of", cnt
+
 
 def check_all():
     dcm = pytroll_db.DCManager(DB)
@@ -268,5 +314,5 @@ if __name__ == "__main__":
     #clean_old_entries_in_db("PPS_cloud_type_granule", datetime(2011, 11, 11, 13, 25))
     #sync_product_db("PPS_cloud_type_granule", '/data/24/saf/polar_out/global', 'metop02*_cloudtype.h5')
     #sync_product_db("PPS_cloud_type_granule", '/tmp', 'metop02*_cloudtype.h5')
-    #delete_product("metop02_20111110_1346_26252_satproj_00000_01079_cloudtype.h5")
+    # delete_product("metop02_20111110_1346_26252_satproj_00000_01079_cloudtype.h5")
     threaded_check_all()
