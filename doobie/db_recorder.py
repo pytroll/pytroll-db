@@ -37,7 +37,14 @@ import logging
 import logging.handlers
 logger = logging.getLogger(__name__)
 
-sat_lookup = {"NPP": "SUOMI NPP",
+sat_lookup = {"Suomi-NPP": "SUOMI NPP",
+              "Metop-A": "METOP-A",
+              "Metop-B": "METOP-B",
+              "NOAA-15": "NOAA 15",
+              "NOAA-18": "NOAA 18",
+              "NOAA-19": "NOAA 19",
+              "EOS-Terra": "TERRA",
+              "EOS-Aqua": "AQUA"
               }
 
 
