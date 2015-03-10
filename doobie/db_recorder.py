@@ -23,18 +23,18 @@
 """Records new files into the database system.
 """
 
-from posttroll.subscriber import NSSubscriber
+from posttroll.subscriber import Subscribe
 from doobie.pytroll_db import DCManager
 from doobie.hl_file import File
 from pyorbital.orbital import Orbital
 from datetime import timedelta
-
+from pyresample.utils import get_area_def
 from sqlalchemy.orm.exc import NoResultFound
 from threading import Thread
 from ConfigParser import ConfigParser
 
 import logging
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 sat_lookup = {"NPP": "SUOMI NPP",
               }
@@ -48,49 +48,57 @@ class DBRecorder(object):
     to the database.
     """
 
-    def __init__(self, config_file="db.cfg"):
-        self.nssubscriber = NSSubscriber("", addr_listener=True)
-        self.subscriber = None
+    def __init__(self,
+                 (nameserver_address, nameserver_port)=("localhost", 16543),
+                 config_file="db.cfg"):
         self.db_thread = Thread(target=self.record)
         self.dbm = None
         self.loop = True
         self._config_file = config_file
 
-    def start(self):
-        """Starts the logging.
-        """
-        self.subscriber = self.nssubscriber.start()
+    def init_db(self):
         config = ConfigParser()
         config.read(self._config_file)
         mode = config.get("default", "mode")
         self.dbm = DCManager(config.get(mode, "uri"))
+
+    def start(self):
+        """Starts the logging.
+        """
+        self.init_db()
         self.db_thread.start()
 
     def insert_line(self, msg):
         """Insert the line corresponding to *msg* in the database.
         """
         if msg.type == "file":
-            required_fields = ["start_time", "end_time"]
 
-            for field in required_fields:
-                if field not in msg.data.keys():
-                    LOG.warning("Missing required " + field
-                                + ", not creating record from "
-                                + str(msg))
-                    return
+            if (("start_time" not in msg.data.keys() or
+                 "end_time" not in msg.data.keys()) and
+                    "area" not in msg.data.keys()):
+                logger.warning("Missing field, not creating record from "
+                               + str(msg))
+                return
+            #required_fields = ["start_time", "end_time"]
+            # for field in required_fields:
+            #     if field not in msg.data.keys():
+            #         logger.warning("Missing required " + field
+            #                     + ", not creating record from "
+            #                     + str(msg))
+            #         return
 
             try:
                 file_obj = File(msg.data["uid"], self.dbm,
                                 filetype=msg.data.get("type", None),
                                 fileformat=msg.data.get("format", None))
             except NoResultFound:
-                LOG.warning("Cannot process: " + str(msg))
+                logger.warning("Cannot process: " + str(msg))
                 return
 
-            LOG.debug("adding :" + str(msg))
+            logger.debug("adding :" + str(msg))
 
             for key, val in msg.data.items():
-                if key in ["uid", "type"]:
+                if key in ["uid", "type", "area"]:
                     continue
                 if key == "uri":
                     file_obj["URIs"] += [val]
@@ -98,55 +106,80 @@ class DBRecorder(object):
                 try:
                     file_obj[key] = val
                 except NoResultFound:
-                    LOG.warning("Cannot add: " + str((key, val)))
+                    logger.warning("Cannot add: " + str((key, val)))
 
-            # compute sub_satellite_track
-            satname = msg.data["satellite"]
-            sat = Orbital(sat_lookup.get(satname, satname))
-            dt_ = timedelta(seconds=10)
-            current_time = msg.data["start_time"]
-            lonlat_list = []
-            while current_time <= msg.data["end_time"]:
-                pos = sat.get_lonlatalt(current_time)
+            if ("start_time" in msg.data.keys() and
+                    "end_time" in msg.data.keys()):
+                # compute sub_satellite_track
+                satname = msg.data["satellite"]
+                sat = Orbital(sat_lookup.get(satname, satname))
+                dt_ = timedelta(seconds=10)
+                current_time = msg.data["start_time"]
+                lonlat_list = []
+                while current_time < msg.data["end_time"]:
+                    pos = sat.get_lonlatalt(current_time)
+                    lonlat_list.append(pos[:2])
+                    current_time += dt_
+                pos = sat.get_lonlatalt(msg.data["end_time"])
                 lonlat_list.append(pos[:2])
-                current_time += dt_
 
-            LOG.debug("Computed sub-satellite track")
+                logger.debug("Computed sub-satellite track")
 
-            file_obj["sub_satellite_track"] = lonlat_list
+                if len(lonlat_list) < 2:
+                    logger.info("Sub satellite track to short, skipping it.")
+                else:
+                    file_obj["sub_satellite_track"] = lonlat_list
+                    logger.debug("Added sub-satellite track")
 
-            LOG.debug("Added sub-satellite track")
+            if "area" in msg.data.keys():
+                logger.debug("Add area definition to the data")
+                area_def = get_area_def(str(msg.data["area"]["id"]),
+                                        str(msg.data["area"]["name"]),
+                                        str(msg.data["area"]["proj_id"]),
+                                        str(msg.data["area"]["proj4"]),
+                                        msg.data["area"]["shape"][0],
+                                        msg.data["area"]["shape"][1],
+                                        msg.data["area"]["area_extent"])
+                logger.debug("Adding boundary...")
+                file_obj["area"] = area_def
+                logger.debug("Boundary added.")
 
     def record(self):
         """Log stuff.
         """
-        for msg in self.subscriber.recv(1):
-            if msg:
-                LOG.debug("received: %s", str(msg))
-                self.insert_line(msg)
-            if not self.loop:
-                LOG.info("Stop recording")
-                break
+        try:
+            with Subscribe("", addr_listener=True) as sub:
+                for msg in sub.recv(timeout=1):
+                    if msg:
+                        self.insert_line(msg)
+                    if not self.loop:
+                        logger.info("Stop recording")
+                        break
+        except:
+            logger.exception("Something went wrong in record")
+            raise
 
     def stop(self):
         """Stop the machine.
         """
         self.loop = False
-        self.nssubscriber.stop()
 
 if __name__ == '__main__':
     import time
     from logging import Formatter
 
-    LOG = logging.getLogger("db_recorder")
-    LOG.setLevel(logging.DEBUG)
+    logger = logging.getLogger("db_recorder")
+    logger.setLevel(logging.DEBUG)
 
-    ch = logging.StreamHandler()
+    #ch = logging.StreamHandler()
+    ch = logging.handlers.TimedRotatingFileHandler(
+        "/var/log/satellit/db_recorder.log",
+        'midnight', backupCount=30, utc=True)
     ch.setLevel(logging.DEBUG)
 
     formatter = Formatter("[%(asctime)s %(levelname)s %(name)s] %(message)s")
     ch.setFormatter(formatter)
-    LOG.addHandler(ch)
+    logger.addHandler(ch)
 
     try:
         recorder = DBRecorder()
