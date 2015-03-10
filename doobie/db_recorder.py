@@ -34,6 +34,7 @@ from threading import Thread
 from ConfigParser import ConfigParser
 
 import logging
+import logging.handlers
 logger = logging.getLogger(__name__)
 
 sat_lookup = {"NPP": "SUOMI NPP",
