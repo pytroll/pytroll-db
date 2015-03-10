@@ -34,6 +34,7 @@ from sqlalchemy.orm import relation, sessionmaker
 
 # from geoalchemy.postgis import PGComparator
 from geoalchemy2 import Geometry, Geography
+from geoalchemy2.shape import from_shape
 # from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
 #        GeometryDDL, WKTSpatialElement, DBSpatialElement, GeometryExtensionColumn,
 #        WKBSpatialElement)
@@ -497,7 +498,7 @@ class DCManager(object):
                 raise TypeError("No parameter reference defined")
 
         parameter_linestring = ParameterLinestring(
-            file_obj, parameter, linestring, creation_time)
+            file_obj, parameter, from_shape(linestring), creation_time)
         self._session.add(parameter_linestring)
         return parameter_linestring
 
