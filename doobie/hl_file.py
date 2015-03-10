@@ -50,7 +50,7 @@ def area_def2boundary(area_def, boundary_id, session):
         srs.ImportFromProj4(area_def.proj4_string)
         srs.SetProjCS(area_def.proj_id)
         try:
-            srs.SetWellKnownGeogCS(area.proj_dict['ellps'])
+            srs.SetWellKnownGeogCS(area_def.proj_dict['ellps'])
         except KeyError:
             pass
         wkt = srs.ExportToWkt()
