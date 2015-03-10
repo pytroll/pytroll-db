@@ -112,7 +112,7 @@ class DBRecorder(object):
             if ("start_time" in msg.data.keys() and
                     "end_time" in msg.data.keys()):
                 # compute sub_satellite_track
-                satname = msg.data["satellite"]
+                satname = msg.data["platform_name"]
                 sat = Orbital(sat_lookup.get(satname, satname))
                 dt_ = timedelta(seconds=10)
                 current_time = msg.data["start_time"]
@@ -152,6 +152,7 @@ class DBRecorder(object):
             with Subscribe("", addr_listener=True) as sub:
                 for msg in sub.recv(timeout=1):
                     if msg:
+                        logger.debug("got msg %s", str(msg))
                         self.insert_line(msg)
                     if not self.loop:
                         logger.info("Stop recording")
