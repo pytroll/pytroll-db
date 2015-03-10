@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011, 2012, 2014.
+# Copyright (c) 2011, 2012, 2014, 2015.
 
 # Author(s):
- 
+
 #   The pytroll team:
 #   Martin Raspaud <martin.raspaud@smhi.se>
 
@@ -29,7 +29,8 @@ import imp
 version = imp.load_source('doobie.version', 'doobie/version.py')
 
 
-requirements = ['geoalchemy', 'sqlalchemy==0.8.1', 'posttroll', 'shapely', 'psycopg2']
+requirements = ['geoalchemy2', 'sqlalchemy==0.8.4',
+                'posttroll', 'shapely', 'psycopg2']
 
 setup(name="doobie",
       version=version.__version__,
@@ -49,5 +50,5 @@ setup(name="doobie",
           'Intended Audience :: Science/Research',
           'Topic :: Scientific/Engineering',
           'Topic :: Communications'
-          ],
+      ],
       )

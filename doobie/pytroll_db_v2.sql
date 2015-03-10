@@ -2,11 +2,10 @@
 CREATE TABLE public.boundary (
                 boundary_id INTEGER NOT NULL,
                 boundary_name VARCHAR(255) NOT NULL,
-                boundary geography(polygon) NOT NULL,
+                boundary geometry(polygon) NOT NULL,
                 creation_time TIMESTAMP NOT NULL,
                 CONSTRAINT boundary_pk PRIMARY KEY (boundary_id)
 );
-
 
 CREATE UNIQUE INDEX boundary_idx
  ON public.boundary

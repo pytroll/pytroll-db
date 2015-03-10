@@ -26,23 +26,63 @@ from sqlalchemy.orm.exc import NoResultFound
 from datetime import datetime
 import shapely
 import numpy as np
+from geoalchemy2.shape import from_shape
 
 
-def area_def2boundary(area_def, boundary_id):
+import logging
+logger = logging.getLogger(__name__)
+
+
+def area_def2boundary(area_def, boundary_id, session):
     """Convert a pyresample *area_def* to a db Boundary object
     """
 
-    lon_bound, lat_bound = area_def.get_boundary_lonlats()
-    lons = np.concatenate((lon_bound.side1[:-1],
-                           lon_bound.side2[:-1],
-                           lon_bound.side3[:-1],
-                           lon_bound.side4[:-1]))
-    lats = np.concatenate((lat_bound.side1[:-1],
-                           lat_bound.side2[:-1],
-                           lat_bound.side3[:-1],
-                           lat_bound.side4[:-1]))
-    poly = shapely.geometry.asPolygon(np.vstack((lons, lats)).T)
-    return db.Boundary(boundary_id, area_def.name, poly)
+    # check if srid is there, otherwise add it
+
+    try:
+        new_srs = session.query(db.SpatialRefSys).filter_by(
+            proj4text=area_def.proj4_string).one()
+    except NoResultFound:
+        logger.debug("Can't find srid, adding it")
+        # add it
+        from osgeo import osr
+        srs = osr.SpatialReference()
+        srs.ImportFromProj4(area_def.proj4_string)
+        srs.SetProjCS(area_def.proj_id)
+        try:
+            srs.SetWellKnownGeogCS(area.proj_dict['ellps'])
+        except KeyError:
+            pass
+        wkt = srs.ExportToWkt()
+        last_srid = session.query(db.SpatialRefSys).order_by(
+            db.SpatialRefSys.srid.desc()).first().srid
+        new_srs = db.SpatialRefSys(srid=last_srid + 1,
+                                   auth_name="smhi",
+                                   auth_srid=last_srid + 1,
+                                   srtext=wkt,
+                                   proj4text=area_def.proj4_string)
+        session.add(new_srs)
+
+    # create the boundary, with the right srid
+
+    # lon_bound, lat_bound = area_def.get_boundary_lonlats()
+    # lons = np.concatenate((lon_bound.side1[:-1],
+    #                        lon_bound.side2[:-1],
+    #                        lon_bound.side3[:-1],
+    #                        lon_bound.side4[:-1]))
+    # lats = np.concatenate((lat_bound.side1[:-1],
+    #                        lat_bound.side2[:-1],
+    #                        lat_bound.side3[:-1],
+    #                        lat_bound.side4[:-1]))
+    corners = [(area_def.area_extent[0], area_def.area_extent[1]),
+               (area_def.area_extent[0], area_def.area_extent[3]),
+               (area_def.area_extent[2], area_def.area_extent[3]),
+               (area_def.area_extent[2], area_def.area_extent[1])]
+
+    poly = shapely.geometry.asPolygon(corners)
+
+    wkb = from_shape(poly, srid=new_srs.srid)
+    return db.Boundary(boundary_id, area_def.name, wkb)
 
 
 class File(object):
@@ -71,7 +111,7 @@ class File(object):
                     db.Boundary.boundary_id.desc()).first().boundary_id + 1
             except AttributeError:
                 bid = 1
-            bound = area_def2boundary(area_def, bid)
+            bound = area_def2boundary(area_def, bid, self.dbm.session)
             self.dbm.session.add(bound)
         self._file.boundary.append(bound)
         self.dbm.session.commit()

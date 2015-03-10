@@ -27,22 +27,20 @@ import datetime
 # from sqlalchemy import Column, Integer, String, Boolean, DateTime,\
 #                       create_engine, ForeignKey, Table
 from sqlalchemy import Integer, String, Boolean, DateTime,\
-    create_engine, ForeignKey
+    create_engine, ForeignKey, Table, Column
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relation, backref, sessionmaker
+from sqlalchemy.orm import relation, sessionmaker
 
-#from geoalchemy.postgis import PGComparator
-from geoalchemy import *
+# from geoalchemy.postgis import PGComparator
+from geoalchemy2 import Geometry, Geography
 # from geoalchemy import (GeometryColumn, Point, Polygon, LineString,
 #        GeometryDDL, WKTSpatialElement, DBSpatialElement, GeometryExtensionColumn,
 #        WKBSpatialElement)
 
-#from osgeo import ogr
-import shapely.wkb
-import shapely.wkt
+# from osgeo import ogr
 
-from sqltypes import LINESTRING, POLYGON
+# from sqltypes import LINESTRING, POLYGON
 
 Base = declarative_base()
 
@@ -173,7 +171,7 @@ class Boundary(Base):
     # mapping
     boundary_id = Column(Integer, primary_key=True)
     boundary_name = Column(String)
-    boundary = Column(POLYGON())
+    boundary = Column(Geometry('POLYGON'))
     creation_time = Column(DateTime)
 
     def __init__(self, boundary_id, boundary_name, boundary, creation_time=None):
@@ -194,8 +192,8 @@ class ParameterLinestring(Base):
     parameter_id = Column(
         Integer, ForeignKey('parameter.parameter_id'), primary_key=True)
     creation_time = Column(DateTime)
-    data_value = Column(LINESTRING())
-    #data_value = GeometryColumn(LineString(2))
+    data_value = Column(Geography('LINESTRING'))
+    # data_value = GeometryColumn(LineString(2))
 
     def __init__(self, file_obj, parameter, data_value, creation_time):
         self.file_obj = file_obj
@@ -244,13 +242,27 @@ class FileURI(Base):
     __tablename__ = "file_uri"
 
     # mapping
-    uid = Column(
-        String, ForeignKey('file.uid', ondelete="CASCADE"), primary_key=True)
+    uid = Column(String,
+                 ForeignKey('file.uid', ondelete="CASCADE"),
+                 primary_key=True)
     uri = Column(String, primary_key=True)
 
     def __init__(self, uid, uri):
         self.uid = uid
         self.uri = uri
+
+
+class SpatialRefSys(Base):
+    __tablename__ = "spatial_ref_sys"
+
+    # mapping
+    srid = Column(Integer, primary_key=True)
+    auth_name = Column(String)
+    auth_srid = Column(Integer)
+    srtext = Column(String)
+    proj4text = Column(String)  # character varying(2048),
+    # CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid),
+    # CONSTRAINT spatial_ref_sys_srid_check CHECK (srid > 0 AND srid <= 998999)
 
 
 # GeometryDDL(ParameterLinestring.__table__)
@@ -355,7 +367,7 @@ class DCManager(object):
                                    parameter_names=None):
         """ Creates a relation between a filetype and a parameter
 
-            Parameters : 
+            Parameters :
                 file_type : FileType object
                 file_type_name : str
                         FileType object name
@@ -367,7 +379,7 @@ class DCManager(object):
             Returns:
                 FileType object with new relations
 
-        Notice : 
+        Notice :
             Either file_type or file_type_name must be provided
             Either parameters or parameter_names must be provided
         """
@@ -646,8 +658,8 @@ class DCManager(object):
         self._session.delete(sqla_object)
 
 if __name__ == '__main__':
-    #rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
-    #rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
+    # rm = DCManager('postgresql://iceopr@devsat-lucid:5432/testdb2')
+    # rm = DCManager('postgresql://a000680:@localhost.localdomain:5432/sat_db')
 
     dcm = DCManager('postgresql://polar:polar@safe:5432/sat_db')
     boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
@@ -655,7 +667,7 @@ if __name__ == '__main__':
     res = dcm.get_within_area_of_interest(boundingbox)
     print res[0].uid
 
-    #f = rm.get_file()
-    #pl = f.parameter_linestrings[0]
+    # f = rm.get_file()
+    # pl = f.parameter_linestrings[0]
     # print type(pl.data_value)
     # print pl.data_value.wkt
