@@ -24,6 +24,7 @@
 """
 
 from posttroll.subscriber import Subscribe
+from posttroll.message import Message
 from doobie.pytroll_db import DCManager
 from doobie.hl_file import File
 from pyorbital.orbital import Orbital
@@ -79,7 +80,17 @@ class DBRecorder(object):
     def insert_line(self, msg):
         """Insert the line corresponding to *msg* in the database.
         """
-        if msg.type == "file":
+        if msg.type == "dataset":
+
+            new_msg = Message(rawstr=str(msg))
+            new_msg.type = "file"
+            del new_msg.data["dataset"]
+
+            for item in msg.data["dataset"]:
+                new_msg.data.update(item)
+                self.insert_line(new_msg)
+
+        elif msg.type == "file":
 
             if (("start_time" not in msg.data.keys() or
                  "end_time" not in msg.data.keys()) and
