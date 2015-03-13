@@ -98,7 +98,7 @@ class File(object):
                                               file_type_name=filetype,
                                               file_format_name=fileformat,
                                               creation_time=datetime.utcnow())
-            self.dbm.session.commit()
+            self.dbm.save()
 
     def add_bound(self, area_def):
         # find if the boundary is already there
@@ -114,7 +114,7 @@ class File(object):
             bound = area_def2boundary(area_def, bid, self.dbm.session)
             self.dbm.session.add(bound)
         self._file.boundary.append(bound)
-        self.dbm.session.commit()
+        self.dbm.save()
 
     def __setitem__(self, key, val):
 
@@ -172,7 +172,7 @@ class File(object):
                                                 data_value=val,
                                                 creation_time=datetime.utcnow())
 
-        self.dbm.session.commit()
+        self.dbm.save()
 
     def __getitem__(self, key):
 
