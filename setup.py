@@ -32,7 +32,7 @@ version = imp.load_source('doobie.version', 'doobie/version.py')
 requirements = ['geoalchemy2', 'sqlalchemy==0.8.4', 'pyorbital',
                 'posttroll', 'shapely', 'psycopg2', 'paramiko']
 
-setup(name="doobie",
+setup(name="pytroll-dibby",
       version=version.__version__,
       description='Messaging system for pytroll',
       author='The pytroll team',
