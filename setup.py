@@ -29,8 +29,8 @@ import imp
 version = imp.load_source('doobie.version', 'doobie/version.py')
 
 
-requirements = ['geoalchemy2', 'sqlalchemy==0.8.4',
-                'posttroll', 'shapely', 'psycopg2']
+requirements = ['geoalchemy2', 'sqlalchemy==0.8.4', 'pyorbital',
+                'posttroll', 'shapely', 'psycopg2', 'paramiko']
 
 setup(name="doobie",
       version=version.__version__,
@@ -49,6 +49,6 @@ setup(name="doobie",
           'Operating System :: OS Independent',
           'Intended Audience :: Science/Research',
           'Topic :: Scientific/Engineering',
-          'Topic :: Communications'
+          'Topic :: Database'
       ],
       )
