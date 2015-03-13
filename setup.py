@@ -25,7 +25,7 @@
 from setuptools import setup
 import imp
 
-version = imp.load_source('doobie.version', 'doobie/version.py')
+version = imp.load_source('dibby.version', 'dibby/version.py')
 
 
 requirements = ['geoalchemy2', 'sqlalchemy==0.8.4', 'pyorbital',
