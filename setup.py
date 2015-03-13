@@ -23,7 +23,6 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
-import sys
 import imp
 
 version = imp.load_source('doobie.version', 'doobie/version.py')
