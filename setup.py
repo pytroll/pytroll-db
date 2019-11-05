@@ -25,19 +25,19 @@
 from setuptools import setup
 import imp
 
-version = imp.load_source('dibby.version', 'dibby/version.py')
+version = imp.load_source('trolldb.version', 'trolldb/version.py')
 
 
-requirements = ['geoalchemy2', 'sqlalchemy==0.8.4', 'pyorbital',
+requirements = ['geoalchemy2', 'sqlalchemy>=1.3.0', 'pyorbital',
                 'posttroll', 'shapely', 'psycopg2', 'paramiko']
 
-setup(name="pytroll-dibby",
+setup(name="pytroll-db",
       version=version.__version__,
       description='Messaging system for pytroll',
       author='The pytroll team',
       author_email='martin.raspaud@smhi.se',
       url="http://github.com/mraspaud/doobie",
-      packages=['doobie'],
+      packages=['trolldb'],
       zip_safe=False,
       license="GPLv3",
       install_requires=requirements,
@@ -50,4 +50,9 @@ setup(name="pytroll-dibby",
           'Topic :: Scientific/Engineering',
           'Topic :: Database'
       ],
+      entry_points={
+          'console_scripts': [
+              'db_cleanup = trolldb.pytroll_cleanup:threaded_check_all',
+          ],
+      },
       )

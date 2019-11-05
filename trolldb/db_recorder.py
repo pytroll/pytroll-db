@@ -25,8 +25,8 @@
 
 from posttroll.subscriber import Subscribe
 from posttroll.message import Message
-from doobie.pytroll_db import DCManager
-from doobie.hl_file import File
+from trolldb.pytroll_db import DCManager
+from trolldb.hl_file import File
 from pyorbital.orbital import Orbital
 from datetime import timedelta
 from pyresample.utils import get_area_def
