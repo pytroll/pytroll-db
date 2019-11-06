@@ -32,7 +32,8 @@ from datetime import timedelta
 from pyresample.utils import get_area_def
 from sqlalchemy.orm.exc import NoResultFound
 from threading import Thread
-from ConfigParser import ConfigParser
+import os
+import yaml
 
 import logging
 import logging.handlers
@@ -58,18 +59,18 @@ class DBRecorder(object):
     """
 
     def __init__(self,
-                 (nameserver_address, nameserver_port)=("localhost", 16543),
-                 config_file="db.cfg"):
+                 nameserver_address='localhost',
+                 nameserver_port=16543,
+                 config_file="db.yaml"):
         self.db_thread = Thread(target=self.record)
         self.dbm = None
         self.loop = True
         self._config_file = config_file
 
     def init_db(self):
-        config = ConfigParser()
-        config.read(self._config_file)
-        mode = config.get("default", "mode")
-        self.dbm = DCManager(config.get(mode, "uri"))
+        with open(self._config_file) as cf:
+            config = yaml.safe_load(cf.read())
+        self.dbm = DCManager(config.get("uri"))
 
     def start(self):
         """Starts the logging.
@@ -86,8 +87,11 @@ class DBRecorder(object):
             new_msg.type = "file"
             del new_msg.data["dataset"]
 
-            for item in msg.data["dataset"]:
-                new_msg.data.update(item)
+            if 'uid' not in new_msg.data:
+                for item in msg.data["dataset"]:
+                    new_msg.data.update(item)
+                    self.insert_line(new_msg)
+            else:
                 self.insert_line(new_msg)
 
         elif msg.type == "file":
@@ -107,6 +111,7 @@ class DBRecorder(object):
             #         return
 
             try:
+                import ipdb; ipdb.set_trace()
                 file_obj = File(msg.data["uid"], self.dbm,
                                 filetype=msg.data.get("type", None),
                                 fileformat=msg.data.get("format", None))
@@ -164,8 +169,7 @@ class DBRecorder(object):
                 logger.debug("Boundary added.")
 
     def record(self):
-        """Log stuff.
-        """
+        """Log stuff."""
         try:
             with Subscribe("", addr_listener=True) as sub:
                 for msg in sub.recv(timeout=1):
@@ -179,27 +183,66 @@ class DBRecorder(object):
             logger.exception("Something went wrong in record")
             raise
 
+
     def stop(self):
-        """Stop the machine.
-        """
+        """Stop the machine."""
         self.loop = False
+
+
+log_levels = {
+    0: logging.WARN,
+    1: logging.INFO,
+    2: logging.DEBUG,
+}
+
+
+def setup_logging(cmd_args):
+    """Set up logging."""
+    if cmd_args.log_config is not None:
+        with open(cmd_args.log_config) as fd:
+            log_dict = yaml.safe_load(fd.read())
+            logging.config.dictConfig(log_dict)
+            return
+
+    root = logging.getLogger('')
+    root.setLevel(log_levels[cmd_args.verbosity])
+
+    if cmd_args.log:
+        fh_ = logging.handlers.TimedRotatingFileHandler(
+            os.path.join(cmd_args.log),
+            "midnight",
+            backupCount=7)
+    else:
+        fh_ = logging.StreamHandler()
+
+    formatter = logging.Formatter(LOG_FORMAT)
+    fh_.setFormatter(formatter)
+
+    root.addHandler(fh_)
+
+LOG_FORMAT = "[%(asctime)s %(name)s %(levelname)s] %(message)s"
 
 if __name__ == '__main__':
     import time
-    from logging import Formatter
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    # parser.add_argument("config_file",
+    #                     help="The configuration file to run on.")
+    parser.add_argument("-l", "--log",
+                        help="The file to log to. stdout otherwise.")
+    parser.add_argument("-c", "--log-config",
+                        help="Log config file to use instead of the standard logging.")
+    parser.add_argument("-v", "--verbose", dest="verbosity", action="count", default=0,
+                        help="Verbosity (between 1 and 2 occurrences with more leading to more "
+                        "verbose logging). WARN=0, INFO=1, "
+                        "DEBUG=2. This is overridden by the log config file if specified.")
+    cmd_args = parser.parse_args()
 
     logger = logging.getLogger("db_recorder")
     logger.setLevel(logging.DEBUG)
-
-    #ch = logging.StreamHandler()
-    ch = logging.handlers.TimedRotatingFileHandler(
-        "/var/log/satellit/db_recorder.log",
-        'midnight', backupCount=30, utc=True)
-    ch.setLevel(logging.DEBUG)
-
-    formatter = Formatter("[%(asctime)s %(levelname)s %(name)s] %(message)s")
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    setup_logging(cmd_args)
+    logger.info("Starting up.")
 
     try:
         recorder = DBRecorder()
@@ -208,7 +251,7 @@ if __name__ == '__main__':
             time.sleep(1)
     except KeyboardInterrupt:
         recorder.stop()
-        print "Thanks for using pytroll/db_recorder. See you soon on www.pytroll.org!"
+        print("Thanks for using pytroll/db_recorder. See you soon on www.pytroll.org!")
 
 
 # insert a line

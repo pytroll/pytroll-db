@@ -424,10 +424,10 @@ class DCManager(object):
                 creation_time : datetime object
                     Time of creation
 
-                Returns : 
+                Returns :
                     ParameterValue Object
 
-        Notice : 
+        Notice :
             Either file_obj or uid must be provided
             Either parameter or parameter_name must be provided
 
@@ -473,10 +473,10 @@ class DCManager(object):
                 creation_time : datetime object
                     Time of creation
 
-                Returns : 
+                Returns :
                     ParameterLinestring Object
 
-        Notice : 
+        Notice :
             Either file_obj or uid must be provided
             Either parameter or parameter_name must be provided
 
@@ -622,10 +622,10 @@ class DCManager(object):
                 is_archived : boolean
                     if file is archived
 
-                Returns : 
+                Returns :
                     File Object
 
-        Notice : 
+        Notice :
             Either file_type or file_type_id or file_type_name must be provided
             Either file_format or file_format_id or file_format_name must be provided
 
@@ -666,7 +666,7 @@ if __name__ == '__main__':
     boundingbox = 'POLYGON ((1.7  54.8, 28.7 54.9, 34.8 71.2, 2.3 71.7, 1.7  54.8))'
 
     res = dcm.get_within_area_of_interest(boundingbox)
-    print res[0].uid
+    print(res[0].uid)
 
     # f = rm.get_file()
     # pl = f.parameter_linestrings[0]

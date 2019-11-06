@@ -2,11 +2,8 @@ import sys
 import os
 import glob
 from datetime import datetime, timedelta
-
+import socket
 import pytroll_db
-
-DB = "postgresql://safusr.u:NWCsaf22@postgresutv01/sat_db"
-
 
 def delete_product(filename):
     dcm = pytroll_db.DCManager(DB)
@@ -32,7 +29,7 @@ def sync_product_db(file_type_name, dirname, glob_filter):
 
 
 def clean_old_entries_in_db(file_type_name, timestamp_utc):
-    """Clean the DB for products of a given type with creation time older 
+    """Clean the DB for products of a given type with creation time older
     than a given threshold"""
 
     dcm = pytroll_db.DCManager(DB)
@@ -175,6 +172,7 @@ class SSHChecker(Thread):
         self.queue = queue
         self.returnqueue = returnqueue
         self.loop = True
+        self.ftp = None
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
@@ -193,7 +191,10 @@ class SSHChecker(Thread):
             raise ConnectionError("Password required for user "
                                   + str(username) + " on "
                                   + str(hostname))
-        self.ftp = self.ssh.open_sftp()
+        except socket.error:
+            print "Can't reach", hostname
+        else:
+            self.ftp = self.ssh.open_sftp()
 
     def run(self):
         while self.loop:
@@ -201,6 +202,8 @@ class SSHChecker(Thread):
                 uri = self.queue.get(timeout=1)
             except Empty:
                 continue
+            if self.ftp is None:
+                self.returnqueue.put((uri, None))
             try:
                 parsed = urlparse(uri)
                 self.ftp.stat(parsed.path)
@@ -220,6 +223,7 @@ def check_file_threaded(uri):
     global connexions
     parsed = urlparse(uri)
     hostname = parsed.hostname
+    print hostname
     if parsed.scheme == "file":
         hostname = "localhost"
         if "localhost" not in connexions:
@@ -228,9 +232,10 @@ def check_file_threaded(uri):
     elif parsed.scheme != "ssh":
         raise ValueError("Protocol should be ssh, not " + str(parsed.scheme))
     elif hostname not in connexions:
+
         connexions[hostname] = SSHChecker(parsed.hostname,
-                                          Queue(),
-                                          returnqueue)
+                                              Queue(),
+                                              returnqueue)
         connexions[hostname].start()
     connexions[hostname].queue.put(uri)
 
@@ -253,7 +258,7 @@ def is_there_dict(file_list):
         values[res[0]] = res[1]
 
 
-def threaded_check_all():
+def threaded_check_all(remove_unaccessible=False):
     dcm = pytroll_db.DCManager(DB)
     file_list = dcm.get_files()
 
@@ -269,7 +274,11 @@ def threaded_check_all():
             try:
                 is_there = result[uri.uri]
                 cnt += 1
-                if not is_there:
+                if is_there is None:
+                    if remove_unaccessible:
+                        removed += 1
+                        uris_remove.append(uri)
+                elif not is_there:
                     removed += 1
                     uris_remove.append(uri)
             except KeyError:
@@ -315,4 +324,4 @@ if __name__ == "__main__":
     #sync_product_db("PPS_cloud_type_granule", '/data/24/saf/polar_out/global', 'metop02*_cloudtype.h5')
     #sync_product_db("PPS_cloud_type_granule", '/tmp', 'metop02*_cloudtype.h5')
     # delete_product("metop02_20111110_1346_26252_satproj_00000_01079_cloudtype.h5")
-    threaded_check_all()
+    threaded_check_all(True)
