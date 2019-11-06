@@ -59,7 +59,7 @@ class MongoRecorder:
                     if msg:
                         logger.debug("got msg %s", str(msg))
                         if msg.type in ['collection', 'file', 'dataset']:
-                            self.insert_line(msg)
+                            self.insert_files(msg)
                     if not self.loop:
                         logger.info("Stop recording")
                         break
