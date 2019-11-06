@@ -28,9 +28,11 @@ import imp
 version = imp.load_source('trolldb.version', 'trolldb/version.py')
 
 
-requirements = ['geoalchemy2', 'sqlalchemy>=1.3.0', 'pyorbital',
-                'posttroll', 'shapely', 'psycopg2', 'paramiko',
-                'pymongo']
+# requirements = ['geoalchemy2', 'sqlalchemy>=1.3.0', 'pyorbital',
+#                 'posttroll', 'shapely', 'psycopg2', 'paramiko',
+#                 'pymongo']
+
+requirements = ['pymongo']
 
 setup(name="pytroll-db",
       version=version.__version__,
