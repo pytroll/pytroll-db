@@ -29,7 +29,8 @@ version = imp.load_source('trolldb.version', 'trolldb/version.py')
 
 
 requirements = ['geoalchemy2', 'sqlalchemy>=1.3.0', 'pyorbital',
-                'posttroll', 'shapely', 'psycopg2', 'paramiko']
+                'posttroll', 'shapely', 'psycopg2', 'paramiko',
+                'pymongo']
 
 setup(name="pytroll-db",
       version=version.__version__,
@@ -55,4 +56,5 @@ setup(name="pytroll-db",
               'db_cleanup = trolldb.pytroll_cleanup:threaded_check_all',
           ],
       },
+      scripts=['bin/pytroll-mongo.py'],
       )
