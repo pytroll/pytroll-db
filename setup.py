@@ -32,7 +32,7 @@ version = imp.load_source('trolldb.version', 'trolldb/version.py')
 #                 'posttroll', 'shapely', 'psycopg2', 'paramiko',
 #                 'pymongo']
 
-requirements = ['pymongo', 'yaml']
+requirements = ['pymongo', 'pyyaml', 'posttroll']
 
 setup(name="pytroll-db",
       version=version.__version__,
