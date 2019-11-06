@@ -34,8 +34,6 @@ class MongoRecorder:
     """A recorder for posttroll file messages."""
 
     def __init__(self,
-                 nameserver_address='localhost',
-                 nameserver_port=16543,
                  mongo_uri="mongodb://localhost:27017",
                  db_name='sat_db'):
         """Init the recorder."""
