@@ -111,7 +111,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "database",
+    parser.add_argument("-d", "--database",
                         help="URI to the mongo database (default mongodb://localhost:27017 ).",
                         default="mongodb://localhost:27017")
     parser.add_argument("-l", "--log",
