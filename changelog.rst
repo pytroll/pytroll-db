@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v0.2.1 (2024-04-04)
+v?.?.? (2024-04-04)
 -------------------
 - Cleanup: remove all SQL related files and references
 
