@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.2.1 (2024-04-04)
+-------------------
+- Cleanup: remove all SQL related files and references
+
+
 v0.2.0 (2015-03-13)
 -------------------
 
