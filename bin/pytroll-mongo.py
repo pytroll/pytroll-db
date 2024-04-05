@@ -1,32 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2019 Martin Raspaud
-
-# Author(s):
-
-#   Martin Raspaud <martin.raspaud@smhi.se>
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from posttroll.subscriber import Subscribe
 import logging
-from threading import Thread
-import yaml
 import os
+from threading import Thread
 
+import yaml
+from posttroll.subscriber import Subscribe
 from pymongo import MongoClient
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,8 +100,8 @@ if __name__ == '__main__':
                         help="Log config file to use instead of the standard logging.")
     parser.add_argument("-v", "--verbose", dest="verbosity", action="count", default=0,
                         help="Verbosity (between 1 and 2 occurrences with more leading to more "
-                        "verbose logging). WARN=0, INFO=1, "
-                        "DEBUG=2. This is overridden by the log config file if specified.")
+                             "verbose logging). WARN=0, INFO=1, "
+                             "DEBUG=2. This is overridden by the log config file if specified.")
     cmd_args = parser.parse_args()
 
     logger = logging.getLogger("mongo_recorder")
