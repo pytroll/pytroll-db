@@ -1,0 +1,46 @@
+# This is just a template.
+# For use in production, rename this file to `config.yaml` so that the actual configurations can be correctly picked up.
+# In addition, adapt the values accordingly.
+# Finally, to improve readability please remove the comments!
+
+# Required
+database:
+  #Required
+  main_database_name: "satellite_database"
+
+  #Required
+  main_collection_name: "files"
+
+  #Required
+  url: "mongodb://localhost:27017"
+
+  #Required
+  timeout: 1000  # milliseconds
+
+
+# Required
+api_server:
+  # Required
+  url: "http://localhost:8000"
+
+  # Required
+  "title": "Pytroll-db API"
+
+  # Required
+  "version": "0.1"
+
+  # Optional
+  "summary": "The awesome API of Pytroll-db"
+
+  # Optional
+  "description": "
+          The API allows you to perform CRUD operations as well as querying the database. 
+          At the moment only MongoDB is supported. It is based on the following Python packages
+          \n * **PyMongo** (https://github.com/mongodb/mongo-python-driver) 
+          \n * **motor** (https://github.com/mongodb/motor)
+          "
+
+  # Optional
+  "license_info":
+    "name": "The GNU General Public License v3.0"
+    "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"

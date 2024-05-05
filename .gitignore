@@ -50,4 +50,13 @@ coverage.xml
 *.pot
 
 # Sphinx documentation
-docs/_build/
+docs/build/
+*.rst
+!index.rst
+
+# the actual config file [HAS TO BE ALWAYS EXCLUDED!]
+config.yaml
+config.yml
+
+# temp log and storage for the test database
+__temp*
