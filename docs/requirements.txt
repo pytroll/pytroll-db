@@ -5,4 +5,4 @@ pydantic==2.6.4
 fastapi==0.110.1
 uvicorn==0.29.0
 loguru==0.7.2
-yaml==0.2.5
+pyyaml==6.0.1
