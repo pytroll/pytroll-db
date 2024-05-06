@@ -15,7 +15,10 @@ import sys
 
 from sphinx.ext import apidoc
 
-sys.path.insert(0, os.path.abspath('../../trolldb'))
+sys.path.insert(0, os.path.abspath('../../'))
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+for x in os.walk('../../trolldb'):
+    sys.path.append(x[0])
 
 # -- Project information -----------------------------------------------------
 
@@ -66,4 +69,4 @@ root_doc = "index"
 
 output_dir = os.path.join('.')
 module_dir = os.path.abspath('../../trolldb')
-apidoc.main(['-f', '-o', output_dir, module_dir])
+apidoc.main(['-q', '-f', '-o', output_dir, module_dir, *include_patterns])
