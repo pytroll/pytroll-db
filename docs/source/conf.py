@@ -13,8 +13,9 @@
 import os
 import sys
 
+from sphinx.ext import apidoc
+
 sys.path.insert(0, os.path.abspath('../../trolldb'))
-sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
@@ -45,7 +46,8 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["*test*"]
+exclude_patterns = ["*tests/*"]
+include_patterns = ["**"]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -54,17 +56,14 @@ exclude_patterns = ["*test*"]
 #
 html_theme = 'sphinx_rtd_theme'
 
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
 
-# autodoc_default_options = {
-#     'member-order': 'bysource',
-#     'special-members': '__init__',
-#     'undoc-members': True,
-#     'exclude-members': '__weakref__'
-# }
 
 root_doc = "index"
+
+output_dir = os.path.join('.')
+module_dir = os.path.abspath('../../trolldb')
+apidoc.main(['-f', '-o', output_dir, module_dir])

@@ -53,6 +53,8 @@ coverage.xml
 docs/build/
 *.rst
 !index.rst
+*.doctree
+*.pickle
 
 # the actual config file [HAS TO BE ALWAYS EXCLUDED!]
 config.yaml
