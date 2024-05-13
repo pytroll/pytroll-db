@@ -1,15 +1,31 @@
+"""
+The module which defines some convenience classes to facilitate the use of aggregation pipelines.
+"""
+
 from typing import Any, Self
 
 
 class PipelineDict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    A subclass of dict which overrides the behaviour of bitwise or ``|`` and bitwise and ``&``. The operators are only
+    defined for operands of type :class:`PipelineDict`. For each of the aforementioned operators, the result will be a
+    dictionary with a single key/value pair. The key is either ``$or`` or ``$and`` depending on the operator being used.
+    The corresponding value is a list with two elements only. The first element of the list is the left operand and the
+    second element is the right operand.
+
+    Example:
+         ```
+            pd1 = PipelineDict({"number": 2})
+            pd2 = PipelineDict({"kind": 1})
+            pd3 = pd1 & pd2
+         ```
+    """
 
     def __or__(self, other: Self):
-        return PipelineDict(**{"$or": [self, other]})
+        return PipelineDict({"$or": [self, other]})
 
     def __and__(self, other: Self):
-        return PipelineDict(**{"$and": [self, other]})
+        return PipelineDict({"$and": [self, other]})
 
 
 class PipelineAttribute:

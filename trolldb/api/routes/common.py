@@ -7,7 +7,6 @@ from typing import Annotated
 from fastapi import Response, Query, Depends
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
-from api.errors.errors import CollectionFail, DatabaseFail, Database_Collection_Fail, FailureResponse
 from database.mongodb import MongoDB
 
 exclude_defaults_query = Query(
@@ -17,7 +16,7 @@ exclude_defaults_query = Query(
                 "`trolldb.database.mongodb.MongoDB.default_database_names` for more information.")
 
 
-async def check_database(database_name: str | None = None) -> Response | AsyncIOMotorDatabase:
+async def check_database(database_name: str | None = None) -> AsyncIOMotorDatabase:
     """
     A dependency for route handlers to check for the existence of a database given
     its name.
@@ -29,28 +28,15 @@ async def check_database(database_name: str | None = None) -> Response | AsyncIO
     Returns:
         -- The database object if it exists.
 
-        -- :obj:`api.errors.errors.DatabaseFail.NOT_FOUND`, if the database does not exist.
-
-        -- :obj:`api.errors.errors.DatabaseFail.WRONG_TYPE`, if the type of the database name is not ``str`` or
-        ``None``.
+        -- Raises a :class:`~trolldb.errors.errors.ResponseError` otherwise. Check
+        :func:`~trolldb.database.mongodb.MongoDB.get_database` for more information.
     """
-
-    match database_name:
-        case None:
-            return MongoDB.main_database()
-
-        case str():
-            if database_name in await MongoDB.client().list_database_names():
-                return MongoDB.client()[database_name]
-            return DatabaseFail.NOT_FOUND.fastapi_response()
-
-        case _:
-            return DatabaseFail.WRONG_TYPE.fastapi_response()
+    return await MongoDB.get_database(database_name)
 
 
 async def check_collection(
         database_name: str | None = None,
-        collection_name: str | None = None) -> Response | AsyncIOMotorCollection:
+        collection_name: str | None = None) -> AsyncIOMotorCollection:
     """
     A dependency for route handlers to check for the existence of a collection given
     its name and the name of the database it resides in. It first checks for the existence of the database using
@@ -78,21 +64,7 @@ async def check_collection(
         is ``None``; or if the type of ``collection_name`` is not ``str``.
     """
 
-    res = await check_database(database_name)
-    if isinstance(res, Response):
-        return res
-
-    match database_name, collection_name:
-        case None, None:
-            return MongoDB.main_collection()
-
-        case str(), str():
-            if collection_name in await MongoDB.client()[database_name].list_collection_names():
-                return MongoDB.client()[database_name][collection_name]
-            return CollectionFail.NOT_FOUND.fastapi_response()
-
-        case _:
-            return CollectionFail.WRONG_TYPE.fastapi_response()
+    return await MongoDB.get_collection(database_name, collection_name)
 
 
 async def get_distinct_items_in_collection(
@@ -124,5 +96,12 @@ async def get_distinct_items_in_collection(
     return await res_coll.distinct(field_name)
 
 
-CheckCollectionDependency = Annotated[FailureResponse | AsyncIOMotorCollection, Depends(check_collection)]
-CheckDataBaseDependency = Annotated[FailureResponse | AsyncIOMotorDatabase, Depends(check_database)]
+CheckCollectionDependency = Annotated[AsyncIOMotorCollection, Depends(check_collection)]
+"""
+Type annotation for the FastAPI dependency injection of checking a collection (function).
+"""
+
+CheckDataBaseDependency = Annotated[AsyncIOMotorDatabase, Depends(check_database)]
+"""
+Type annotation for the FastAPI dependency injection of checking a database (function).
+"""

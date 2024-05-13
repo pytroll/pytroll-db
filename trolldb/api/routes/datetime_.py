@@ -8,12 +8,12 @@ Note:
 from datetime import datetime
 from typing import TypedDict
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from api.errors.errors import database_collection_fail_descriptor
 from api.routes.common import CheckCollectionDependency
-from database.mongodb import MongoDB
+from database.errors import database_collection_fail_descriptor
+from database.mongodb import get_id
 
 
 class TimeModel(TypedDict):
@@ -38,11 +38,8 @@ router = APIRouter()
             response_model=ResponseModel,
             responses=database_collection_fail_descriptor,
             summary="Gets the the minimum and maximum values for the start and end times")
-async def datetime(res_coll: CheckCollectionDependency) -> Response | ResponseModel:
-    if isinstance(res_coll, Response):
-        return res_coll
-
-    agg_result = await res_coll.aggregate([{
+async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
+    agg_result = await collection.aggregate([{
         "$group": {
             "_id": None,
             "min_start_time": {"$min": "$start_time"},
@@ -52,7 +49,7 @@ async def datetime(res_coll: CheckCollectionDependency) -> Response | ResponseMo
         }}]).next()
 
     def _aux(query):
-        return MongoDB.get_id(res_coll.find_one(query))
+        return get_id(collection.find_one(query))
 
     return ResponseModel(
         start_time=TimeEntry(

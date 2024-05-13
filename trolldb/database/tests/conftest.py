@@ -1,9 +1,9 @@
 import pytest
 import pytest_asyncio
 
-from test_utils.mock_mongodb_instance import mongodb_instance_server_process_context
+from test_utils.mongodb_instance import mongodb_instance_server_process_context
 from test_utils.common import test_app_config
-from test_utils.mock_mongodb_database import TestDatabase
+from test_utils.mongodb_database import TestDatabase
 from trolldb.database.mongodb import mongodb_context
 
 
@@ -13,7 +13,7 @@ def run_mongodb_server_instance():
         yield
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture()
 async def mongodb_fixture(run_mongodb_server_instance):
     TestDatabase.prepare()
     async with mongodb_context(test_app_config.database):

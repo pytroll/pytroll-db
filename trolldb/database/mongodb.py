@@ -4,11 +4,9 @@ The module which handles database CRUD operations for MongoDB. It is based on
 """
 
 import errno
-import sys
 from contextlib import asynccontextmanager
-from typing import Any, Coroutine
+from typing import Any, AsyncGenerator, Coroutine, TypeVar
 
-from loguru import logger
 from motor.motor_asyncio import (
     AsyncIOMotorClient,
     AsyncIOMotorDatabase,
@@ -16,20 +14,72 @@ from motor.motor_asyncio import (
     AsyncIOMotorCommandCursor,
     AsyncIOMotorCursor
 )
-from pydantic import validate_call
+from pydantic import validate_call, BaseModel
 from pymongo.collection import _DocumentType
 from pymongo.errors import (
     ConnectionFailure,
     ServerSelectionTimeoutError)
 
 from config.config import DatabaseConfig
+from database.errors import CollectionFail, DatabaseFail, ClientFail
+from errors.errors import ResponseError
+
+T = TypeVar("T")
+CoroutineLike = Coroutine[Any, Any, T]
+CoroutineDocument = CoroutineLike[_DocumentType | None]
+CoroutineStrList = CoroutineLike[list[str]]
+
+
+class DatabaseName(BaseModel):
+    name: str | None
+
+
+class CollectionName(BaseModel):
+    name: str | None
+
+
+async def get_id(doc: CoroutineDocument) -> str:
+    """
+    Retrieves the ID of a document as a simple flat string.
+
+    Note:
+        The rationale behind this method is as follows. In MongoDB, each document has a unique ID which is of type
+        :class:`~bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
+        the need for this method.
+
+    Args:
+        doc:
+            A MongoDB document in the coroutine form. This could be e.g. the result of applying the standard
+            ``find_one`` method from MongoDB on a collection given a ``filter``.
+
+    Returns:
+        The ID of a document as a simple string. For example, when applied on a document with
+        ``_id: ObjectId('000000000000000000000000')``, the method returns ``'000000000000000000000000'``.
+    """
+    return str((await doc)["_id"])
+
+
+async def get_ids(docs: AsyncIOMotorCommandCursor | AsyncIOMotorCursor) -> list[str]:
+    """
+    Similar to :func:`~MongoDB.get_id` but for a list of documents.
+
+    Args:
+        docs:
+            A list of MongoDB documents as :obj:`~AsyncIOMotorCommandCursor` or :obj:`~AsyncIOMotorCursor`.
+            This could be e.g. the result of applying the standard ``aggregate`` method from MongoDB on a
+            collection given a ``pipeline``.
+
+    Returns:
+        The list of all IDs, each as a simple string.
+    """
+    return [str(doc["_id"]) async for doc in docs]
 
 
 class MongoDB:
     """
     A wrapper class around the `motor async driver <https://www.mongodb.com/docs/drivers/motor/>`_ for Mongo DB with
-    convenience methods tailored to our specific needs. As such, most of the methods return coroutines whose results
-    need to be awaited.
+    convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()`` method returns a
+    coroutine which needs to be awaited.
 
     Note:
         This class is not meant to be instantiated! That's why all the methods in this class are decorated with
@@ -48,6 +98,7 @@ class MongoDB:
     """
 
     __client: AsyncIOMotorClient | None = None
+    __database_config: DatabaseConfig | None = None
     __main_collection: AsyncIOMotorCollection = None
     __main_database: AsyncIOMotorDatabase = None
 
@@ -65,16 +116,28 @@ class MongoDB:
             database_config:
                  A named tuple which includes the database configurations.
 
-        Raises :obj:`~SystemExit(errno.EIO)`:
-            If connection is not established (``ConnectionFailure``) or if the attempt times out
-            (``ServerSelectionTimeoutError``)
+        Raises ``SystemExit(errno.EIO)``:
+            - If connection is not established (``ConnectionFailure``)
+            - If the attempt times out (``ServerSelectionTimeoutError``)
+            - If one attempts reinitializing the class with new (different) database configurations without calling
+             :func:`~close()` first.
+            - If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
+            configurations still exist and are different from the new ones which have been just provided.
 
-        Raises :obj:`~SystemExit(errno.ENODATA)`:
+        Raises ``SystemExit(errno.ENODATA)``:
             If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
 
         Returns:
             On success ``None``.
         """
+
+        if cls.__database_config:
+            if database_config == cls.__database_config:
+                if cls.__client:
+                    return ClientFail.AlreadyOpenError.log_warning()
+                ClientFail.InconsistencyError.raise_error_log_and_exit(errno.EIO)
+            else:
+                ClientFail.ReinitializeConfigError.raise_error_log_and_exit(errno.EIO)
 
         # This only makes the reference and does not establish an actual connection until the first attempt is made
         # to access the database.
@@ -82,31 +145,41 @@ class MongoDB:
             database_config.url.unicode_string(),
             serverSelectionTimeoutMS=database_config.timeout)
 
+        __database_names = []
         try:
             # Here we attempt to access the database
             __database_names = await cls.__client.list_database_names()
         except (ConnectionFailure, ServerSelectionTimeoutError):
-            logger.error(f"Could not connect to the database with URL: {database_config.url.unicode_string()}")
-            sys.exit(errno.EIO)
+            ClientFail.ConnectionError.raise_error_log_and_exit(
+                errno.EIO, {"url": database_config.url.unicode_string()}
+            )
+
+        err_extra_information = {"database_name": database_config.main_database_name}
 
         if database_config.main_database_name not in __database_names:
-            logger.error(f"Could not find any database with the given name: {database_config.main_database_name}")
-            sys.exit(errno.ENODATA)
+            DatabaseFail.NotFoundError.raise_error_log_and_exit(errno.ENODATA, err_extra_information)
         cls.__main_database = cls.__client.get_database(database_config.main_database_name)
 
+        err_extra_information |= {"collection_name": database_config.main_collection_name}
+
         if database_config.main_collection_name not in await cls.__main_database.list_collection_names():
-            logger.error(f"Could not find any collection in database `{database_config.main_database_name}` with the "
-                         f"given name: {database_config.main_database_name}")
-            sys.exit(errno.ENODATA)
+            CollectionFail.NotFoundError.raise_error_log_and_exit(errno.ENODATA, err_extra_information)
+
         cls.__main_collection = cls.__main_database.get_collection(database_config.main_collection_name)
 
     @classmethod
-    def client(cls) -> AsyncIOMotorClient:
+    def close(cls) -> None:
         """
-        Returns:
-            The actual motor client so that it can be used to perform database CRUD operations.
+        Closes the motor client.
         """
-        return cls.__client
+        if cls.__client:
+            cls.__database_config = None
+            return cls.__client.close()
+        ClientFail.CloseNotAllowedError.raise_error_log_and_exit(errno.EIO)
+
+    @classmethod
+    def list_database_names(cls) -> CoroutineStrList:
+        return cls.__client.list_database_names()
 
     @classmethod
     def main_collection(cls) -> AsyncIOMotorCollection:
@@ -130,61 +203,83 @@ class MongoDB:
         """
         return cls.__main_database
 
-    @staticmethod
-    async def get_id(doc: Coroutine[Any, Any, _DocumentType | None] | _DocumentType) -> str:
+    @classmethod
+    async def get_collection(
+            cls,
+            database_name: str,
+            collection_name: str) -> AsyncIOMotorCollection | ResponseError:
         """
-        Retrieves the ID of a document as a simple flat string.
-
-        Note:
-            The rationale behind this method is as follows. In MongoDB, each document has a unique ID which is of type
-            :class:`~bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
-            the need for this method.
+        Gets the collection object given its name and the database name in which it resides.
 
         Args:
-            doc:
-                A MongoDB document as a :class:`_DocumentType` object or in the coroutine form. The latter could be e.g.
-                the result of applying the standard ``find_one`` method from MongoDB on a collection given a ``filter``.
+            database_name:
+                The name of the parent database which includes the collection.
+            collection_name:
+                The name of the collection which resides inside the parent database labelled by ``database_name``.
+
+        Raises:
+            ``ValidationError``:
+                If input args are invalid according to the pydantic.
+
+             ``KeyError``:
+                If the database name exists, but it does not include any collection with the given name.
+
+            ``TypeError``:
+                If only one of the database or collection names are ``None``.
+
+            ``_``:
+                This method relies on :func:`get_database` to check for the existence of the database which can raise
+                exceptions. Check its documentation for more information.
 
         Returns:
-            The ID of a document as a simple string. For example, when applied on a document with
-            ``_id: ObjectId('000000000000000000000000')``, the method returns ``'000000000000000000000000'``.
+            The database object. In case of ``None`` for both the database name and collection name, the main collection
+            will be returned.
         """
-        match doc:
-            case _DocumentType():
-                return str(doc["_id"])
-            case Coroutine():
-                return str((await doc)["_id"])
-            case _:
-                raise TypeError("The type of `doc` must be either `_DocumentType` or "
-                                "`Coroutine[Any, Any, _DocumentType | None] `.")
 
-    @staticmethod
-    async def get_ids(docs: AsyncIOMotorCommandCursor | AsyncIOMotorCursor | list[_DocumentType]) -> list[str]:
+        database_name = DatabaseName(name=database_name).name
+        collection_name = CollectionName(name=collection_name).name
+
+        match database_name, collection_name:
+            case None, None:
+                return cls.main_collection()
+
+            case str(), str():
+                db = await cls.get_database(database_name)
+                if collection_name in await db.list_collection_names():
+                    return db[collection_name]
+                raise CollectionFail.NotFoundError
+            case _:
+                raise CollectionFail.WrongTypeError
+
+    @classmethod
+    async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase | ResponseError:
         """
-        Similar to :func:`~MongoDB.get_id` but for a list of documents.
+        Gets the database object given its name.
 
         Args:
-            docs:
-                A list of MongoDB documents each as a :class:`DocumentType`, or all as an
-                :obj:`~AsyncIOMotorCommandCursor`. The latter could be e.g. the result of applying the
-                standard ``aggregate`` method from MongoDB on a collection given a ``pipeline``.
+            database_name:
+                The name of the database to retrieve.
+        Raises:
+             ``KeyError``:
+                If the database name does not exist in the list of database names.
 
         Returns:
-            The list of all IDs, each as a simple string.
+            The database object.
         """
-        match docs:
-            case list():
-                return [str(doc["_id"]) for doc in docs]
-            case AsyncIOMotorCommandCursor() | AsyncIOMotorCursor():
-                return [str(doc["_id"]) async for doc in docs]
+        database_name = DatabaseName(name=database_name).name
+
+        match database_name:
+            case None:
+                return cls.main_database()
+            case _ if database_name in await cls.list_database_names():
+                return cls.__client[database_name]
             case _:
-                raise TypeError("The type of `docs` must be either `list[_DocumentType]` or "
-                                "`AsyncIOMotorCommandCursor`.")
+                raise DatabaseFail.NotFoundError
 
 
 @asynccontextmanager
 @validate_call
-async def mongodb_context(database_config: DatabaseConfig):
+async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
     """
     An asynchronous context manager to connect to the MongoDB client.
     It can be either used in production or in testing environments.
@@ -197,5 +292,4 @@ async def mongodb_context(database_config: DatabaseConfig):
         await MongoDB.initialize(database_config)
         yield
     finally:
-        if MongoDB.client() is not None:
-            MongoDB.client().close()
+        MongoDB.close()

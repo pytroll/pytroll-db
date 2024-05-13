@@ -1,9 +1,9 @@
 import pytest
 
 from api.api import server_process_context
-from test_utils.mock_mongodb_instance import mongodb_instance_server_process_context
+from test_utils.mongodb_instance import mongodb_instance_server_process_context
 from test_utils.common import test_app_config
-from test_utils.mock_mongodb_database import TestDatabase
+from test_utils.mongodb_database import TestDatabase
 
 
 @pytest.fixture(scope="session")

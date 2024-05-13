@@ -24,12 +24,14 @@ from contextlib import contextmanager
 from multiprocessing import Process
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from fastapi.responses import PlainTextResponse
 from pydantic import FilePath, validate_call
 
 from api.routes import api_router
 from config.config import AppConfig, parse, Timeout
 from database.mongodb import mongodb_context
+from errors.errors import ResponseError
 
 
 @validate_call
@@ -57,6 +59,14 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
     config = parse(config)
     app = FastAPI(**(config.api_server._asdict() | kwargs))
     app.include_router(api_router)
+
+    @app.exception_handler(ResponseError)
+    async def unicorn_exception_handler(_, exc: ResponseError):
+        status_code, message = exc.get_error_info()
+        return PlainTextResponse(
+            status_code=status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=message if message else "Generic Error [This is not okay, check why we have the generic error!]",
+        )
 
     async def _serve():
         """

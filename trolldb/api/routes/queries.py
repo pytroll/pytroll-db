@@ -7,11 +7,11 @@ Note:
 
 import datetime
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query
 
-from api.errors.errors import database_collection_fail_descriptor
 from api.routes.common import CheckCollectionDependency
-from database.mongodb import MongoDB
+from database.errors import database_collection_fail_descriptor
+from database.mongodb import get_ids
 from database.piplines import PipelineAttribute, Pipelines
 
 router = APIRouter()
@@ -22,14 +22,11 @@ router = APIRouter()
             responses=database_collection_fail_descriptor,
             summary="Gets the database UUIDs of the documents that match specifications determined by the query string")
 async def queries(
-        res_coll: CheckCollectionDependency,
+        collection: CheckCollectionDependency,
         platform: list[str] = Query(None),
         sensor: list[str] = Query(None),
         time_min: datetime.datetime = Query(None),
-        time_max: datetime.datetime = Query(None)) -> Response | list[str]:
-    if isinstance(res_coll, Response):
-        return res_coll
-
+        time_max: datetime.datetime = Query(None)) -> list[str]:
     pipelines = Pipelines()
 
     if platform:
@@ -44,4 +41,4 @@ async def queries(
         pipelines += ((start_time >= time_min) | (start_time <= time_max) |
                       (end_time >= time_min) | (end_time <= time_max))
 
-    return await MongoDB.get_ids(res_coll.aggregate(pipelines))
+    return await get_ids(collection.aggregate(pipelines))

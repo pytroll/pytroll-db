@@ -25,7 +25,7 @@ async def test_connection_timeout_negative():
     assert t2 - t1 >= timeout / 1000
 
 
-async def test_main_database_negative():
+async def test_main_database_negative(run_mongodb_server_instance):
     """
     Expect to fail when giving an invalid name for the main database, given a valid collection name.
     """
@@ -39,7 +39,7 @@ async def test_main_database_negative():
     assert pytest_wrapped_e.value.code == errno.ENODATA
 
 
-async def test_main_collection_negative():
+async def test_main_collection_negative(run_mongodb_server_instance):
     """
     Expect to fail when giving an invalid name for the main collection, given a valid database name.
     """
@@ -53,29 +53,20 @@ async def test_main_collection_negative():
     assert pytest_wrapped_e.value.code == errno.ENODATA
 
 
-async def test_connection_success():
-    """
-    Expect to establish a connection with the MongoDB instance successfully (with default args).
-    """
-    pass
-
-
-async def test_get_client():
+async def test_get_client(mongodb_fixture):
     """
     This is our way of testing that MongoDB.client() returns the valid client object.
 
     Expect:
-        - Have a MongoDB client which is not `None`
         - The `close` method can be called on the client and leads to the closure of the client
         - Further attempts to access the database after closing the client fails.
     """
-    assert MongoDB.client() is not None
-    MongoDB.client().close()
+    MongoDB.close()
     with pytest.raises(InvalidOperation):
-        await MongoDB.client().list_database_names()
+        await MongoDB.list_database_names()
 
 
-async def test_main_collection():
+async def test_main_collection(mongodb_fixture):
     """
     Expect:
     - The retrieved main collection is not `None`
@@ -85,13 +76,14 @@ async def test_main_collection():
     assert MongoDB.main_collection() is not None
     assert MongoDB.main_collection().name == test_app_config.database.main_collection_name
     assert MongoDB.main_collection() == \
-           MongoDB.client()[test_app_config.database.main_database_name][test_app_config.database.main_collection_name]
+           (await MongoDB.get_database(test_app_config.database.main_database_name))[
+               test_app_config.database.main_collection_name]
 
 
-async def test_main_database():
+async def test_main_database(mongodb_fixture):
     """
     Same as test_main_collection but for the main database.
     """
     assert MongoDB.main_database() is not None
     assert MongoDB.main_database().name == test_app_config.database.main_database_name
-    assert MongoDB.main_database() == MongoDB.client()[test_app_config.database.main_database_name]
+    assert MongoDB.main_database() == await MongoDB.get_database(test_app_config.database.main_database_name)
