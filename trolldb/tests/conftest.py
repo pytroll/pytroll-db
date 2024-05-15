@@ -3,13 +3,30 @@
 This module provides fixtures for running a Mongo DB instance in test mode and filling the database with test data.
 """
 
+
 import pytest
 import pytest_asyncio
 
+from trolldb.api.api import server_process_context
 from trolldb.database.mongodb import mongodb_context
 from trolldb.test_utils.common import test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase
 from trolldb.test_utils.mongodb_instance import mongodb_instance_server_process_context
+
+
+@pytest.fixture(scope="session")
+def _run_mongodb_server_instance():
+    """Documentation to be added!"""
+    with mongodb_instance_server_process_context():
+        yield
+
+
+@pytest.fixture(scope="session")
+def _test_server_fixture(_run_mongodb_server_instance):
+    """Documentation to be added!"""
+    TestDatabase.prepare()
+    with server_process_context(test_app_config, startup_time=2000):
+        yield
 
 
 @pytest.fixture(scope="session")
