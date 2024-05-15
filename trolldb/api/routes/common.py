@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import Response, Query, Depends
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
-from database.mongodb import MongoDB
+from trolldb.database.mongodb import MongoDB
 
 exclude_defaults_query = Query(
     True,

@@ -10,7 +10,7 @@ Note:
 
 from fastapi import status
 
-from errors.errors import ResponsesErrorGroup, ResponseError
+from trolldb.errors.errors import ResponsesErrorGroup, ResponseError
 
 
 class Client(ResponsesErrorGroup):

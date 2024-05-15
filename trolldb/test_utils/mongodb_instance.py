@@ -12,8 +12,8 @@ from shutil import rmtree
 
 from loguru import logger
 
-from config.config import DatabaseConfig
-from test_utils.common import test_app_config
+from trolldb.config.config import DatabaseConfig
+from trolldb.test_utils.common import test_app_config
 
 
 class TestMongoInstance:

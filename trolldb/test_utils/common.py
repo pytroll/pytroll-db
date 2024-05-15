@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from pydantic import AnyUrl
 from urllib3 import request, BaseHTTPResponse
 
-from config.config import APIServerConfig, DatabaseConfig, AppConfig
+from trolldb.config.config import APIServerConfig, DatabaseConfig, AppConfig
 
 test_app_config = AppConfig(
     api_server=APIServerConfig(url=AnyUrl("http://localhost:8080"), title="Test API Server", version="0.1"),

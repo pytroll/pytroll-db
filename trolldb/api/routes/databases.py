@@ -8,15 +8,15 @@ Note:
 from fastapi import APIRouter
 from pymongo.collection import _DocumentType
 
-from api.routes.common import (
+from trolldb.api.routes.common import (
     exclude_defaults_query, CheckCollectionDependency, CheckDataBaseDependency)
-from config.config import MongoObjectId
-from database.errors import (
+from trolldb.config.config import MongoObjectId
+from trolldb.database.errors import (
     Databases,
     Documents,
     database_collection_error_descriptor,
     database_collection_document_error_descriptor)
-from database.mongodb import MongoDB, get_ids
+from trolldb.database.mongodb import MongoDB, get_ids
 
 router = APIRouter()
 

@@ -1,7 +1,7 @@
 from fastapi import status
 
-from test_utils.common import assert_equal, http_get
-from test_utils.mongodb_database import test_mongodb_context, TestDatabase
+from trolldb.test_utils.common import assert_equal, http_get
+from trolldb.test_utils.mongodb_database import test_mongodb_context, TestDatabase
 
 
 def test_root():

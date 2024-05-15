@@ -5,8 +5,8 @@ from typing import Any
 
 from pymongo import MongoClient
 
-from config.config import DatabaseConfig
-from test_utils.common import test_app_config
+from trolldb.config.config import DatabaseConfig
+from trolldb.test_utils.common import test_app_config
 
 
 @contextmanager

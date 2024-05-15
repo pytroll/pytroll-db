@@ -7,8 +7,8 @@ Note:
 
 from fastapi import APIRouter
 
-from api.routes.common import get_distinct_items_in_collection, CheckCollectionDependency
-from database.errors import database_collection_error_descriptor
+from trolldb.api.routes.common import get_distinct_items_in_collection, CheckCollectionDependency
+from trolldb.database.errors import database_collection_error_descriptor
 
 router = APIRouter()
 

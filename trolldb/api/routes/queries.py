@@ -9,10 +9,10 @@ import datetime
 
 from fastapi import APIRouter, Query
 
-from api.routes.common import CheckCollectionDependency
-from database.errors import database_collection_error_descriptor
-from database.mongodb import get_ids
-from database.piplines import PipelineAttribute, Pipelines
+from trolldb.api.routes.common import CheckCollectionDependency
+from trolldb.database.errors import database_collection_error_descriptor
+from trolldb.database.mongodb import get_ids
+from trolldb.database.piplines import PipelineAttribute, Pipelines
 
 router = APIRouter()
 

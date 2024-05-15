@@ -20,9 +20,9 @@ from pymongo.errors import (
     ConnectionFailure,
     ServerSelectionTimeoutError)
 
-from config.config import DatabaseConfig
-from database.errors import Collections, Databases, Client
-from errors.errors import ResponseError
+from trolldb.config.config import DatabaseConfig
+from trolldb.database.errors import Collections, Databases, Client
+from trolldb.errors.errors import ResponseError
 
 T = TypeVar("T")
 CoroutineLike = Coroutine[Any, Any, T]
@@ -104,7 +104,7 @@ class MongoDB:
 
     default_database_names = ["admin", "config", "local"]
     """
-    MongoDB creates these databases by default for self usage. 
+    MongoDB creates these databases by default for self usage.
     """
 
     @classmethod

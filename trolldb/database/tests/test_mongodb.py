@@ -5,7 +5,7 @@ import pytest
 from pydantic import AnyUrl
 from pymongo.errors import InvalidOperation
 
-from test_utils.common import test_app_config
+from trolldb.test_utils.common import test_app_config
 from trolldb.database.mongodb import DatabaseConfig, MongoDB, mongodb_context
 
 

@@ -28,10 +28,10 @@ from fastapi import FastAPI, status
 from fastapi.responses import PlainTextResponse
 from pydantic import FilePath, validate_call
 
-from api.routes import api_router
-from config.config import AppConfig, parse, Timeout
-from database.mongodb import mongodb_context
-from errors.errors import ResponseError
+from trolldb.api.routes import api_router
+from trolldb.config.config import AppConfig, parse, Timeout
+from trolldb.database.mongodb import mongodb_context
+from trolldb.errors.errors import ResponseError
 
 
 @validate_call

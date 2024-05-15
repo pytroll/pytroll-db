@@ -7,7 +7,7 @@ Note:
 
 from fastapi import APIRouter
 
-from . import databases, datetime_, platforms, queries, root, sensors
+from trolldb.api.routes import databases, datetime_, platforms, queries, root, sensors
 
 api_router = APIRouter()
 api_router.include_router(root.router, tags=["root"])

@@ -11,9 +11,9 @@ from typing import TypedDict
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from api.routes.common import CheckCollectionDependency
-from database.errors import database_collection_error_descriptor
-from database.mongodb import get_id
+from trolldb.api.routes.common import CheckCollectionDependency
+from trolldb.database.errors import database_collection_error_descriptor
+from trolldb.database.mongodb import get_id
 
 
 class TimeModel(TypedDict):
