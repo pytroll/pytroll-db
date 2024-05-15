@@ -114,14 +114,14 @@ class MongoDB:
 
         Raises ``SystemExit(errno.EIO)``:
 
-            - If connection is not established (``ConnectionFailure``)
+            If connection is not established (``ConnectionFailure``)
 
-            - If the attempt times out (``ServerSelectionTimeoutError``)
+            If the attempt times out (``ServerSelectionTimeoutError``)
 
-            - If one attempts reinitializing the class with new (different) database configurations without calling
+            If one attempts reinitializing the class with new (different) database configurations without calling
             :func:`~close()` first.
 
-            - If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
+            If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
             configurations still exist and are different from the new ones which have been just provided.
 
 

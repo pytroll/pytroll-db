@@ -12,12 +12,11 @@ class PipelineDict(dict):
     left operand and the second element is the right operand.
 
     Example:
-         ```
-            pd1 = PipelineDict({"number": 2})
-            pd2 = PipelineDict({"kind": 1})
-            pd3 = pd1 & pd2
-
-         ```
+        ```
+        pd1 = PipelineDict({"number": 2})
+        pd2 = PipelineDict({"kind": 1})
+        pd3 = pd1 & pd2
+        ```
     """
 
     def __or__(self, other: Self):
