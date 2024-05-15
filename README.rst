@@ -2,6 +2,11 @@
 The database interface of `Pytroll <https://pytroll.github.io/>`_
 
 
+.. image:: https://results.pre-commit.ci/badge/github/pytroll/pytroll-db/master.svg
+   :target: https://results.pre-commit.ci/latest/github/pytroll/pytroll-db/master
+   :alt: pre-commit.ci status
+
+
 Copyright (C)
     2012, 2014, 2015, 2024
 
@@ -32,4 +37,3 @@ Disclaimer
     GNU General Public License for more details. You should have
     received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
