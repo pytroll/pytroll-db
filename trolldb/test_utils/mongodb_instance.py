@@ -66,7 +66,8 @@ class TestMongoInstance:
     @classmethod
     def shutdown_instance(cls):
         """Documentation to be added!"""
-        cls.process.kill()
+        cls.process.terminate()
+        cls.process.wait()
         for d in [cls.log_dir, cls.storage_dir]:
             cls.remove_dir(d)
 
