@@ -30,10 +30,12 @@ CoroutineStrList = CoroutineLike[list[str]]
 
 
 class DatabaseName(BaseModel):
+    """Pydantic model for a database name."""
     name: str | None
 
 
 class CollectionName(BaseModel):
+    """Pydantic model for a collection name."""
     name: str | None
 
 
@@ -100,9 +102,7 @@ class MongoDB:
     __main_database: AsyncIOMotorDatabase = None
 
     default_database_names = ["admin", "config", "local"]
-    """
-    MongoDB creates these databases by default for self usage.
-    """
+    """MongoDB creates these databases by default for self usage."""
 
     @classmethod
     async def initialize(cls, database_config: DatabaseConfig):
@@ -177,6 +177,7 @@ class MongoDB:
 
     @classmethod
     def list_database_names(cls) -> CoroutineStrList:
+        """Lists all the database names."""
         return cls.__client.list_database_names()
 
     @classmethod

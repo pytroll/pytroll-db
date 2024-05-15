@@ -1,5 +1,4 @@
-"""The module which defines some convenience classes to facilitate the use of aggregation pipelines.
-"""
+"""The module which defines some convenience classes to facilitate the use of aggregation pipelines."""
 
 from typing import Any, Self
 
@@ -9,8 +8,8 @@ class PipelineDict(dict):
 
     The operators are only defined for operands of type :class:`PipelineDict`. For each of the aforementioned operators,
     the result will be a dictionary with a single key/value pair. The key is either ``$or`` or ``$and`` depending on the
-    operator being used. The corresponding value is a list with two elements only. The first element of the list is the left operand and the
-    second element is the right operand.
+    operator being used. The corresponding value is a list with two elements only. The first element of the list is the
+    left operand and the second element is the right operand.
 
     Example:
          ```

@@ -1,5 +1,4 @@
-"""The module which defines common functions to be used in handling requests related to `databases` and `collections`.
-"""
+"""The module with common functions to be used in handling requests related to `databases` and `collections`."""
 
 from typing import Annotated
 
@@ -66,7 +65,7 @@ async def check_collection(
 async def get_distinct_items_in_collection(
         res_coll: Response | AsyncIOMotorCollection,
         field_name: str) -> Response | list[str]:
-    """An auxiliary function to either return the given response; or return a list of distinct (unique) values
+    """An auxiliary function to either return the given response; or return a list of distinct (unique) values.
 
     Given the ``field_name`` it conducts a search in all documents of the given collection. The latter behaviour is
     equivalent to the ``distinct`` function from MongoDB. The former is the behaviour of an identity function.
@@ -91,11 +90,7 @@ async def get_distinct_items_in_collection(
 
 
 CheckCollectionDependency = Annotated[AsyncIOMotorCollection, Depends(check_collection)]
-"""
-Type annotation for the FastAPI dependency injection of checking a collection (function).
-"""
+"""Type annotation for the FastAPI dependency injection of checking a collection (function)."""
 
 CheckDataBaseDependency = Annotated[AsyncIOMotorDatabase, Depends(check_database)]
-"""
-Type annotation for the FastAPI dependency injection of checking a database (function).
-"""
+"""Type annotation for the FastAPI dependency injection of checking a database (function)."""
