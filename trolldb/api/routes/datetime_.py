@@ -16,16 +16,19 @@ from trolldb.database.mongodb import get_id
 
 
 class TimeModel(TypedDict):
+    """TODO."""
     _id: str
     _time: datetime
 
 
 class TimeEntry(TypedDict):
+    """TODO."""
     _min: TimeModel
     _max: TimeModel
 
 
 class ResponseModel(BaseModel):
+    """TODO."""
     start_time: TimeEntry
     end_time: TimeEntry
 
@@ -38,6 +41,7 @@ router = APIRouter()
             responses=database_collection_error_descriptor,
             summary="Gets the the minimum and maximum values for the start and end times")
 async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
+    """TODO."""
     agg_result = await collection.aggregate([{
         "$group": {
             "_id": None,
@@ -48,6 +52,7 @@ async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
         }}]).next()
 
     def _aux(query):
+        """TODO."""
         return get_id(collection.find_one(query))
 
     return ResponseModel(

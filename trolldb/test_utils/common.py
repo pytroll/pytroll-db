@@ -1,3 +1,5 @@
+"""TODO."""
+
 from typing import Any
 from urllib.parse import urljoin
 
@@ -30,9 +32,10 @@ def http_get(route: str = "") -> BaseHTTPResponse:
 
 
 def assert_equal(test, expected) -> None:
-    """An auxiliary function to assert the equality of two objects using the ``==`` operator. In case an input is a list or
-    a tuple, it will be first converted to a set so that the order of items there in does not affect the assertion
-    outcome.
+    """An auxiliary function to assert the equality of two objects using the ``==`` operator.
+
+    In case an input is a list or a tuple, it will be first converted to a set so that the order of items there in does
+    not affect the assertion outcome.
 
     Warning:
         In case of a list or tuple of items as inputs, do not use this function if the order of items matters.
@@ -45,8 +48,8 @@ def assert_equal(test, expected) -> None:
     """
 
     def _setify(obj: Any) -> Any:
-        """An auxiliary function to convert an object to a set if it is a tuple or a list.
-        """
+        """An auxiliary function to convert an object to a set if it is a tuple or a list."""
         return set(obj) if isinstance(obj, list | tuple) else obj
 
-    assert _setify(test) == _setify(expected)
+    if not _setify(test) == _setify(expected):
+        raise AssertionError(f"{test} and {expected} are not equal.")

@@ -21,45 +21,60 @@ class PipelineDict(dict):
     """
 
     def __or__(self, other: Self):
+        """TODO."""
         return PipelineDict({"$or": [self, other]})
 
     def __and__(self, other: Self):
+        """TODO."""
         return PipelineDict({"$and": [self, other]})
 
 
 class PipelineAttribute:
+    """TODO."""
+
     def __init__(self, key: str):
+        """TODO."""
         self.__key = key
 
     def __eq__(self, other: Any) -> PipelineDict:
+        """TODO."""
         if isinstance(other, list):
             return PipelineDict(**{"$or": [{self.__key: v} for v in other]})
         return PipelineDict(**{self.__key: other})
 
     def __aux_operators(self, other: Any, operator: str) -> PipelineDict:
+        """TODO."""
         return PipelineDict(**{self.__key: {operator: other}} if other else {})
 
     def __ge__(self, other: Any) -> PipelineDict:
+        """TODO."""
         return self.__aux_operators(other, "$gte")
 
     def __gt__(self, other: Any) -> PipelineDict:
+        """TODO."""
         return self.__aux_operators(other, "$gt")
 
     def __le__(self, other: Any) -> PipelineDict:
+        """TODO."""
         return self.__aux_operators(other, "$lte")
 
     def __lt__(self, other: Any) -> PipelineDict:
+        """TODO."""
         return self.__aux_operators(other, "$le")
 
 
 class Pipelines(list):
+    """TODO."""
     def __init__(self, *args, **kwargs):
+        """TODO."""
         super().__init__(*args, **kwargs)
 
     def __iadd__(self, other):
+        """TODO."""
         self.extend([{"$match": other}])
         return self
 
     def __add__(self, other):
+        """TODO."""
         self.append({"$match": other})
         return self

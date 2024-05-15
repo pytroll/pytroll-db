@@ -1,5 +1,4 @@
-"""The modules which defines the error responses that might occur while working with the
-MongoDB database.
+"""The modules which defines the error responses that might occur while working with the MongoDB database.
 
 Note:
     The error responses are grouped into classes, with each class representing the major
@@ -79,14 +78,13 @@ class Documents(ResponsesErrorGroup):
 database_collection_error_descriptor = (
         Databases.union() | Collections.union()
 ).fastapi_descriptor
-"""
-A response descriptor for the Fast API routes. This combines all the error messages that might
-occur as result of working with databases and collections. See the fast api documentation for TODO.
+"""A response descriptor for the Fast API routes.
+
+This combines all the error messages that might occur as result of working with databases and collections. See the
+fast api documentation for TODO.
 """
 
 database_collection_document_error_descriptor = (
         Databases.union() | Collections.union() | Documents.union()
 ).fastapi_descriptor
-"""
-Same as :obj:`database_collection_error_descriptor` but including documents as well.
-"""
+"""Same as :obj:`database_collection_error_descriptor` but including documents as well."""

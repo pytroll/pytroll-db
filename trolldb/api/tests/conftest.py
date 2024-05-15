@@ -1,3 +1,5 @@
+"""TODO."""
+
 import pytest
 
 from trolldb.api.api import server_process_context
@@ -7,13 +9,15 @@ from trolldb.test_utils.mongodb_instance import mongodb_instance_server_process_
 
 
 @pytest.fixture(scope="session")
-def run_mongodb_server_instance():
+def _run_mongodb_server_instance():
+    """TODO."""
     with mongodb_instance_server_process_context():
         yield
 
 
-@pytest.fixture(scope="session", autouse=True)
-def test_server_fixture(run_mongodb_server_instance):
+@pytest.fixture(scope="session")
+def _test_server_fixture(_run_mongodb_server_instance):
+    """TODO."""
     TestDatabase.prepare()
     with server_process_context(test_app_config, startup_time=2000):
         yield

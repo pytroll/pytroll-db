@@ -1,5 +1,4 @@
-"""The module which defines functionalities to run a MongoDB instance which is to be used in the testing environment.
-"""
+"""The module which defines functionalities to run a MongoDB instance which is to be used in the testing environment."""
 import errno
 import subprocess
 import sys
@@ -16,6 +15,7 @@ from trolldb.test_utils.common import test_app_config
 
 
 class TestMongoInstance:
+    """TODO."""
     log_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_log")
     storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
     port: int = 28017
@@ -23,17 +23,20 @@ class TestMongoInstance:
 
     @classmethod
     def prepare_dir(cls, directory: str):
+        """TODO."""
         cls.remove_dir(directory)
         mkdir(directory)
 
     @classmethod
     def remove_dir(cls, directory: str):
+        """TODO."""
         if path.exists(directory) and path.isdir(directory):
             rmtree(directory)
 
     @classmethod
     def run_subprocess(cls, args: list[str], wait=True):
-        cls.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        """TODO."""
+        cls.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         if wait:
             outs, errs = cls.process.communicate()
             return outs, errs
@@ -41,6 +44,7 @@ class TestMongoInstance:
 
     @classmethod
     def mongodb_exists(cls) -> bool:
+        """TODO."""
         outs, errs = cls.run_subprocess(["which", "mongod"])
         if outs and not errs:
             return True
@@ -48,17 +52,20 @@ class TestMongoInstance:
 
     @classmethod
     def prepare_dirs(cls) -> None:
+        """TODO."""
         cls.prepare_dir(cls.log_dir)
         cls.prepare_dir(cls.storage_dir)
 
     @classmethod
     def run_instance(cls):
+        """TODO."""
         cls.run_subprocess(
             ["mongod", "--dbpath", cls.storage_dir, "--logpath", f"{cls.log_dir}/mongod.log", "--port", f"{cls.port}"]
             , wait=False)
 
     @classmethod
     def shutdown_instance(cls):
+        """TODO."""
         cls.process.kill()
         for d in [cls.log_dir, cls.storage_dir]:
             cls.remove_dir(d)

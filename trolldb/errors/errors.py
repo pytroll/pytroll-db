@@ -1,4 +1,5 @@
 """The module which defines the base functionality for error responses that will be returned by the API.
+
 This module only includes the generic utilities using which each module should define its own error responses
 specifically. See :obj:`trolldb.database.errors` as an example on how this module is used.
 """
@@ -18,19 +19,18 @@ class ResponseError(Exception):
     """The base class for all error responses. This is derivative of the ``Exception`` class."""
 
     descriptor_delimiter: str = " |OR| "
-    """
-    A delimiter to combine the message part of several error responses into a single one. This will be shown in textual
-    format  for the response descriptors of the Fast API routes. For example:
+    """A delimiter to combine the message part of several error responses into a single one.
+
+    This will be shown in textual format  for the response descriptors of the Fast API routes. For example:
 
         ``ErrorA |OR| ErrorB``
     """
 
-    defaultResponseClass: Response = PlainTextResponse
-    """
-    The default type of the response which will be returned when an error occurs.
-    """
+    DefaultResponseClass: Response = PlainTextResponse
+    """The default type of the response which will be returned when an error occurs."""
 
     def __init__(self, args_dict: OrderedDict[StatusCode, str | list[str]] | dict) -> None:
+        """TODO."""
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
@@ -64,6 +64,7 @@ class ResponseError(Exception):
     def __assert_existence_multiple_response_codes(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
+        """TODO."""
         match status_code, len(self.__dict):
             case None, n if n > 1:
                 raise ValueError("In case of multiple response status codes, the status code must be specified.")
@@ -80,6 +81,7 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None) -> (StatusCode, str):
+        """TODO."""
         status_code, msg = self.__assert_existence_multiple_response_codes(status_code)
         return (
             status_code,
@@ -91,6 +93,7 @@ class ResponseError(Exception):
             exit_code: int = -1,
             extra_information: dict | None = None,
             status_code: int | None = None) -> None:
+        """TODO."""
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.error(msg)
         exit(exit_code)
@@ -99,32 +102,39 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None):
+        """TODO."""
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.warning(msg)
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
+        """TODO."""
         return {status: {Literal["description"]: ResponseError.__stringify(msg)} for status, msg in self.__dict.items()}
 
     @staticmethod
     def __listify(item: str | list[str]) -> list[str]:
+        """TODO."""
         return item if isinstance(item, list) else [item]
 
     @staticmethod
     def __stringify(item: str | list[str]) -> str:
+        """TODO."""
         return ResponseError.descriptor_delimiter.join(ResponseError.__listify(item))
 
 
 class ResponsesErrorGroup:
+    """TODO."""
 
     @classmethod
     def fields(cls):
+        """TODO."""
         return {k: v for k, v in cls.__dict__.items() if isinstance(v, ResponseError)}
 
     @classmethod
     def union(cls):
+        """TODO."""
         buff = None
-        for k, v in cls.fields().items():
+        for v in cls.fields().values():
             if buff is None:
                 buff = v
             else:

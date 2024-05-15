@@ -22,10 +22,11 @@ router = APIRouter()
             summary="Gets the database UUIDs of the documents that match specifications determined by the query string")
 async def queries(
         collection: CheckCollectionDependency,
-        platform: list[str] = Query(None),
-        sensor: list[str] = Query(None),
-        time_min: datetime.datetime = Query(None),
-        time_max: datetime.datetime = Query(None)) -> list[str]:
+        platform: list[str] = Query(default=None),  # noqa: B008
+        sensor: list[str] = Query(default=None),  # noqa: B008
+        time_min: datetime.datetime = Query(default=None),  # noqa: B008
+        time_max: datetime.datetime = Query(default=None)) -> list[str]:  # noqa: B008
+    """TODO."""
     pipelines = Pipelines()
 
     if platform:
