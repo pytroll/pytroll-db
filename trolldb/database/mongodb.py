@@ -1,6 +1,7 @@
-"""
-The module which handles database CRUD operations for MongoDB. It is based on
-`PyMongo <https://github.com/mongodb/mongo-python-driver>`_ and `motor <https://github.com/mongodb/motor>`_.
+"""The module which handles database CRUD operations for MongoDB.
+
+It is based on `PyMongo <https://github.com/mongodb/mongo-python-driver>`_ and
+`motor <https://github.com/mongodb/motor>`_.
 """
 
 import errno
@@ -9,19 +10,17 @@ from typing import Any, AsyncGenerator, Coroutine, TypeVar
 
 from motor.motor_asyncio import (
     AsyncIOMotorClient,
-    AsyncIOMotorDatabase,
     AsyncIOMotorCollection,
     AsyncIOMotorCommandCursor,
-    AsyncIOMotorCursor
+    AsyncIOMotorCursor,
+    AsyncIOMotorDatabase,
 )
-from pydantic import validate_call, BaseModel
+from pydantic import BaseModel, validate_call
 from pymongo.collection import _DocumentType
-from pymongo.errors import (
-    ConnectionFailure,
-    ServerSelectionTimeoutError)
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from trolldb.config.config import DatabaseConfig
-from trolldb.database.errors import Collections, Databases, Client
+from trolldb.database.errors import Client, Collections, Databases
 from trolldb.errors.errors import ResponseError
 
 T = TypeVar("T")
@@ -39,8 +38,7 @@ class CollectionName(BaseModel):
 
 
 async def get_id(doc: CoroutineDocument) -> str:
-    """
-    Retrieves the ID of a document as a simple flat string.
+    """Retrieves the ID of a document as a simple flat string.
 
     Note:
         The rationale behind this method is as follows. In MongoDB, each document has a unique ID which is of type
@@ -60,8 +58,7 @@ async def get_id(doc: CoroutineDocument) -> str:
 
 
 async def get_ids(docs: AsyncIOMotorCommandCursor | AsyncIOMotorCursor) -> list[str]:
-    """
-    Similar to :func:`~MongoDB.get_id` but for a list of documents.
+    """Similar to :func:`~MongoDB.get_id` but for a list of documents.
 
     Args:
         docs:
@@ -76,10 +73,10 @@ async def get_ids(docs: AsyncIOMotorCommandCursor | AsyncIOMotorCursor) -> list[
 
 
 class MongoDB:
-    """
-    A wrapper class around the `motor async driver <https://www.mongodb.com/docs/drivers/motor/>`_ for Mongo DB with
-    convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()`` method returns a
-    coroutine which needs to be awaited.
+    """A wrapper class around the `motor async driver <https://www.mongodb.com/docs/drivers/motor/>`_ for Mongo DB.
+
+    It includes convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()`` method
+    returns a coroutine which needs to be awaited.
 
     Note:
         This class is not meant to be instantiated! That's why all the methods in this class are decorated with
@@ -109,8 +106,7 @@ class MongoDB:
 
     @classmethod
     async def initialize(cls, database_config: DatabaseConfig):
-        """
-        Initializes the motor client. Note that this method has to be awaited!
+        """Initializes the motor client. Note that this method has to be awaited!
 
         Args:
             database_config:
@@ -135,7 +131,6 @@ class MongoDB:
         Returns:
             On success ``None``.
         """
-
         if cls.__database_config:
             if database_config == cls.__database_config:
                 if cls.__client:
@@ -174,9 +169,7 @@ class MongoDB:
 
     @classmethod
     def close(cls) -> None:
-        """
-        Closes the motor client.
-        """
+        """Closes the motor client."""
         if cls.__client:
             cls.__database_config = None
             return cls.__client.close()
@@ -188,8 +181,7 @@ class MongoDB:
 
     @classmethod
     def main_collection(cls) -> AsyncIOMotorCollection:
-        """
-        A convenience method to get the main collection.
+        """A convenience method to get the main collection.
 
         Returns:
             The main collection which resides inside the main database.
@@ -199,8 +191,7 @@ class MongoDB:
 
     @classmethod
     def main_database(cls) -> AsyncIOMotorDatabase:
-        """
-        A convenience method to get the main database.
+        """A convenience method to get the main database.
 
         Returns:
             The main database which includes the main collection, which in turn includes the desired documents.
@@ -213,8 +204,7 @@ class MongoDB:
             cls,
             database_name: str,
             collection_name: str) -> AsyncIOMotorCollection | ResponseError:
-        """
-        Gets the collection object given its name and the database name in which it resides.
+        """Gets the collection object given its name and the database name in which it resides.
 
         Args:
             database_name:
@@ -240,7 +230,6 @@ class MongoDB:
             The database object. In case of ``None`` for both the database name and collection name, the main collection
             will be returned.
         """
-
         database_name = DatabaseName(name=database_name).name
         collection_name = CollectionName(name=collection_name).name
 
@@ -258,12 +247,12 @@ class MongoDB:
 
     @classmethod
     async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase | ResponseError:
-        """
-        Gets the database object given its name.
+        """Gets the database object given its name.
 
         Args:
             database_name:
                 The name of the database to retrieve.
+
         Raises:
              ``KeyError``:
                 If the database name does not exist in the list of database names.
@@ -285,8 +274,8 @@ class MongoDB:
 @asynccontextmanager
 @validate_call
 async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
-    """
-    An asynchronous context manager to connect to the MongoDB client.
+    """An asynchronous context manager to connect to the MongoDB client.
+
     It can be either used in production or in testing environments.
 
     Args:

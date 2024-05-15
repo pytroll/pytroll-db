@@ -1,5 +1,4 @@
-"""
-The module which handles all requests to the queries route.
+"""The module which handles all requests to the queries route.
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.

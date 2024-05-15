@@ -1,5 +1,4 @@
-"""
-The modules which defines the error responses that might occur while working with the
+"""The modules which defines the error responses that might occur while working with the
 MongoDB database.
 
 Note:
@@ -10,14 +9,11 @@ Note:
 
 from fastapi import status
 
-from trolldb.errors.errors import ResponsesErrorGroup, ResponseError
+from trolldb.errors.errors import ResponseError, ResponsesErrorGroup
 
 
 class Client(ResponsesErrorGroup):
-    """
-    Client error responses, e.g. if something goes wrong with initialization or closing the
-    client.
-    """
+    """Client error responses, e.g. if something goes wrong with initialization or closing the client."""
     CloseNotAllowedError = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "Calling `close()` on a client which has not been initialized is not allowed!"
@@ -47,9 +43,7 @@ class Client(ResponsesErrorGroup):
 
 
 class Collections(ResponsesErrorGroup):
-    """
-    Collections error responses, e.g. if a requested collection cannot be found.
-    """
+    """Collections error responses, e.g. if a requested collection cannot be found."""
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given collection name inside the specified database."
@@ -62,9 +56,7 @@ class Collections(ResponsesErrorGroup):
 
 
 class Databases(ResponsesErrorGroup):
-    """
-    Databases error responses, e.g. if a requested database cannot be found.
-    """
+    """Databases error responses, e.g. if a requested database cannot be found."""
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given database name."
@@ -77,9 +69,7 @@ class Databases(ResponsesErrorGroup):
 
 
 class Documents(ResponsesErrorGroup):
-    """
-    Documents error responses, e.g. if a requested document cannot be found.
-    """
+    """Documents error responses, e.g. if a requested document cannot be found."""
     NotFound = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find any document with the given object id."

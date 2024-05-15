@@ -1,11 +1,10 @@
 from typing import Any
 from urllib.parse import urljoin
 
-
 from pydantic import AnyUrl
-from urllib3 import request, BaseHTTPResponse
+from urllib3 import BaseHTTPResponse, request
 
-from trolldb.config.config import APIServerConfig, DatabaseConfig, AppConfig
+from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig
 
 test_app_config = AppConfig(
     api_server=APIServerConfig(url=AnyUrl("http://localhost:8080"), title="Test API Server", version="0.1"),
@@ -18,8 +17,7 @@ test_app_config = AppConfig(
 
 
 def http_get(route: str = "") -> BaseHTTPResponse:
-    """
-    An auxiliary function to make a GET request using :func:`urllib.request`.
+    """An auxiliary function to make a GET request using :func:`urllib.request`.
 
     Args:
         route:
@@ -32,8 +30,7 @@ def http_get(route: str = "") -> BaseHTTPResponse:
 
 
 def assert_equal(test, expected) -> None:
-    """
-    An auxiliary function to assert the equality of two objects using the ``==`` operator. In case an input is a list or
+    """An auxiliary function to assert the equality of two objects using the ``==`` operator. In case an input is a list or
     a tuple, it will be first converted to a set so that the order of items there in does not affect the assertion
     outcome.
 
@@ -48,8 +45,7 @@ def assert_equal(test, expected) -> None:
     """
 
     def _setify(obj: Any) -> Any:
-        """
-        An auxiliary function to convert an object to a set if it is a tuple or a list.
+        """An auxiliary function to convert an object to a set if it is a tuple or a list.
         """
         return set(obj) if isinstance(obj, list | tuple) else obj
 

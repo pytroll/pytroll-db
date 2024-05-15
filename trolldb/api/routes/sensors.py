@@ -1,5 +1,4 @@
-"""
-The module which handles all requests regarding `sensors`.
+"""The module which handles all requests regarding `sensors`.
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.
@@ -7,7 +6,7 @@ Note:
 
 from fastapi import APIRouter
 
-from trolldb.api.routes.common import get_distinct_items_in_collection, CheckCollectionDependency
+from trolldb.api.routes.common import CheckCollectionDependency, get_distinct_items_in_collection
 from trolldb.database.errors import database_collection_error_descriptor
 
 router = APIRouter()

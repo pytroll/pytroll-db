@@ -1,10 +1,9 @@
-"""
-The module which defines common functions to be used in handling requests related to `databases` and `collections`.
+"""The module which defines common functions to be used in handling requests related to `databases` and `collections`.
 """
 
 from typing import Annotated
 
-from fastapi import Response, Query, Depends
+from fastapi import Depends, Query, Response
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from trolldb.database.mongodb import MongoDB
@@ -17,9 +16,7 @@ exclude_defaults_query = Query(
 
 
 async def check_database(database_name: str | None = None) -> AsyncIOMotorDatabase:
-    """
-    A dependency for route handlers to check for the existence of a database given
-    its name.
+    """A dependency for route handlers to check for the existence of a database given its name.
 
     Args:
         database_name (Optional, default ``None``):
@@ -37,10 +34,10 @@ async def check_database(database_name: str | None = None) -> AsyncIOMotorDataba
 async def check_collection(
         database_name: str | None = None,
         collection_name: str | None = None) -> AsyncIOMotorCollection:
-    """
-    A dependency for route handlers to check for the existence of a collection given
-    its name and the name of the database it resides in. It first checks for the existence of the database using
-    :func:`check_database`.
+    """A dependency for route handlers to check for the existence of a collection.
+
+    It performs the check given the collection name and the name of the database it resides in. It first checks for the
+    existence of the database using :func:`check_database`.
 
     Args:
         database_name (Optional, default ``None``):
@@ -63,18 +60,16 @@ async def check_collection(
         -- if only one of ``database_name`` or ``collection_name``
         is ``None``; or if the type of ``collection_name`` is not ``str``.
     """
-
     return await MongoDB.get_collection(database_name, collection_name)
 
 
 async def get_distinct_items_in_collection(
         res_coll: Response | AsyncIOMotorCollection,
         field_name: str) -> Response | list[str]:
-    """
-    An auxiliary function to either return (verbatim echo) the given response; or return a list of distinct (unique)
-    values for the given ``field_name`` via a search which is conducted in all documents of the given collection. The
-    latter behaviour is equivalent to the ``distinct`` function from MongoDB. The former is the behaviour of an
-    identity function
+    """An auxiliary function to either return the given response; or return a list of distinct (unique) values
+
+    Given the ``field_name`` it conducts a search in all documents of the given collection. The latter behaviour is
+    equivalent to the ``distinct`` function from MongoDB. The former is the behaviour of an identity function.
 
     Args:
         res_coll:
@@ -89,7 +84,6 @@ async def get_distinct_items_in_collection(
         -- In case of a collection as input, all the documents of the collection will be searched for ``field_name``,
         and the corresponding values will be retrieved. Finally, a list of all the distinct values is returned.
     """
-
     if isinstance(res_coll, Response):
         return res_coll
 

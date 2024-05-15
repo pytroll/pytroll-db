@@ -1,6 +1,6 @@
-"""
-The module which includes the main functionalities of the API package. This is the main module which is supposed to be
-imported by the users of the package.
+"""The module which includes the main functionalities of the API package.
+
+This is the main module which is supposed to be imported by the users of the package.
 
 Note:
     Functions in this module are decorated with
@@ -29,16 +29,16 @@ from fastapi.responses import PlainTextResponse
 from pydantic import FilePath, validate_call
 
 from trolldb.api.routes import api_router
-from trolldb.config.config import AppConfig, parse, Timeout
+from trolldb.config.config import AppConfig, Timeout, parse
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
 
 @validate_call
 def run_server(config: AppConfig | FilePath, **kwargs) -> None:
-    """
-    Runs the API server with all the routes and connection to the database. It first creates a FastAPI
-    application and runs it using `uvicorn <https://www.uvicorn.org/>`_ which is
+    """Runs the API server with all the routes and connection to the database.
+
+    It first creates a FastAPI application and runs it using `uvicorn <https://www.uvicorn.org/>`_ which is
     ASGI (Asynchronous Server Gateway Interface) compliant. This function runs the event loop using
     `asyncio <https://docs.python.org/3/library/asyncio.html>`_ and does not yield!
 
@@ -55,7 +55,6 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             are read from the ``config`` argument. The keyword arguments which are passed
             explicitly to the function take precedence over ``config``.
     """
-
     config = parse(config)
     app = FastAPI(**(config.api_server._asdict() | kwargs))
     app.include_router(api_router)
@@ -69,9 +68,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
         )
 
     async def _serve():
-        """
-        An auxiliary coroutine to be used in the asynchronous execution of the FastAPI application.
-        """
+        """An auxiliary coroutine to be used in the asynchronous execution of the FastAPI application."""
         async with mongodb_context(config.database):
             await uvicorn.Server(
                 config=uvicorn.Config(
@@ -87,10 +84,10 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 @contextmanager
 @validate_call
 def server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2000):
-    """
-    A synchronous context manager to run the API server in a separate process (non-blocking) using the
-    `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case is envisaged
-    to be in testing environments.
+    """A synchronous context manager to run the API server in a separate process (non-blocking).
+
+    It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
+    is envisaged to be in testing environments.
 
     Args:
         config:

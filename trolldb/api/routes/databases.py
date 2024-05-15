@@ -1,5 +1,4 @@
-"""
-The module which handles all requests related to getting the list of `databases` and `collections`.
+"""The module which handles all requests related to getting the list of `databases` and `collections`.
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.
@@ -8,14 +7,14 @@ Note:
 from fastapi import APIRouter
 from pymongo.collection import _DocumentType
 
-from trolldb.api.routes.common import (
-    exclude_defaults_query, CheckCollectionDependency, CheckDataBaseDependency)
+from trolldb.api.routes.common import CheckCollectionDependency, CheckDataBaseDependency, exclude_defaults_query
 from trolldb.config.config import MongoObjectId
 from trolldb.database.errors import (
     Databases,
     Documents,
+    database_collection_document_error_descriptor,
     database_collection_error_descriptor,
-    database_collection_document_error_descriptor)
+)
 from trolldb.database.mongodb import MongoDB, get_ids
 
 router = APIRouter()

@@ -1,5 +1,4 @@
-"""
-The module which handles all requests to the root route, i.e. "/".
+"""The module which handles all requests to the root route, i.e. "/".
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.

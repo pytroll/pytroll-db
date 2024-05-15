@@ -85,7 +85,7 @@ class TestDatabase:
 
     @classmethod
     def generate_documents(cls, random_shuffle=True) -> list:
-        documents = [Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors)]
+        documents = [Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)]
         if random_shuffle:
             shuffle(documents)
         return documents
@@ -93,7 +93,7 @@ class TestDatabase:
     @classmethod
     def reset(cls):
         with test_mongodb_context() as client:
-            for db_name, coll_name in zip(cls.database_names, cls.collection_names):
+            for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
                 db = client[db_name]
                 collection = db[coll_name]
                 collection.delete_many({})

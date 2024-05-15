@@ -1,5 +1,4 @@
-"""
-The module which defines functionalities to run a MongoDB instance which is to be used in the testing environment.
+"""The module which defines functionalities to run a MongoDB instance which is to be used in the testing environment.
 """
 import errno
 import subprocess
@@ -7,7 +6,7 @@ import sys
 import tempfile
 import time
 from contextlib import contextmanager
-from os import path, mkdir
+from os import mkdir, path
 from shutil import rmtree
 
 from loguru import logger
@@ -69,10 +68,10 @@ class TestMongoInstance:
 def mongodb_instance_server_process_context(
         database_config: DatabaseConfig = test_app_config.database,
         startup_time=2000):
-    """
-    A synchronous context manager to run the MongoDB instance in a separate process (non-blocking) using the
-    `subprocess <https://docs.python.org/3/library/subprocess.html>`_ package. The main use case is envisaged to be in
-    testing environments.
+    """A synchronous context manager to run the MongoDB instance in a separate process (non-blocking).
+
+     It uses the `subprocess <https://docs.python.org/3/library/subprocess.html>`_ package. The main use case is
+     envisaged to be in testing environments.
 
     Args:
         database_config:

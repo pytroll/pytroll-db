@@ -1,5 +1,4 @@
-"""
-The module which defines all the routes with their corresponding tags.
+"""The module which defines all the routes with their corresponding tags.
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.

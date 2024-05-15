@@ -1,5 +1,4 @@
-"""
-The module which defines the base functionality for error responses that will be returned by the API.
+"""The module which defines the base functionality for error responses that will be returned by the API.
 This module only includes the generic utilities using which each module should define its own error responses
 specifically. See :obj:`trolldb.database.errors` as an example on how this module is used.
 """
@@ -16,9 +15,7 @@ StatusCode = int
 
 
 class ResponseError(Exception):
-    """
-    The base class for all error responses. This is derivative of the ``Exception`` class.
-    """
+    """The base class for all error responses. This is derivative of the ``Exception`` class."""
 
     descriptor_delimiter: str = " |OR| "
     """
@@ -38,8 +35,8 @@ class ResponseError(Exception):
         self.extra_information: dict | None = None
 
     def __or__(self, other: Self):
-        """
-        Combines the error responses into a single error response.
+        """Combines the error responses into a single error response.
+
         Args:
             other:
                 Another error response of the same base type to combine with.

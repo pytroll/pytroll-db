@@ -62,3 +62,6 @@ config.yml
 
 # temp log and storage for the test database
 __temp*
+
+# version file
+version.py

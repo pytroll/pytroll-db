@@ -1,5 +1,4 @@
-"""
-The module which handles parsing and validating the config (YAML) file.
+"""The module which handles parsing and validating the config (YAML) file.
 The validation is performed using `Pydantic <https://docs.pydantic.dev/latest/>`_.
 
 Note:
@@ -10,7 +9,7 @@ Note:
 
 import errno
 import sys
-from typing import Optional, NamedTuple, TypedDict
+from typing import NamedTuple, Optional, TypedDict
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -38,9 +37,10 @@ class MongoDocument(BaseModel):
 
 
 class LicenseInfo(TypedDict):
-    """
-    A dictionary type to hold the summary of the license information. One has to always consult the included `LICENSE`
-    file for more information.
+    """A dictionary type to hold the summary of the license information.
+
+    Warning:
+        One has to always consult the included `LICENSE` file for more information.
     """
 
     name: str
@@ -56,8 +56,7 @@ class LicenseInfo(TypedDict):
 
 
 class APIServerConfig(NamedTuple):
-    """
-    A named tuple to hold all the configurations of the API server (excluding the database).
+    """A named tuple to hold all the configurations of the API server (excluding the database).
 
     Note:
         Except for the ``url``, the attributes herein are a subset of the keyword arguments accepted by
@@ -99,8 +98,7 @@ class APIServerConfig(NamedTuple):
 
 
 class DatabaseConfig(NamedTuple):
-    """
-    A named tuple to hold all the configurations of the Database which will be used by the MongoDB instance.
+    """A named tuple to hold all the configurations of the Database which will be used by the MongoDB instance.
     """
 
     main_database_name: str
@@ -127,9 +125,9 @@ class DatabaseConfig(NamedTuple):
 
 
 class AppConfig(BaseModel):
-    """
-    A model to hold all the configurations of the application including both the API server and the database. This will
-    be used by Pydantic to validate the parsed YAML file.
+    """A model to hold all the configurations of the application including both the API server and the database.
+
+    This will be used by Pydantic to validate the parsed YAML file.
     """
     api_server: APIServerConfig
     database: DatabaseConfig
@@ -137,8 +135,7 @@ class AppConfig(BaseModel):
 
 @validate_call
 def from_yaml(filename: FilePath) -> AppConfig:
-    """
-    Parses and validates the configurations from a YAML file.
+    """Parses and validates the configurations from a YAML file.
 
     Args:
         filename:
@@ -155,7 +152,6 @@ def from_yaml(filename: FilePath) -> AppConfig:
     Returns:
         An instance of :class:`AppConfig`.
     """
-
     with open(filename, "r") as file:
         config = safe_load(file)
     try:
@@ -167,8 +163,7 @@ def from_yaml(filename: FilePath) -> AppConfig:
 
 @validate_call
 def parse(config: AppConfig | FilePath) -> AppConfig:
-    """
-    Tries to return a valid object of type :class:`AppConfig`
+    """Tries to return a valid object of type :class:`AppConfig`
 
     Args:
         config:

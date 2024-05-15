@@ -1,5 +1,4 @@
-"""
-The module which handles all requests related to `datetime`.
+"""The module which handles all requests related to `datetime`.
 
 Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.
