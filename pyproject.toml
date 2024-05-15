@@ -5,18 +5,18 @@ description = "The database API of Pytroll."
 authors = [
     { name = "Pouria Khalaj", email = "pouria.khalaj@smhi.se" }
 ]
-dependencies = ['pymongo', 'posttroll', 'motor', 'pydantic', 'fastapi', 'uvicorn', "loguru", "pyyaml", "urllib3"]
+dependencies = ["pymongo", "posttroll", "motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml", "urllib3"]
 readme = "README.rst"
 requires-python = ">= 3.12"
 license = {file = "LICENSE"}
 classifiers = [
-    'Development Status :: 4 - Beta',
-    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-    'Programming Language :: Python',
-    'Operating System :: OS Independent',
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Database'
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Database"
 ]
 
 [project.urls]
