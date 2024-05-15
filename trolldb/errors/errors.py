@@ -30,7 +30,7 @@ class ResponseError(Exception):
     """The default type of the response which will be returned when an error occurs."""
 
     def __init__(self, args_dict: OrderedDict[StatusCode, str | list[str]] | dict) -> None:
-        """TODO."""
+        """Documentation to be added!"""
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
@@ -64,7 +64,7 @@ class ResponseError(Exception):
     def __assert_existence_multiple_response_codes(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
-        """TODO."""
+        """Documentation to be added!"""
         match status_code, len(self.__dict):
             case None, n if n > 1:
                 raise ValueError("In case of multiple response status codes, the status code must be specified.")
@@ -81,7 +81,7 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None) -> (StatusCode, str):
-        """TODO."""
+        """Documentation to be added!"""
         status_code, msg = self.__assert_existence_multiple_response_codes(status_code)
         return (
             status_code,
@@ -93,7 +93,7 @@ class ResponseError(Exception):
             exit_code: int = -1,
             extra_information: dict | None = None,
             status_code: int | None = None) -> None:
-        """TODO."""
+        """Documentation to be added!"""
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.error(msg)
         exit(exit_code)
@@ -102,37 +102,37 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None):
-        """TODO."""
+        """Documentation to be added!"""
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.warning(msg)
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
-        """TODO."""
+        """Documentation to be added!"""
         return {status: {Literal["description"]: ResponseError.__stringify(msg)} for status, msg in self.__dict.items()}
 
     @staticmethod
     def __listify(item: str | list[str]) -> list[str]:
-        """TODO."""
+        """Documentation to be added!"""
         return item if isinstance(item, list) else [item]
 
     @staticmethod
     def __stringify(item: str | list[str]) -> str:
-        """TODO."""
+        """Documentation to be added!"""
         return ResponseError.descriptor_delimiter.join(ResponseError.__listify(item))
 
 
 class ResponsesErrorGroup:
-    """TODO."""
+    """Documentation to be added!"""
 
     @classmethod
     def fields(cls):
-        """TODO."""
+        """Documentation to be added!"""
         return {k: v for k, v in cls.__dict__.items() if isinstance(v, ResponseError)}
 
     @classmethod
     def union(cls):
-        """TODO."""
+        """Documentation to be added!"""
         buff = None
         for v in cls.fields().values():
             if buff is None:

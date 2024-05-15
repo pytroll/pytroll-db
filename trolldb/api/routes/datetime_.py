@@ -16,19 +16,19 @@ from trolldb.database.mongodb import get_id
 
 
 class TimeModel(TypedDict):
-    """TODO."""
+    """Documentation to be added!"""
     _id: str
     _time: datetime
 
 
 class TimeEntry(TypedDict):
-    """TODO."""
+    """Documentation to be added!"""
     _min: TimeModel
     _max: TimeModel
 
 
 class ResponseModel(BaseModel):
-    """TODO."""
+    """Documentation to be added!"""
     start_time: TimeEntry
     end_time: TimeEntry
 
@@ -41,7 +41,7 @@ router = APIRouter()
             responses=database_collection_error_descriptor,
             summary="Gets the the minimum and maximum values for the start and end times")
 async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
-    """TODO."""
+    """Documentation to be added!"""
     agg_result = await collection.aggregate([{
         "$group": {
             "_id": None,
@@ -52,7 +52,7 @@ async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
         }}]).next()
 
     def _aux(query):
-        """TODO."""
+        """Documentation to be added!"""
         return get_id(collection.find_one(query))
 
     return ResponseModel(

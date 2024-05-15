@@ -26,7 +26,7 @@ async def queries(
         sensor: list[str] = Query(default=None),  # noqa: B008
         time_min: datetime.datetime = Query(default=None),  # noqa: B008
         time_max: datetime.datetime = Query(default=None)) -> list[str]:  # noqa: B008
-    """TODO."""
+    """Documentation to be added!"""
     pipelines = Pipelines()
 
     if platform:

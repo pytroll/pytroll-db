@@ -21,60 +21,60 @@ class PipelineDict(dict):
     """
 
     def __or__(self, other: Self):
-        """TODO."""
+        """Documentation to be added!"""
         return PipelineDict({"$or": [self, other]})
 
     def __and__(self, other: Self):
-        """TODO."""
+        """Documentation to be added!"""
         return PipelineDict({"$and": [self, other]})
 
 
 class PipelineAttribute:
-    """TODO."""
+    """Documentation to be added!"""
 
     def __init__(self, key: str):
-        """TODO."""
+        """Documentation to be added!"""
         self.__key = key
 
     def __eq__(self, other: Any) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         if isinstance(other, list):
             return PipelineDict(**{"$or": [{self.__key: v} for v in other]})
         return PipelineDict(**{self.__key: other})
 
     def __aux_operators(self, other: Any, operator: str) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         return PipelineDict(**{self.__key: {operator: other}} if other else {})
 
     def __ge__(self, other: Any) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         return self.__aux_operators(other, "$gte")
 
     def __gt__(self, other: Any) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         return self.__aux_operators(other, "$gt")
 
     def __le__(self, other: Any) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         return self.__aux_operators(other, "$lte")
 
     def __lt__(self, other: Any) -> PipelineDict:
-        """TODO."""
+        """Documentation to be added!"""
         return self.__aux_operators(other, "$le")
 
 
 class Pipelines(list):
-    """TODO."""
+    """Documentation to be added!"""
     def __init__(self, *args, **kwargs):
-        """TODO."""
+        """Documentation to be added!"""
         super().__init__(*args, **kwargs)
 
     def __iadd__(self, other):
-        """TODO."""
+        """Documentation to be added!"""
         self.extend([{"$match": other}])
         return self
 
     def __add__(self, other):
-        """TODO."""
+        """Documentation to be added!"""
         self.append({"$match": other})
         return self

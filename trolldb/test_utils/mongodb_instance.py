@@ -15,7 +15,7 @@ from trolldb.test_utils.common import test_app_config
 
 
 class TestMongoInstance:
-    """TODO."""
+    """Documentation to be added!"""
     log_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_log")
     storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
     port: int = 28017
@@ -23,19 +23,19 @@ class TestMongoInstance:
 
     @classmethod
     def prepare_dir(cls, directory: str):
-        """TODO."""
+        """Documentation to be added!"""
         cls.remove_dir(directory)
         mkdir(directory)
 
     @classmethod
     def remove_dir(cls, directory: str):
-        """TODO."""
+        """Documentation to be added!"""
         if path.exists(directory) and path.isdir(directory):
             rmtree(directory)
 
     @classmethod
     def run_subprocess(cls, args: list[str], wait=True):
-        """TODO."""
+        """Documentation to be added!"""
         cls.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         if wait:
             outs, errs = cls.process.communicate()
@@ -44,7 +44,7 @@ class TestMongoInstance:
 
     @classmethod
     def mongodb_exists(cls) -> bool:
-        """TODO."""
+        """Documentation to be added!"""
         outs, errs = cls.run_subprocess(["which", "mongod"])
         if outs and not errs:
             return True
@@ -52,20 +52,20 @@ class TestMongoInstance:
 
     @classmethod
     def prepare_dirs(cls) -> None:
-        """TODO."""
+        """Documentation to be added!"""
         cls.prepare_dir(cls.log_dir)
         cls.prepare_dir(cls.storage_dir)
 
     @classmethod
     def run_instance(cls):
-        """TODO."""
+        """Documentation to be added!"""
         cls.run_subprocess(
             ["mongod", "--dbpath", cls.storage_dir, "--logpath", f"{cls.log_dir}/mongod.log", "--port", f"{cls.port}"]
             , wait=False)
 
     @classmethod
     def shutdown_instance(cls):
-        """TODO."""
+        """Documentation to be added!"""
         cls.process.kill()
         for d in [cls.log_dir, cls.storage_dir]:
             cls.remove_dir(d)

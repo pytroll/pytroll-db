@@ -17,5 +17,5 @@ router = APIRouter()
             responses=database_collection_error_descriptor,
             summary="Gets the list of all platform names")
 async def platform_names(collection: CheckCollectionDependency) -> list[str]:
-    """TODO."""
+    """Documentation to be added!"""
     return await get_distinct_items_in_collection(collection, "platform_name")

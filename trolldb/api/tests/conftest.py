@@ -1,4 +1,4 @@
-"""TODO."""
+"""Documentation to be added!"""
 
 import pytest
 
@@ -10,14 +10,14 @@ from trolldb.test_utils.mongodb_instance import mongodb_instance_server_process_
 
 @pytest.fixture(scope="session")
 def _run_mongodb_server_instance():
-    """TODO."""
+    """Documentation to be added!"""
     with mongodb_instance_server_process_context():
         yield
 
 
 @pytest.fixture(scope="session")
 def _test_server_fixture(_run_mongodb_server_instance):
-    """TODO."""
+    """Documentation to be added!"""
     TestDatabase.prepare()
     with server_process_context(test_app_config, startup_time=2000):
         yield

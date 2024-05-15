@@ -1,4 +1,4 @@
-"""TODO."""
+"""Documentation to be added!"""
 
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ from trolldb.test_utils.common import test_app_config
 
 @contextmanager
 def test_mongodb_context(database_config: DatabaseConfig = test_app_config.database):
-    """TODO."""
+    """Documentation to be added!"""
     client = None
     try:
         client = MongoClient(database_config.url.unicode_string(), connectTimeoutMS=database_config.timeout)
@@ -24,46 +24,46 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
 
 
 def random_sample(items: list[Any], size=10):
-    """TODO."""
+    """Documentation to be added!"""
     last_index = len(items) - 1
     indices = [randint(0, last_index) for _ in range(size)]  # noqa: S311
     return [items[i] for i in indices]
 
 
 class Time:
-    """TODO."""
+    """Documentation to be added!"""
     min_start_time = datetime(2019, 1, 1, 0, 0, 0)
     max_end_time = datetime(2024, 1, 1, 0, 0, 0)
     delta_time = int((max_end_time - min_start_time).total_seconds())
 
     @staticmethod
     def random_interval_secs(max_interval_secs):
-        """TODO."""
+        """Documentation to be added!"""
         return timedelta(seconds=randint(0, max_interval_secs)) # noqa: S311
 
     @staticmethod
     def random_start_time():
-        """TODO."""
+        """Documentation to be added!"""
         return Time.min_start_time + Time.random_interval_secs(Time.delta_time)
 
     @staticmethod
     def random_end_time(start_time: datetime, max_interval_secs: int = 300):
-        """TODO."""
+        """Documentation to be added!"""
         return start_time + Time.random_interval_secs(max_interval_secs)
 
 
 class Document:
-    """TODO."""
+    """Documentation to be added!"""
 
     def __init__(self, platform_name: str, sensor: str):
-        """TODO."""
+        """Documentation to be added!"""
         self.platform_name = platform_name
         self.sensor = sensor
         self.start_time = Time.random_start_time()
         self.end_time = Time.random_end_time(self.start_time)
 
     def generate_dataset(self, max_count: int):
-        """TODO."""
+        """Documentation to be added!"""
         dataset = []
         n = randint(1, max_count)  # noqa: S311
         for i in range(n):
@@ -76,7 +76,7 @@ class Document:
         return dataset
 
     def like_mongodb_document(self):
-        """TODO."""
+        """Documentation to be added!"""
         return {
             "platform_name": self.platform_name,
             "sensor": self.sensor,
@@ -87,7 +87,7 @@ class Document:
 
 
 class TestDatabase:
-    """TODO."""
+    """Documentation to be added!"""
     platform_names = random_sample(["PA", "PB", "PC"])
     sensors = random_sample(["SA", "SB", "SC"])
 
@@ -99,7 +99,7 @@ class TestDatabase:
 
     @classmethod
     def generate_documents(cls, random_shuffle=True) -> list:
-        """TODO."""
+        """Documentation to be added!"""
         documents = [Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors,
                                                                             strict=False)]
         if random_shuffle:
@@ -108,7 +108,7 @@ class TestDatabase:
 
     @classmethod
     def reset(cls):
-        """TODO."""
+        """Documentation to be added!"""
         with test_mongodb_context() as client:
             for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
                 db = client[db_name]
@@ -118,7 +118,7 @@ class TestDatabase:
 
     @classmethod
     def write_mock_date(cls):
-        """TODO."""
+        """Documentation to be added!"""
         with test_mongodb_context() as client:
             cls.documents = cls.generate_documents()
             collection = client[test_app_config.database.main_database_name][
@@ -127,6 +127,6 @@ class TestDatabase:
 
     @classmethod
     def prepare(cls):
-        """TODO."""
+        """Documentation to be added!"""
         cls.reset()
         cls.write_mock_date()
