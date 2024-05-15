@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""TODO."""
 
 import logging
 import os
@@ -17,7 +18,7 @@ class MongoRecorder:
 
     def __init__(self,
                  mongo_uri="mongodb://localhost:27017",
-                 db_name='sat_db'):
+                 db_name="sat_db"):
         """Init the recorder."""
         self.db = MongoClient(mongo_uri)[db_name]
         self.loop = True
@@ -38,7 +39,7 @@ class MongoRecorder:
                 for msg in sub.recv(timeout=1):
                     if msg:
                         logger.debug("got msg %s", str(msg))
-                        if msg.type in ['collection', 'file', 'dataset']:
+                        if msg.type in ["collection", "file", "dataset"]:
                             self.insert_files(msg)
                     if not self.loop:
                         logger.info("Stop recording")
@@ -67,7 +68,7 @@ def setup_logging(cmd_args):
             logging.config.dictConfig(log_dict)
             return
 
-    root = logging.getLogger('')
+    root = logging.getLogger("")
     root.setLevel(log_levels[cmd_args.verbosity])
 
     if cmd_args.log:
@@ -86,9 +87,9 @@ def setup_logging(cmd_args):
 
 LOG_FORMAT = "[%(asctime)s %(name)s %(levelname)s] %(message)s"
 
-if __name__ == '__main__':
-    import time
+if __name__ == "__main__":
     import argparse
+    import time
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--database",
@@ -116,4 +117,4 @@ if __name__ == '__main__':
             time.sleep(1)
     except KeyboardInterrupt:
         recorder.stop()
-        print("Thanks for using pytroll/mongo_recorder. See you soon on www.pytroll.org!")
+        # print("Thanks for using pytroll/mongo_recorder. See you soon on www.pytroll.org!")
