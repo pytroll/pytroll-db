@@ -19,9 +19,9 @@ class ResponseError(Exception):
 
     descriptor_delimiter: str = " |OR| "
     """
-    A delimiter to combine the message part of several error responses into a single one. This will be shown in textual 
+    A delimiter to combine the message part of several error responses into a single one. This will be shown in textual
     format  for the response descriptors of the Fast API routes. For example:
-    
+
         ``ErrorA |OR| ErrorB``
     """
 

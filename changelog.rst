@@ -215,5 +215,3 @@ Other
   postgreSQL/postGIS database. [Adam Dybbroe]
 
 - Initial commit. [Martin Raspaud]
-
-
