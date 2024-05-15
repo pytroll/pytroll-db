@@ -58,9 +58,9 @@ async def check_collection(
         -- A response from :func:`check_database`, if the database does not exist or the type of ``database_name`` is
         not valid.
 
-        -- :obj:`api.errors.errors.CollectionFail.NOT_FOUND`, if the parent database exists but the collection does not.
+        -- if the parent database exists but the collection does not.
 
-        -- :obj:`api.errors.errors.CollectionFail.WRONG_TYPE`, if only one of ``database_name`` or ``collection_name``
+        -- if only one of ``database_name`` or ``collection_name``
         is ``None``; or if the type of ``collection_name`` is not ``str``.
     """
 

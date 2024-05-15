@@ -21,7 +21,7 @@ from pymongo.errors import (
     ServerSelectionTimeoutError)
 
 from config.config import DatabaseConfig
-from database.errors import CollectionFail, DatabaseFail, ClientFail
+from database.errors import Collections, Databases, Client
 from errors.errors import ResponseError
 
 T = TypeVar("T")
@@ -117,12 +117,17 @@ class MongoDB:
                  A named tuple which includes the database configurations.
 
         Raises ``SystemExit(errno.EIO)``:
+
             - If connection is not established (``ConnectionFailure``)
+
             - If the attempt times out (``ServerSelectionTimeoutError``)
+
             - If one attempts reinitializing the class with new (different) database configurations without calling
-             :func:`~close()` first.
+            :func:`~close()` first.
+
             - If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
             configurations still exist and are different from the new ones which have been just provided.
+
 
         Raises ``SystemExit(errno.ENODATA)``:
             If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
@@ -134,10 +139,10 @@ class MongoDB:
         if cls.__database_config:
             if database_config == cls.__database_config:
                 if cls.__client:
-                    return ClientFail.AlreadyOpenError.log_warning()
-                ClientFail.InconsistencyError.raise_error_log_and_exit(errno.EIO)
+                    return Client.AlreadyOpenError.log_as_warning()
+                Client.InconsistencyError.sys_exit_log(errno.EIO)
             else:
-                ClientFail.ReinitializeConfigError.raise_error_log_and_exit(errno.EIO)
+                Client.ReinitializeConfigError.sys_exit_log(errno.EIO)
 
         # This only makes the reference and does not establish an actual connection until the first attempt is made
         # to access the database.
@@ -150,20 +155,20 @@ class MongoDB:
             # Here we attempt to access the database
             __database_names = await cls.__client.list_database_names()
         except (ConnectionFailure, ServerSelectionTimeoutError):
-            ClientFail.ConnectionError.raise_error_log_and_exit(
+            Client.ConnectionError.sys_exit_log(
                 errno.EIO, {"url": database_config.url.unicode_string()}
             )
 
         err_extra_information = {"database_name": database_config.main_database_name}
 
         if database_config.main_database_name not in __database_names:
-            DatabaseFail.NotFoundError.raise_error_log_and_exit(errno.ENODATA, err_extra_information)
+            Databases.NotFoundError.sys_exit_log(errno.ENODATA, err_extra_information)
         cls.__main_database = cls.__client.get_database(database_config.main_database_name)
 
         err_extra_information |= {"collection_name": database_config.main_collection_name}
 
         if database_config.main_collection_name not in await cls.__main_database.list_collection_names():
-            CollectionFail.NotFoundError.raise_error_log_and_exit(errno.ENODATA, err_extra_information)
+            Collections.NotFoundError.sys_exit_log(errno.ENODATA, err_extra_information)
 
         cls.__main_collection = cls.__main_database.get_collection(database_config.main_collection_name)
 
@@ -175,7 +180,7 @@ class MongoDB:
         if cls.__client:
             cls.__database_config = None
             return cls.__client.close()
-        ClientFail.CloseNotAllowedError.raise_error_log_and_exit(errno.EIO)
+        Client.CloseNotAllowedError.sys_exit_log(errno.EIO)
 
     @classmethod
     def list_database_names(cls) -> CoroutineStrList:
@@ -247,9 +252,9 @@ class MongoDB:
                 db = await cls.get_database(database_name)
                 if collection_name in await db.list_collection_names():
                     return db[collection_name]
-                raise CollectionFail.NotFoundError
+                raise Collections.NotFoundError
             case _:
-                raise CollectionFail.WrongTypeError
+                raise Collections.WrongTypeError
 
     @classmethod
     async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase | ResponseError:
@@ -274,7 +279,7 @@ class MongoDB:
             case _ if database_name in await cls.list_database_names():
                 return cls.__client[database_name]
             case _:
-                raise DatabaseFail.NotFoundError
+                raise Databases.NotFoundError
 
 
 @asynccontextmanager

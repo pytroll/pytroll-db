@@ -12,10 +12,10 @@ from api.routes.common import (
     exclude_defaults_query, CheckCollectionDependency, CheckDataBaseDependency)
 from config.config import MongoObjectId
 from database.errors import (
-    DatabaseFail,
-    DocumentsFail,
-    database_collection_fail_descriptor,
-    database_collection_document_fail_descriptor)
+    Databases,
+    Documents,
+    database_collection_error_descriptor,
+    database_collection_document_error_descriptor)
 from database.mongodb import MongoDB, get_ids
 
 router = APIRouter()
@@ -35,7 +35,7 @@ async def database_names(exclude_defaults: bool = exclude_defaults_query) -> lis
 
 @router.get("/{database_name}",
             response_model=list[str],
-            responses=DatabaseFail.union().fastapi_descriptor,
+            responses=Databases.union().fastapi_descriptor,
             summary="Gets the list of all collection names for the given database name")
 async def collection_names(db: CheckDataBaseDependency) -> list[str]:
     return await db.list_collection_names()
@@ -43,7 +43,7 @@ async def collection_names(db: CheckDataBaseDependency) -> list[str]:
 
 @router.get("/{database_name}/{collection_name}",
             response_model=list[str],
-            responses=database_collection_fail_descriptor,
+            responses=database_collection_error_descriptor,
             summary="Gets the object ids of all documents for the given database and collection name")
 async def documents(collection: CheckCollectionDependency) -> list[str]:
     return await get_ids(collection.find({}))
@@ -51,10 +51,10 @@ async def documents(collection: CheckCollectionDependency) -> list[str]:
 
 @router.get("/{database_name}/{collection_name}/{_id}",
             response_model=_DocumentType,
-            responses=database_collection_document_fail_descriptor,
+            responses=database_collection_document_error_descriptor,
             summary="Gets the document content in json format given its object id, database, and collection name")
 async def document_by_id(collection: CheckCollectionDependency, _id: MongoObjectId) -> _DocumentType:
     if document := await collection.find_one({"_id": _id}):
         return dict(document) | {"_id": str(_id)}
 
-    raise DocumentsFail.NotFound
+    raise Documents.NotFound

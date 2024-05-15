@@ -8,7 +8,7 @@ Note:
     so that their arguments can be validated using the corresponding type hints, when calling the function at runtime.
 
 Note:
-    The following applies to the :obj:`trolldb.api` package and all its subpackages/modules.
+    The following applies to the :obj:`api` package and all its subpackages/modules.
 
     To avoid redundant documentation and inconsistencies, only non-FastAPI components are documented via the docstrings.
     For the documentation related to the FastAPI components, check out the auto-generated documentation by FastAPI.
@@ -62,7 +62,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
     @app.exception_handler(ResponseError)
     async def unicorn_exception_handler(_, exc: ResponseError):
-        status_code, message = exc.get_error_info()
+        status_code, message = exc.get_error_details()
         return PlainTextResponse(
             status_code=status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=message if message else "Generic Error [This is not okay, check why we have the generic error!]",

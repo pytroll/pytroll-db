@@ -12,7 +12,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from api.routes.common import CheckCollectionDependency
-from database.errors import database_collection_fail_descriptor
+from database.errors import database_collection_error_descriptor
 from database.mongodb import get_id
 
 
@@ -36,7 +36,7 @@ router = APIRouter()
 
 @router.get("",
             response_model=ResponseModel,
-            responses=database_collection_fail_descriptor,
+            responses=database_collection_error_descriptor,
             summary="Gets the the minimum and maximum values for the start and end times")
 async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
     agg_result = await collection.aggregate([{

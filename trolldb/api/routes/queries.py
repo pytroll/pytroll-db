@@ -10,7 +10,7 @@ import datetime
 from fastapi import APIRouter, Query
 
 from api.routes.common import CheckCollectionDependency
-from database.errors import database_collection_fail_descriptor
+from database.errors import database_collection_error_descriptor
 from database.mongodb import get_ids
 from database.piplines import PipelineAttribute, Pipelines
 
@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.get("",
             response_model=list[str],
-            responses=database_collection_fail_descriptor,
+            responses=database_collection_error_descriptor,
             summary="Gets the database UUIDs of the documents that match specifications determined by the query string")
 async def queries(
         collection: CheckCollectionDependency,

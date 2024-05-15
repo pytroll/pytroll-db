@@ -1,9 +1,23 @@
+"""
+The modules which defines the error responses that might occur while working with the
+MongoDB database.
+
+Note:
+    The error responses are grouped into classes, with each class representing the major
+    category (context) in which the errors occur. As such, the attributes of the top classes
+    are (expected to be) self-explanatory and require no additional documentation.
+"""
+
 from fastapi import status
 
 from errors.errors import ResponsesErrorGroup, ResponseError
 
 
-class ClientFail(ResponsesErrorGroup):
+class Client(ResponsesErrorGroup):
+    """
+    Client error responses, e.g. if something goes wrong with initialization or closing the
+    client.
+    """
     CloseNotAllowedError = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "Calling `close()` on a client which has not been initialized is not allowed!"
@@ -32,7 +46,10 @@ class ClientFail(ResponsesErrorGroup):
     })
 
 
-class CollectionFail(ResponsesErrorGroup):
+class Collections(ResponsesErrorGroup):
+    """
+    Collections error responses, e.g. if a requested collection cannot be found.
+    """
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given collection name inside the specified database."
@@ -44,7 +61,10 @@ class CollectionFail(ResponsesErrorGroup):
     })
 
 
-class DatabaseFail(ResponsesErrorGroup):
+class Databases(ResponsesErrorGroup):
+    """
+    Databases error responses, e.g. if a requested database cannot be found.
+    """
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given database name."
@@ -56,18 +76,27 @@ class DatabaseFail(ResponsesErrorGroup):
     })
 
 
-class DocumentsFail(ResponsesErrorGroup):
+class Documents(ResponsesErrorGroup):
+    """
+    Documents error responses, e.g. if a requested document cannot be found.
+    """
     NotFound = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find any document with the given object id."
     })
 
 
-Database_Collection_Fail = DatabaseFail | CollectionFail
-Database_Collection_Document_Fail = DatabaseFail | CollectionFail | DocumentsFail
-database_collection_fail_descriptor = (
-        DatabaseFail.union() | CollectionFail.union()
+database_collection_error_descriptor = (
+        Databases.union() | Collections.union()
 ).fastapi_descriptor
-database_collection_document_fail_descriptor = (
-        DatabaseFail.union() | CollectionFail.union() | DocumentsFail.union()
+"""
+A response descriptor for the Fast API routes. This combines all the error messages that might
+occur as result of working with databases and collections. See the fast api documentation for TODO.
+"""
+
+database_collection_document_error_descriptor = (
+        Databases.union() | Collections.union() | Documents.union()
 ).fastapi_descriptor
+"""
+Same as :obj:`database_collection_error_descriptor` but including documents as well.
+"""
