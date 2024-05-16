@@ -81,7 +81,7 @@ database_collection_error_descriptor = (
 """A response descriptor for the Fast API routes.
 
 This combines all the error messages that might occur as result of working with databases and collections. See the
-fast api documentation for Documentation to be added!
+FastAPI documentation for `additional responses <https://fastapi.tiangolo.com/advanced/additional-responses/>`_.
 """
 
 database_collection_document_error_descriptor = (
