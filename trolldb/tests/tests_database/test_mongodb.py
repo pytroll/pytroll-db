@@ -1,4 +1,10 @@
-"""Direct tests for `mongodb` module without an API server connection."""
+"""Direct tests for :obj:`trolldb.database.mongodb` module without an API server connection.
+
+Note:
+    The functionalities of the MongoDB client is not mocked! For the tests herein an actual MongoDB instance will be
+    run. It includes databases which are pre-filled with random data having similar characteristics to the real data.
+    Actual calls will be made to the running MongoDB instance via the client.
+"""
 
 import errno
 import time

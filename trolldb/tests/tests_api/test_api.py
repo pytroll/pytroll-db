@@ -1,4 +1,12 @@
-"""Documentation to be added!"""
+"""Tests for the API server.
+
+Note:
+    The functionalities of the API server is not mocked! For the tests herein an actual API server will be running in a
+    separate process. Moreover, a MongoDB instance is run with databases which are pre-filled with random data having
+    similar characteristics to the real data. Actual requests will be sent to the API and the results will be asserted
+    against expectations.
+"""
+
 import pytest
 from fastapi import status
 
