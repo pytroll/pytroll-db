@@ -14,7 +14,8 @@ test_app_config = AppConfig(
         main_database_name="mock_database",
         main_collection_name="mock_collection",
         url=AnyUrl("mongodb://localhost:28017"),
-        timeout=1000)
+        timeout=1000),
+    subscriber_config=dict()
 )
 
 

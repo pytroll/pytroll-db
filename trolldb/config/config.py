@@ -10,7 +10,7 @@ Note:
 
 import errno
 import sys
-from typing import NamedTuple
+from typing import Any, Dict, NamedTuple
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -79,7 +79,7 @@ class AppConfig(BaseModel):
     """
     api_server: APIServerConfig
     database: DatabaseConfig
-
+    subscriber_config: Dict[Any, Any]
 
 @validate_call
 def from_yaml(filename: FilePath) -> AppConfig:
