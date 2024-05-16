@@ -248,16 +248,24 @@ class ResponseError(Exception):
 
 
 class ResponsesErrorGroup:
-    """Documentation to be added!"""
+    """A class which groups related errors.
+
+    This provides a base class from which actual error groups are derived. The attributes of this class are all static.
+
+    See :obj:`trolldb.database.errors` as an example on how to achieve this.
+    """
 
     @classmethod
-    def fields(cls):
-        """Documentation to be added!"""
+    def fields(cls) -> dict[str, ResponseError]:
+        """Retrieves a dictionary of all errors which are members of the class."""
         return {k: v for k, v in cls.__dict__.items() if isinstance(v, ResponseError)}
 
     @classmethod
-    def union(cls):
-        """Documentation to be added!"""
+    def union(cls) -> ResponseError:
+        """Gets the union of all member errors in the group.
+
+        This utilizes the bitwise `or` ``|`` functionality of :obj:`ResponseError`.
+        """
         buff = None
         for v in cls.fields().values():
             if buff is None:
