@@ -10,7 +10,7 @@ Note:
 
 import errno
 import sys
-from typing import NamedTuple, Optional, TypedDict
+from typing import NamedTuple
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -39,27 +39,11 @@ class MongoDocument(BaseModel):
     _id: MongoObjectId
 
 
-class LicenseInfo(TypedDict):
-    """A dictionary type to hold the summary of the license information.
-
-    Warning:
-        One has to always consult the included `LICENSE` file for more information.
-    """
-
-    name: str
-    """The full name of the license including the exact variant and the version (if any), e.g.
-    ``"The GNU General Public License v3.0"``
-    """
-
-    url: AnyUrl
-    """The URL to access the license, e.g. ``"https://www.gnu.org/licenses/gpl-3.0.en.html"``"""
-
-
 class APIServerConfig(NamedTuple):
     """A named tuple to hold all the configurations of the API server (excluding the database).
 
     Note:
-        Except for the ``url``, the attributes herein are a subset of the keyword arguments accepted by
+        Except for the ``url``, the attributes herein (if any!) are a subset of the keyword arguments accepted by
         `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
         to the FastAPI class.
     """
@@ -67,25 +51,6 @@ class APIServerConfig(NamedTuple):
     url: AnyUrl
     """The URL of the API server including the port, e.g. ``mongodb://localhost:8000``. This will not be passed to the
     FastAPI class. Instead, it will be used by the `uvicorn` to determine the URL of the server.
-    """
-
-    title: str
-    """The title of the API server, as appears in the automatically generated documentation by the FastAPI."""
-
-    version: str
-    """The version of the API server as appears in the automatically generated documentation by the FastAPI."""
-
-    summary: Optional[str] = None
-    """The summary of the API server, as appears in the automatically generated documentation by the FastAPI."""
-
-    description: Optional[str] = None
-    """The more comprehensive description (extended summary) of the API server, as appears in the automatically
-    generated documentation by the FastAPI.
-    """
-
-    license_info: Optional[LicenseInfo] = None
-    """The license information of the API server, as appears in the automatically generated documentation by the
-    FastAPI.
     """
 
 

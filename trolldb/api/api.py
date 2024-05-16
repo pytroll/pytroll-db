@@ -33,6 +33,20 @@ from trolldb.config.config import AppConfig, Timeout, parse
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
+API_INFO = {
+    "title": "pytroll-db",
+    "version": "0.1",
+    "summary": "The database API of Pytroll",
+    "description": "The API allows   you to perform CRUD operations as well as querying the database"
+                   "At the moment only MongoDB is supported. It is based on the following Python packages"
+                   "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
+                   "\n * **motor** (https://github.com/mongodb/motor)",
+    "license_info": {
+        "name": "The GNU General Public License v3.0",
+        "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+    }
+}
+
 
 @validate_call
 def run_server(config: AppConfig | FilePath, **kwargs) -> None:
@@ -56,7 +70,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             explicitly to the function take precedence over ``config``.
     """
     config = parse(config)
-    app = FastAPI(**(config.api_server._asdict() | kwargs))
+    app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)

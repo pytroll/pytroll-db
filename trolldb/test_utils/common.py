@@ -9,7 +9,7 @@ from urllib3 import BaseHTTPResponse, request
 from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig
 
 test_app_config = AppConfig(
-    api_server=APIServerConfig(url=AnyUrl("http://localhost:8080"), title="Test API Server", version="0.1"),
+    api_server=APIServerConfig(url=AnyUrl("http://localhost:8080")),
     database=DatabaseConfig(
         main_database_name="mock_database",
         main_collection_name="mock_collection",

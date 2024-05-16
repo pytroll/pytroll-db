@@ -14,7 +14,9 @@ class PipelineDict(dict):
     Example:
         ```
         pd1 = PipelineDict({"number": 2})
+
         pd2 = PipelineDict({"kind": 1})
+
         pd3 = pd1 & pd2
         ```
     """
