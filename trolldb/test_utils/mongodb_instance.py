@@ -15,27 +15,40 @@ from trolldb.test_utils.common import test_app_config
 
 
 class TestMongoInstance:
-    """Documentation to be added!"""
+    """A static class to enclose functionalities for running a MongoDB instance."""
+
     log_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_log")
+    """Temp directory for logging messages by the MongoDB instance."""
+
     storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
+    """Temp directory for storing database files by the MongoDB instance."""
+
     port: int = 28017
+    """The port on which the instance will run."""
+
     process: subprocess.Popen | None = None
+    """The (sub-)process which will be used to run the MongoDB instance."""
 
     @classmethod
-    def prepare_dir(cls, directory: str):
-        """Documentation to be added!"""
-        cls.remove_dir(directory)
+    def __prepare_dir(cls, directory: str):
+        """Auxiliary function to prepare a single directory.
+
+        That is making a directory if it does not exist, or removing it if it does and then remaking it.
+        """
+        cls.__remove_dir(directory)
         mkdir(directory)
 
     @classmethod
-    def remove_dir(cls, directory: str):
-        """Documentation to be added!"""
+    def __remove_dir(cls, directory: str):
+        """Auxiliary function to remove temporary directories."""
         if path.exists(directory) and path.isdir(directory):
             rmtree(directory)
 
     @classmethod
     def run_subprocess(cls, args: list[str], wait=True):
-        """Documentation to be added!"""
+        """Runs the subprocess in shell given its arguments."""
+        # We suppress ruff here as we are not receiving any args from outside, e.g. port is hard-coded. Therefore,
+        # sanitization of ``args`` is not required.
         cls.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         if wait:
             outs, errs = cls.process.communicate()
@@ -44,7 +57,7 @@ class TestMongoInstance:
 
     @classmethod
     def mongodb_exists(cls) -> bool:
-        """Documentation to be added!"""
+        """Checks if ``mongod`` command exists."""
         outs, errs = cls.run_subprocess(["which", "mongod"])
         if outs and not errs:
             return True
@@ -52,24 +65,24 @@ class TestMongoInstance:
 
     @classmethod
     def prepare_dirs(cls) -> None:
-        """Documentation to be added!"""
-        cls.prepare_dir(cls.log_dir)
-        cls.prepare_dir(cls.storage_dir)
+        """Prepares the temp directories."""
+        cls.__prepare_dir(cls.log_dir)
+        cls.__prepare_dir(cls.storage_dir)
 
     @classmethod
     def run_instance(cls):
-        """Documentation to be added!"""
+        """Runs the MongoDB instance and does not wait for it, i.e. the process runs in the background."""
         cls.run_subprocess(
             ["mongod", "--dbpath", cls.storage_dir, "--logpath", f"{cls.log_dir}/mongod.log", "--port", f"{cls.port}"]
             , wait=False)
 
     @classmethod
     def shutdown_instance(cls):
-        """Documentation to be added!"""
+        """Shuts down the MongoDB instance by terminating its process."""
         cls.process.terminate()
         cls.process.wait()
         for d in [cls.log_dir, cls.storage_dir]:
-            cls.remove_dir(d)
+            cls.__remove_dir(d)
 
 
 @contextmanager

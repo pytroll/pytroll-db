@@ -30,7 +30,7 @@ class ResponseError(Exception):
     """The default type of the response which will be returned when an error occurs."""
 
     def __init__(self, args_dict: OrderedDict[StatusCode, str | list[str]] | dict) -> None:
-        """Documentation to be added!"""
+        """Initializes the response error object given a dictionary of error (HTTP) codes and messages."""
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
@@ -47,12 +47,13 @@ class ResponseError(Exception):
             In case of the same status codes, the messages will be appended to a list and saved as a list.
 
         Example:
-              ErrorA = ResponseError({200: "OK"})
-              ErrorB = ResponseError({400: "Bad Request"})
-              ErrorC = ResponseError({200: "Still Okay"})
+            .. code-block:: python
 
-              ErrorCombined = ErrorA | ErrorB | ErrorC
+                ErrorA = ResponseError({200: "OK"})
+                ErrorB = ResponseError({400: "Bad Request"})
+                ErrorC = ResponseError({200: "Still Okay"})
 
+                ErrorCombined = ErrorA | ErrorB | ErrorC
         """
         buff = OrderedDict(self.__dict)
         for key, msg in other.__dict.items():
@@ -64,7 +65,7 @@ class ResponseError(Exception):
     def __assert_existence_multiple_response_codes(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
-        """Documentation to be added!"""
+        """Assert whether the response error includes multiple items."""
         match status_code, len(self.__dict):
             case None, n if n > 1:
                 raise ValueError("In case of multiple response status codes, the status code must be specified.")

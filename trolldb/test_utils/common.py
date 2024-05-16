@@ -1,4 +1,4 @@
-"""Documentation to be added!"""
+"""Common functionalities for testing, shared between tests and other test utility modules."""
 
 from typing import Any
 from urllib.parse import urljoin
