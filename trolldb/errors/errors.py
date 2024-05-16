@@ -1,4 +1,4 @@
-"""The module which defines the base functionalities for errors that will be risen when using the package or the API.
+"""The module which defines the base functionalities for errors that will be raised when using the package or the API.
 
 This module only includes the generic utilities using which each module should define its own error responses
 specifically. See :obj:`trolldb.database.errors` as an example on how to achieve this.
@@ -138,23 +138,43 @@ class ResponseError(Exception):
             buff[key].extend(_listify(msg))
         return ResponseError(buff)
 
-    def __retrieve_one_from_multiple_response_codes(
+    def __retrieve_one_from_some(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
         """Retrieves a single tuple of ``(<status-code>, <message>)`` from the internal dictionary ``self.__dict``.
 
-        Asserts whether the response error includes multiple items.
+        Args:
+            status_code (Optional, default: ``None``):
+                The status code to retrieve from the internal dictionary. In case of ``None``, the internal dictionary
+                must include only a single entry which will be returned.
 
+        Returns:
+            The tuple of ``(<status-code>, <message>)``.
+
+        Raises:
+            ValueError:
+                In case of ambiguity, i.e. there are multiple items in the internal dictionary and the
+                ``status_code`` is ``None``.
+
+            KeyError:
+                When the given ``status_code`` cannot be found.
         """
         match status_code, len(self.__dict):
+            # Ambiguity, several items in the dictionary but the status code has not been given
             case None, n if n > 1:
                 raise ValueError("In case of multiple response status codes, the status code must be specified.")
-            case StatusCode(), n if n > 1:
+
+            # The status code has been specified
+            case StatusCode(), n if n >= 1:
                 if status_code in self.__dict.keys():
                     return status_code, self.__dict[status_code]
                 raise KeyError(f"Status code {status_code} cannot be found.")
+
+            # The status code has not been given and there is only a single item in the dictionary
             case _, 1:
                 return [(k, v) for k, v in self.__dict.items()][0]
+
+            # The internal dictionary is empty and the status code is None.
             case _:
                 return 500, "Generic Response Error"
 
@@ -162,30 +182,47 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None) -> (StatusCode, str):
-        """Gets the details of the error response."""
-        status_code, msg = self.__retrieve_one_from_multiple_response_codes(status_code)
-        return (
-            status_code,
-            _stringify(msg, self.descriptor_delimiter) + (f" :=> {extra_information}" if extra_information else "")
-        )
+        """Gets the details of the error response.
+
+        Args:
+            extra_information (Optional, default ``None``):
+                Some more information to be added in the message string.
+            status_code (Optional, default ``None``):
+                The status to retrieve. This is useful when there are several error items in the internal dictionary.
+                In case of ``None``, the internal dictionary must include a single entry, otherwise an error is raised.
+
+        Returns:
+            A tuple, in which the first element is the status code and the second element is a single string message.
+        """
+        status_code, msg = self.__retrieve_one_from_some(status_code)
+        return status_code, msg + (f" :=> {extra_information}" if extra_information else "")
+
+    def log_as_warning(
+            self,
+            extra_information: dict | None = None,
+            status_code: int | None = None):
+        """Same as :func:`~ResponseError.get_error_details` but logs the error as a warning and returns ``None``."""
+        msg, _ = self.get_error_details(extra_information, status_code)
+        logger.warning(msg)
 
     def sys_exit_log(
             self,
             exit_code: int = -1,
             extra_information: dict | None = None,
             status_code: int | None = None) -> None:
-        """Documentation to be added!"""
+        """Same as :func:`~ResponseError.get_error_details` but logs the error and calls the ``sys.exit``.
+
+        This is supposed to be done in case of non-recoverable errors, e.g. database issues.
+
+        The arguments are the same as :func:`~ResponseError.get_error_details` with the addition of ``exit_code``
+        which is optional and is set to ``-1`` by default.
+
+        Returns:
+            Does not return anything, but logs the error and exits the program.
+        """
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.error(msg)
         exit(exit_code)
-
-    def log_as_warning(
-            self,
-            extra_information: dict | None = None,
-            status_code: int | None = None):
-        """Documentation to be added!"""
-        msg, _ = self.get_error_details(extra_information, status_code)
-        logger.warning(msg)
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
