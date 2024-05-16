@@ -1,7 +1,7 @@
-"""The module which defines the base functionality for error responses that will be returned by the API.
+"""The module which defines the base functionalities for errors that will be risen when using the package or the API.
 
 This module only includes the generic utilities using which each module should define its own error responses
-specifically. See :obj:`trolldb.database.errors` as an example on how this module is used.
+specifically. See :obj:`trolldb.database.errors` as an example on how to achieve this.
 """
 
 from collections import OrderedDict
@@ -13,59 +13,139 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 
 StatusCode = int
+"""An alias for the built-in ``int`` type, which is used for HTTP status codes."""
+
+
+def _listify(item: str | list[str]) -> list[str]:
+    """Encloses the given (single) string in a list or returns the same input as-is in case of a list of strings.
+
+    Args:
+        item:
+            The item that needs to be converted to a list.
+
+    Returns:
+          If the input is itself a list of strings the same list is returned as-is, otherwise, the given input
+          string is enclosed in ``[]`` and returned.
+
+    Example:
+        .. code-block:: python
+
+            # The following evaluate to ``True``
+            __listify("test") == ["test"]
+            __listify(["a", "b"]) = ["a", "b"]
+            __listify([]) == []
+    """
+    return item if isinstance(item, list) else [item]
+
+
+def _stringify(item: str | list[str], delimiter: str) -> str:
+    """Makes a single string out of the item(s) by delimiting them with ``delimiter``.
+
+    Args:
+        item:
+            A string or list of strings to be delimited.
+        delimiter:
+            A string as delimiter.
+
+    Returns:
+        The same input string, or in case of a list of items, a single string delimited by ``delimiter``.
+    """
+    return delimiter.join(_listify(item))
 
 
 class ResponseError(Exception):
-    """The base class for all error responses. This is derivative of the ``Exception`` class."""
+    """The base class for all error responses.
+
+    This is a derivative of the ``Exception`` class and therefore can be used directly in ``raise`` statements.
+
+    Attributes:
+        __dict (:obj:`OrderedDict[StatusCode, str]`):
+            An ordered dictionary in which the keys are (HTTP) status codes and the values are the corresponding
+            messages.
+    """
 
     descriptor_delimiter: str = " |OR| "
-    """A delimiter to combine the message part of several error responses into a single one.
+    """A delimiter to divide the message part of several error responses which have been combined into a single one.
 
-    This will be shown in textual format  for the response descriptors of the Fast API routes. For example:
+    This will be shown in textual format for the response descriptors of the Fast API routes.
 
-        ``ErrorA |OR| ErrorB``
+    Example:
+        .. code-block:: python
+
+            error_a = ResponseError({400: "Bad Request"})
+            error_b = ResponseError({404: "Not Found"})
+            errors = error_a | error_b
+
+            # When used in a FastAPI response descriptor, the following string will be generated for ``errors``
+            "Bad Request |OR| Not Found"
     """
 
     DefaultResponseClass: Response = PlainTextResponse
-    """The default type of the response which will be returned when an error occurs."""
+    """The default type of the response which will be returned when an error occurs.
+
+    This must be a valid member (class) of ``fastapi.responses``.
+    """
 
     def __init__(self, args_dict: OrderedDict[StatusCode, str | list[str]] | dict) -> None:
-        """Initializes the response error object given a dictionary of error (HTTP) codes and messages."""
+        """Initializes the error object given a dictionary of error (HTTP) codes (keys) and messages (values).
+
+        Note:
+            The order of items will be preserved as we use an ordered dictionary to store the items internally.
+
+        Example:
+            .. code-block:: python
+
+                # The following are all valid error objects
+                error_a = ResponseError({400: "Bad Request"})
+                error_b = ResponseError({404: "Not Found"})
+                errors = error_a | error_b
+                errors_a_or_b = ResponseError({400: "Bad Request", 404: "Not Found"})
+        """
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
     def __or__(self, other: Self):
-        """Combines the error responses into a single error response.
+        """Implements the bitwise `or` (``|``) which combines the error objects into a single error response.
 
         Args:
             other:
                 Another error response of the same base type to combine with.
 
         Returns:
-            A new error response which includes the combined error response. In case of different http status codes,
-            the returned response includes the `{status-code: message}` pairs for both ``self`` and the ``other``.
-            In case of the same status codes, the messages will be appended to a list and saved as a list.
+            A new error response which includes the combined error response. In case of different (HTTP) status codes,
+            the returned response includes the ``{<status-code>: <message>}`` pairs for both ``self`` and the ``other``.
+            In case of the same status codes, the messages will be stored in a list.
 
         Example:
             .. code-block:: python
 
-                ErrorA = ResponseError({200: "OK"})
-                ErrorB = ResponseError({400: "Bad Request"})
-                ErrorC = ResponseError({200: "Still Okay"})
+                error_a = ResponseError({400: "Bad Request"})
+                error_b = ResponseError({404: "Not Found"})
+                error_c = ResponseError({400: "Still Bad Request"})
 
-                ErrorCombined = ErrorA | ErrorB | ErrorC
+                errors_combined = error_a | error_b | error_c
+
+                # which is equivalent to the following
+                errors_combined_literal = ResponseError({
+                    400: ["Bad Request", "Still Bad Request"],
+                    404: "Not Found"
+                }
         """
         buff = OrderedDict(self.__dict)
         for key, msg in other.__dict.items():
             self_msg = buff.get(key, None)
-            buff[key] = ResponseError.__listify(self_msg) if self_msg else []
-            buff[key].extend(ResponseError.__listify(msg))
+            buff[key] = _listify(self_msg) if self_msg else []
+            buff[key].extend(_listify(msg))
         return ResponseError(buff)
 
-    def __assert_existence_multiple_response_codes(
+    def __retrieve_one_from_multiple_response_codes(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
-        """Assert whether the response error includes multiple items."""
+        """Retrieves a single tuple of ``(<status-code>, <message>)`` from the internal dictionary ``self.__dict``.
+
+        Asserts whether the response error includes multiple items.
+
+        """
         match status_code, len(self.__dict):
             case None, n if n > 1:
                 raise ValueError("In case of multiple response status codes, the status code must be specified.")
@@ -82,11 +162,11 @@ class ResponseError(Exception):
             self,
             extra_information: dict | None = None,
             status_code: int | None = None) -> (StatusCode, str):
-        """Documentation to be added!"""
-        status_code, msg = self.__assert_existence_multiple_response_codes(status_code)
+        """Gets the details of the error response."""
+        status_code, msg = self.__retrieve_one_from_multiple_response_codes(status_code)
         return (
             status_code,
-            ResponseError.__stringify(msg) + (f" :=> {extra_information}" if extra_information else "")
+            _stringify(msg, self.descriptor_delimiter) + (f" :=> {extra_information}" if extra_information else "")
         )
 
     def sys_exit_log(
@@ -109,18 +189,25 @@ class ResponseError(Exception):
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
-        """Documentation to be added!"""
-        return {status: {Literal["description"]: ResponseError.__stringify(msg)} for status, msg in self.__dict.items()}
+        """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`~ResponseError.__dict`.
 
-    @staticmethod
-    def __listify(item: str | list[str]) -> list[str]:
-        """Documentation to be added!"""
-        return item if isinstance(item, list) else [item]
+        Example:
+             .. code-block:: python
 
-    @staticmethod
-    def __stringify(item: str | list[str]) -> str:
-        """Documentation to be added!"""
-        return ResponseError.descriptor_delimiter.join(ResponseError.__listify(item))
+            error_a = ResponseError({400: "Bad Request"})
+            error_b = ResponseError({404: "Not Found"})
+            error_c = ResponseError({400: "Still Bad Request"})
+
+            errors_combined = error_a | error_b | error_c
+            errors_combined.fastapi_descriptor == {
+                400: {"description": "Bad Request |OR| Still Bad Request"},
+                404: {"description": "Not Found"}
+            }
+        """
+        return {
+            status: {Literal["description"]: _stringify(msg, self.descriptor_delimiter)}
+            for status, msg in self.__dict.items()
+        }
 
 
 class ResponsesErrorGroup:

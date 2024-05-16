@@ -9,7 +9,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+
 import os
 import sys
 
@@ -19,9 +19,6 @@ sys.path.insert(0, os.path.abspath("../../"))
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 for x in os.walk("../../trolldb"):
     sys.path.append(x[0])
-
-# autodoc_mock_imports = ["motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml"]
-
 
 # -- Project information -----------------------------------------------------
 
@@ -44,8 +41,8 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
 ]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -67,9 +64,17 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
 
+autodoc_default_options = {
+    "members": True,
+    "member-order": "bysource",
+    "private-members": True,
+    "special-members": "__init__, __or__",
+    "undoc-members": True,
+    "exclude-members": "__weakref__"
+}
 
 root_doc = "index"
 
 output_dir = os.path.join(".")
 module_dir = os.path.abspath("../../trolldb")
-apidoc.main(["-q", "-f", "-o", output_dir, module_dir, *include_patterns])
+apidoc.main(["-e", "-M", "-q", "-f", "-o", output_dir, module_dir, *include_patterns])
