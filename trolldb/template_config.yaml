@@ -22,25 +22,3 @@ database:
 api_server:
   # Required
   url: "http://localhost:8000"
-
-  # Required
-  "title": "Pytroll-db API"
-
-  # Required
-  "version": "0.1"
-
-  # Optional
-  "summary": "The awesome API of Pytroll-db"
-
-  # Optional
-  "description": "
-          The API allows you to perform CRUD operations as well as querying the database.
-          At the moment only MongoDB is supported. It is based on the following Python packages
-          \n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)
-          \n * **motor** (https://github.com/mongodb/motor)
-          "
-
-  # Optional
-  "license_info":
-    "name": "The GNU General Public License v3.0"
-    "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"

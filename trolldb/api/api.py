@@ -67,10 +67,17 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
             to it. These keyword arguments will be first concatenated with the configurations of the API server which
             are read from the ``config`` argument. The keyword arguments which are passed
-            explicitly to the function take precedence over ``config``.
+            explicitly to the function take precedence over ``config``. Finally, ``API_INFO``, which are hard-coded
+            information for the API server, will be concatenated and takes precedence over all.
     """
     config = parse(config)
-    app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
+
+    # Keep all except for the "url" key, as that one will be handled by the `uvicorn`
+    config_fast_api = {k: v for k, v in config.api_server._asdict() if k != "url"}
+
+    # concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
+    app = FastAPI(**(config_fast_api | kwargs | API_INFO))
+
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)
