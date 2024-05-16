@@ -17,5 +17,5 @@ router = APIRouter()
             responses=database_collection_error_descriptor,
             summary="Gets the list of all sensor names")
 async def sensor_names(collection: CheckCollectionDependency) -> list[str]:
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     return await get_distinct_items_in_collection(collection, "sensor")

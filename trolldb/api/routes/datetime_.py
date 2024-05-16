@@ -16,19 +16,19 @@ from trolldb.database.mongodb import get_id
 
 
 class TimeModel(TypedDict):
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     _id: str
     _time: datetime
 
 
 class TimeEntry(TypedDict):
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     _min: TimeModel
     _max: TimeModel
 
 
 class ResponseModel(BaseModel):
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     start_time: TimeEntry
     end_time: TimeEntry
 
@@ -41,7 +41,7 @@ router = APIRouter()
             responses=database_collection_error_descriptor,
             summary="Gets the the minimum and maximum values for the start and end times")
 async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     agg_result = await collection.aggregate([{
         "$group": {
             "_id": None,
@@ -52,7 +52,7 @@ async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
         }}]).next()
 
     def _aux(query):
-        """Documentation to be added!"""
+        """Please consult the auto-generated documentation by FastAPI."""
         return get_id(collection.find_one(query))
 
     return ResponseModel(

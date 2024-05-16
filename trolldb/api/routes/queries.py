@@ -26,7 +26,7 @@ async def queries(
         sensor: list[str] = Query(default=None),  # noqa: B008
         time_min: datetime.datetime = Query(default=None),  # noqa: B008
         time_max: datetime.datetime = Query(default=None)) -> list[str]:  # noqa: B008
-    """Documentation to be added!"""
+    """Please consult the auto-generated documentation by FastAPI."""
     pipelines = Pipelines()
 
     if platform:
