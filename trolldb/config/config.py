@@ -43,15 +43,13 @@ class APIServerConfig(NamedTuple):
     """A named tuple to hold all the configurations of the API server (excluding the database).
 
     Note:
-        Except for the ``url``, the attributes herein (if any!) are a subset of the keyword arguments accepted by
+        The attributes herein are a subset of the keyword arguments accepted by
         `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
         to the FastAPI class.
     """
 
     url: AnyUrl
-    """The URL of the API server including the port, e.g. ``mongodb://localhost:8000``. This will not be passed to the
-    FastAPI class. Instead, it will be used by the `uvicorn` to determine the URL of the server.
-    """
+    """The URL of the API server including the port, e.g. ``mongodb://localhost:8000``."""
 
 
 class DatabaseConfig(NamedTuple):

@@ -72,11 +72,8 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
     """
     config = parse(config)
 
-    # Keep all except for the "url" key, as that one will be handled by the `uvicorn`
-    config_fast_api = {k: v for k, v in config.api_server._asdict() if k != "url"}
-
     # concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
-    app = FastAPI(**(config_fast_api | kwargs | API_INFO))
+    app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
 
     app.include_router(api_router)
 
