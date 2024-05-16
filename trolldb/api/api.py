@@ -37,15 +37,17 @@ API_INFO = {
     "title": "pytroll-db",
     "version": "0.1",
     "summary": "The database API of Pytroll",
-    "description": "The API allows   you to perform CRUD operations as well as querying the database"
-                   "At the moment only MongoDB is supported. It is based on the following Python packages"
-                   "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
-                   "\n * **motor** (https://github.com/mongodb/motor)",
+    "description":
+        "The API allows   you to perform CRUD operations as well as querying the database"
+        "At the moment only MongoDB is supported. It is based on the following Python packages"
+        "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
+        "\n * **motor** (https://github.com/mongodb/motor)",
     "license_info": {
         "name": "The GNU General Public License v3.0",
         "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
     }
 }
+"""These will appear the auto-generated documentation and are passed to the ``FastAPI`` class."""
 
 
 @validate_call
