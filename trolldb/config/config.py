@@ -10,7 +10,7 @@ Note:
 
 import errno
 import sys
-from typing import Any, Dict, NamedTuple
+from typing import Any, NamedTuple
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -46,6 +46,7 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
 
 
 MongoObjectId = Annotated[str, AfterValidator(id_must_be_valid)]
+"""Type hint validator for object IDs."""
 
 
 class MongoDocument(BaseModel):
@@ -80,10 +81,17 @@ class DatabaseConfig(NamedTuple):
     url: MongoDsn
     """The URL of the MongoDB server excluding the port part, e.g. ``"mongodb://localhost:27017"``"""
 
-    timeout: Annotated[int, Field(gt=-1)]
-    """The timeout in milliseconds (non-negative integer), after which an exception is raised if a connection with the
-    MongoDB instance is not established successfully, e.g. ``1000``.
+    timeout: Timeout
+    """The timeout in seconds (non-negative float), after which an exception is raised if a connection with the
+    MongoDB instance is not established successfully, e.g. ``2.5``.
     """
+
+
+SubscriberConfig = dict[Any, Any]
+"""A dictionary to hold all the configurations of the subscriber.
+
+TODO: This has to be moved to the `posttroll` package.
+"""
 
 
 class AppConfig(BaseModel):
@@ -93,7 +101,7 @@ class AppConfig(BaseModel):
     """
     api_server: APIServerConfig
     database: DatabaseConfig
-    subscriber_config: Dict[Any, Any]
+    subscriber_config: SubscriberConfig
 
 
 @validate_call
@@ -104,16 +112,16 @@ def from_yaml(filename: FilePath) -> AppConfig:
         filename:
             The filename of a valid YAML file which holds the configurations.
 
-    Raises:
-        -- ParserError:
-            If the file cannot be properly parsed.
-
-        -- ValidationError:
-            If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to
-            :class:`AppConfig`.
-
     Returns:
         An instance of :class:`AppConfig`.
+
+    Raises:
+        ParserError:
+            If the file cannot be properly parsed
+
+        ValidationError:
+            If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to
+            :class:`AppConfig`.
     """
     with open(filename, "r") as file:
         config = safe_load(file)
@@ -133,9 +141,8 @@ def parse(config: AppConfig | FilePath) -> AppConfig:
             Either an object of type :class:`AppConfig` or :class:`FilePath`.
 
     Returns:
-        -- In case of an object of type :class:`AppConfig` as input, the same object will be returned.
-
-        -- An input object of type ``str`` will be interpreted as a YAML filename, in which case the function returns
+      - In case of an object of type :class:`AppConfig` as input, the same object will be returned as-is.
+      - An input object of type ``str`` will be interpreted as a YAML filename, in which case the function returns
         the result of parsing the file.
     """
     match config:
