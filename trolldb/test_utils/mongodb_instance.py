@@ -115,6 +115,10 @@ def mongodb_instance_server_process_context(
         startup_time:
             The overall time in seconds that is expected for the MongoDB server instance to run before the database
             content can be accessed.
+
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
     """
     TestMongoInstance.port = database_config.url.hosts()[0]["port"]
     TestMongoInstance.prepare_dirs()

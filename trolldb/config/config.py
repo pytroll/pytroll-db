@@ -122,6 +122,10 @@ def from_yaml(filename: FilePath) -> AppConfig:
         ValidationError:
             If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to
             :class:`AppConfig`.
+
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
     """
     with open(filename, "r") as file:
         config = safe_load(file)
@@ -144,6 +148,10 @@ def parse(config: AppConfig | FilePath) -> AppConfig:
       - In case of an object of type :class:`AppConfig` as input, the same object will be returned as-is.
       - An input object of type ``str`` will be interpreted as a YAML filename, in which case the function returns
         the result of parsing the file.
+
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
     """
     match config:
         case AppConfig():

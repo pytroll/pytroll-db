@@ -72,6 +72,10 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             take precedence over ``config``. Finally, ``API_INFO``, which are hard-coded information for the API server,
             will be concatenated and takes precedence over all.
 
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
+
     Example:
         .. code-block:: python
 
@@ -125,6 +129,10 @@ def server_process_context(config: AppConfig | FilePath, startup_time: Timeout =
             The overall time in seconds that is expected for the server and the database connections to be established
             before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
             large so that the tests will not time out.
+
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
     """
     config = parse(config)
     process = Process(target=run_server, args=(config,))

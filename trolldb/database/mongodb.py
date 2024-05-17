@@ -293,6 +293,10 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
     Args:
         database_config:
             The configuration of the database.
+
+    Raises:
+        ValidationError:
+            If the function is not called with arguments of valid type.
     """
     try:
         await MongoDB.initialize(database_config)
