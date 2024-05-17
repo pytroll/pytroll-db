@@ -68,9 +68,9 @@ autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
     "private-members": True,
-    "special-members": "__init__, __or__",
+    "special-members": True,
     "undoc-members": True,
-    "exclude-members": "__weakref__"
+    "exclude-members": "__weakref__, __dict__, __module__, __hash__"
 }
 
 root_doc = "index"
