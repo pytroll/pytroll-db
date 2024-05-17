@@ -20,13 +20,27 @@ from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 from yaml import safe_load
 
-Timeout = Annotated[int, Field(gt=0)]
+Timeout = Annotated[float, Field(ge=0)]
+"""A type hint for the timeout in seconds (non-negative float)."""
 
 
-def id_must_be_valid(v: str) -> ObjectId:
-    """Checks that the given string can be converted to a valid MongoDB ObjectId."""
+def id_must_be_valid(id_like_string: str) -> ObjectId:
+    """Checks that the given string can be converted to a valid MongoDB ObjectId.
+
+    Args:
+        id_like_string:
+            The string to be converted to an ObjectId.
+
+    Returns:
+       The ObjectId object if successfully.
+
+    Raises:
+        ValueError:
+            If the given string cannot be converted to a valid ObjectId. This will ultimately turn into a pydantic
+            validation error.
+    """
     try:
-        return ObjectId(v)
+        return ObjectId(id_like_string)
     except InvalidId as e:
         raise ValueError from e
 
@@ -80,6 +94,7 @@ class AppConfig(BaseModel):
     api_server: APIServerConfig
     database: DatabaseConfig
     subscriber_config: Dict[Any, Any]
+
 
 @validate_call
 def from_yaml(filename: FilePath) -> AppConfig:

@@ -4,7 +4,7 @@ from typing import Any, Self
 
 
 class PipelineBooleanDict(dict):
-    """A subclass of dict which overrides the behaviour of bitwise `OR` (``|``) and bitwise `AND` (``&``).
+    """A subclass of dict which overrides the behavior of bitwise `OR` (``|``) and bitwise `AND` (``&``).
 
     This class makes it easier to chain and nest `And/Or` operations.
 

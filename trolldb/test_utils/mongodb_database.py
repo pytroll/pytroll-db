@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from random import randint, shuffle
-from typing import Any, Iterator
+from typing import Iterator
 
 from pymongo import MongoClient
 
@@ -18,6 +18,14 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
     Note:
         This is based on `pymongo` and not the `motor` async driver. For testing purposes this is sufficient and we
         do not need async capabilities.
+
+    Args:
+        database_config (Optional, default :obj:``~test_app_config.database``):
+            The configuration object for the database. Defaults to the test_app_config.database configuration.
+
+    Yields:
+        MongoClient:
+            The MongoDB client object.
     """
     client = None
     try:
@@ -28,8 +36,26 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
             client.close()
 
 
-def random_sample(items: list[Any], size: int = 10) -> list[Any]:
-    """Generates a random sample of ``size`` elements, using the given list of items."""
+def random_sample(items, size=10):
+    """Generates a random sample of elements, using the given list of items.
+
+    Args:
+        items:
+            The list of items from which the random sample will be generated.
+        size (Optional, default ``10``):
+            The number of elements in the random sample. Defaults to 10.
+
+    Returns:
+        A list containing the random sample of elements.
+
+    Raises:
+        None
+
+    Example:
+        >>> items = [1, 2, 3, 4, 5]
+        >>> random_sample(items, 10)
+        [2, 4, 1, 5, 3, 4, 2, 1, 3, 5]
+    """
     last_index = len(items) - 1
     # We suppress ruff here as we are not generating anything cryptographic here!
     indices = [randint(0, last_index) for _ in range(size)]  # noqa: S311

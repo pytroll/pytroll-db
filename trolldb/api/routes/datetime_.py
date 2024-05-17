@@ -5,7 +5,7 @@ Note:
 """
 
 from datetime import datetime
-from typing import TypedDict
+from typing import Any, Coroutine, TypedDict
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -51,8 +51,16 @@ async def datetime(collection: CheckCollectionDependency) -> ResponseModel:
             "max_end_time": {"$max": "$end_time"}
         }}]).next()
 
-    def _aux(query):
-        """Please consult the auto-generated documentation by FastAPI."""
+    def _aux(query: dict) -> Coroutine[Any, Any, str]:
+        """An auxiliary function that retrieves a single object UUID from the database based on the given query.
+
+        Args:
+            query:
+                The query used to search for the desired document in the database.
+
+        Returns:
+            The UUID of the document found in the database.
+        """
         return get_id(collection.find_one(query))
 
     return ResponseModel(

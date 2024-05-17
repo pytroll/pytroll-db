@@ -1,7 +1,8 @@
 """The module which handles database CRUD operations for MongoDB.
 
-It is based on `PyMongo <https://github.com/mongodb/mongo-python-driver>`_ and
-`motor <https://github.com/mongodb/motor>`_.
+It is based on the following libraries:
+  - `PyMongo <https://github.com/mongodb/mongo-python-driver>`_
+  - `motor <https://github.com/mongodb/motor>`_.
 """
 
 import errno
@@ -25,8 +26,13 @@ from trolldb.errors.errors import ResponseError
 
 T = TypeVar("T")
 CoroutineLike = Coroutine[Any, Any, T]
+"""A simple type hint for a coroutine of any type."""
+
 CoroutineDocument = CoroutineLike[_DocumentType | None]
+"""Coroutine type hint for document like objects."""
+
 CoroutineStrList = CoroutineLike[list[str]]
+"""Coroutine type hint for a list of strings."""
 
 
 class DatabaseName(BaseModel):
@@ -112,24 +118,23 @@ class MongoDB:
             database_config:
                  A named tuple which includes the database configurations.
 
-        Raises ``SystemExit(errno.EIO)``:
-
-            If connection is not established (``ConnectionFailure``)
-
-            If the attempt times out (``ServerSelectionTimeoutError``)
-
-            If one attempts reinitializing the class with new (different) database configurations without calling
-            :func:`~close()` first.
-
-            If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
-            configurations still exist and are different from the new ones which have been just provided.
-
-
-        Raises ``SystemExit(errno.ENODATA)``:
-            If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
-
         Returns:
             On success ``None``.
+
+        Raises:
+            SystemExit(errno.EIO):
+                If connection is not established (``ConnectionFailure``)
+            SystemExit(errno.EIO):
+                If the attempt times out (``ServerSelectionTimeoutError``)
+            SystemExit(errno.EIO):
+                If one attempts reinitializing the class with new (different) database configurations without calling
+                :func:`~close()` first.
+            SystemExit(errno.EIO):
+                If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
+                configurations still exist and are different from the new ones which have been just provided.
+
+            SystemExit(errno.ENODATA):
+                If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
         """
         if cls.__database_config:
             if database_config == cls.__database_config:
@@ -196,7 +201,8 @@ class MongoDB:
 
         Returns:
             The main database which includes the main collection, which in turn includes the desired documents.
-            Equivalent to ``MongoDB.client()[<main_database_name>]``.
+
+            This is equivalent to ``MongoDB.client()[<main_database_name>]``.
         """
         return cls.__main_database
 
@@ -213,23 +219,23 @@ class MongoDB:
             collection_name:
                 The name of the collection which resides inside the parent database labelled by ``database_name``.
 
-        Raises:
-            ``ValidationError``:
-                If input args are invalid according to the pydantic.
-
-             ``KeyError``:
-                If the database name exists, but it does not include any collection with the given name.
-
-            ``TypeError``:
-                If only one of the database or collection names are ``None``.
-
-            ``_``:
-                This method relies on :func:`get_database` to check for the existence of the database which can raise
-                exceptions. Check its documentation for more information.
-
         Returns:
             The database object. In case of ``None`` for both the database name and collection name, the main collection
             will be returned.
+
+        Raises:
+            ValidationError:
+                If input args are invalid according to the pydantic.
+
+            KeyError:
+                If the database name exists, but it does not include any collection with the given name.
+
+            TypeError:
+                If only one of the database or collection names are ``None``.
+
+            ...:
+                This method relies on :func:`get_database` to check for the existence of the database which can raise
+                exceptions. Check its documentation for more information.
         """
         database_name = DatabaseName(name=database_name).name
         collection_name = CollectionName(name=collection_name).name
@@ -254,12 +260,12 @@ class MongoDB:
             database_name:
                 The name of the database to retrieve.
 
-        Raises:
-             ``KeyError``:
-                If the database name does not exist in the list of database names.
-
         Returns:
             The database object.
+
+        Raises:
+             KeyError:
+                If the database name does not exist in the list of database names.
         """
         database_name = DatabaseName(name=database_name).name
 
@@ -277,7 +283,12 @@ class MongoDB:
 async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
     """An asynchronous context manager to connect to the MongoDB client.
 
-    It can be either used in production or in testing environments.
+    It can be either used in `PRODUCTION` or in `TESTING` environments.
+
+
+    Note:
+        Since the :class:`MongoDB` is supposed to be used statically, this context manager does not yield anything!
+        One can simply use :class:`MongoDB` inside the context manager.
 
     Args:
         database_config:

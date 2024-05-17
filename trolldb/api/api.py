@@ -33,21 +33,21 @@ from trolldb.config.config import AppConfig, Timeout, parse
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
-API_INFO = {
-    "title": "pytroll-db",
-    "version": "0.1",
-    "summary": "The database API of Pytroll",
-    "description":
-        "The API allows   you to perform CRUD operations as well as querying the database"
-        "At the moment only MongoDB is supported. It is based on the following Python packages"
-        "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
-        "\n * **motor** (https://github.com/mongodb/motor)",
-    "license_info": {
-        "name": "The GNU General Public License v3.0",
-        "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
-    }
-}
-"""These will appear the auto-generated documentation and are passed to the ``FastAPI`` class."""
+API_INFO = dict(
+    title="pytroll-db",
+    version="0.1",
+    summary="The database API of Pytroll",
+    description=
+    "The API allows   you to perform CRUD operations as well as querying the database"
+    "At the moment only MongoDB is supported. It is based on the following Python packages"
+    "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
+    "\n * **motor** (https://github.com/mongodb/motor)",
+    license_info=dict(
+        name="The GNU General Public License v3.0",
+        url="https://www.gnu.org/licenses/gpl-3.0.en.html"
+    )
+)
+"""These will appear int the auto-generated documentation and are passed to the ``FastAPI`` class as keyword args."""
 
 
 @validate_call
@@ -68,19 +68,27 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             The keyword arguments are the same as those accepted by the
             `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
             to it. These keyword arguments will be first concatenated with the configurations of the API server which
-            are read from the ``config`` argument. The keyword arguments which are passed
-            explicitly to the function take precedence over ``config``. Finally, ``API_INFO``, which are hard-coded
-            information for the API server, will be concatenated and takes precedence over all.
+            are read from the ``config`` argument. The keyword arguments which are passed explicitly to the function
+            take precedence over ``config``. Finally, ``API_INFO``, which are hard-coded information for the API server,
+            will be concatenated and takes precedence over all.
+
+    Example:
+        .. code-block:: python
+
+            from api.api import run_server
+            if __name__ == "__main__":
+                run_server("config.yaml")
     """
     config = parse(config)
 
-    # concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
+    # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
     app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
 
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)
     async def unicorn_exception_handler(_, exc: ResponseError):
+        """Catches all the exceptions raised as a ResponseError, e.g. accessing non-existing databases/collections."""
         status_code, message = exc.get_error_details()
         return PlainTextResponse(
             status_code=status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -103,26 +111,27 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
 @contextmanager
 @validate_call
-def server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2000):
+def server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2):
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
-    is envisaged to be in testing environments.
+    is envisaged to be in `TESTING` environments.
 
     Args:
         config:
             Same as ``config`` argument for :func:`run_server`.
 
         startup_time:
-            The overall time that is expected for the server and the database connections to be established before
-            actual requests can be sent to the server. For testing purposes ensure that this is sufficiently large so
-            that the tests will not time out.
+            The overall time in seconds that is expected for the server and the database connections to be established
+            before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
+            large so that the tests will not time out.
     """
     config = parse(config)
     process = Process(target=run_server, args=(config,))
     process.start()
     try:
-        time.sleep(startup_time / 1000)  # `time.sleep()` expects an argument in seconds, hence the division by 1000.
+        time.sleep(startup_time)
         yield process
     finally:
         process.terminate()
+        process.join()
