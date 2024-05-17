@@ -174,7 +174,7 @@ class ResponseError(Exception):
 
             # The status code has not been given and there is only a single item in the dictionary
             case _, 1:
-                return [(k, v) for k, v in self.__dict.items()][0]
+                return next(iter(self.__dict.items()))
 
             # The internal dictionary is empty and the status code is None.
             case _:
@@ -188,10 +188,11 @@ class ResponseError(Exception):
 
         Args:
             extra_information (Optional, default ``None``):
-                Some more information to be added in the message string.
+                More information (if any) that wants to be added to the message string.
             status_code (Optional, default ``None``):
-                The status to retrieve. This is useful when there are several error items in the internal dictionary.
-                In case of ``None``, the internal dictionary must include a single entry, otherwise an error is raised.
+                The status code to retrieve. This is useful when there are several error items in the internal
+                dictionary. In case of ``None``, the internal dictionary must include a single entry, otherwise an error
+                is raised.
 
         Returns:
             A tuple, in which the first element is the status code and the second element is a single string message.
@@ -214,10 +215,12 @@ class ResponseError(Exception):
             status_code: int | None = None) -> None:
         """Same as :func:`~ResponseError.get_error_details` but logs the error and calls the ``sys.exit``.
 
-        This is supposed to be done in case of non-recoverable errors, e.g. database issues.
-
         The arguments are the same as :func:`~ResponseError.get_error_details` with the addition of ``exit_code``
         which is optional and is set to ``-1`` by default.
+
+        Warning:
+            This is supposed to be done in case of non-recoverable errors, e.g. database issues. For other cases, we try
+            to see if we can recover and continue.
 
         Returns:
             Does not return anything, but logs the error and exits the program.
@@ -258,7 +261,7 @@ class ResponsesErrorGroup:
     """
 
     @classmethod
-    def fields(cls) -> dict[str, ResponseError]:
+    def members(cls) -> dict[str, ResponseError]:
         """Retrieves a dictionary of all errors which are members of the class."""
         return {k: v for k, v in cls.__dict__.items() if isinstance(v, ResponseError)}
 
@@ -266,10 +269,11 @@ class ResponsesErrorGroup:
     def union(cls) -> ResponseError:
         """Gets the union of all member errors in the group.
 
-        This utilizes the bitwise `or` ``|`` functionality of :obj:`ResponseError`.
+        This is useful when one wants to get the FastAPI response descriptor of all members. This function utilizes
+        the bitwise `or` ``|`` functionality of :obj:`ResponseError`.
         """
         buff = None
-        for v in cls.fields().values():
+        for v in cls.members().values():
             if buff is None:
                 buff = v
             else:
