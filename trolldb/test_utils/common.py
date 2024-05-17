@@ -21,17 +21,19 @@ test_app_config = AppConfig(
 """The app configuration when used in testing."""
 
 
-def http_get(route: str = "") -> BaseHTTPResponse:
+def http_get(route: str = "", root: AnyUrl = test_app_config.api_server.url) -> BaseHTTPResponse:
     """An auxiliary function to make a GET request using :func:`urllib.request`.
 
     Args:
         route:
             The desired route (excluding the root URL) which can include a query string as well.
+        root (Optional, default :obj:`test_app_config.api_server.url`):
+            The root to which the given route will be added to make the complete URL.
 
     Returns:
         The response from the GET request.
     """
-    return request("GET", urljoin(test_app_config.api_server.url.unicode_string(), route))
+    return request("GET", urljoin(root.unicode_string(), route))
 
 
 def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:

@@ -16,16 +16,16 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
     """A context manager for the MongoDB client given test configurations.
 
     Note:
-        This is based on `pymongo` and not the `motor` async driver. For testing purposes this is sufficient and we
+        This is based on `Pymongo` and not the `motor` async driver. For testing purposes this is sufficient and we
         do not need async capabilities.
 
     Args:
-        database_config (Optional, default :obj:``~test_app_config.database``):
-            The configuration object for the database. Defaults to the test_app_config.database configuration.
+        database_config (Optional, default :obj:`test_app_config.database`):
+            The configuration object for the database.
 
     Yields:
         MongoClient:
-            The MongoDB client object.
+            The MongoDB client object (from `Pymongo`)
     """
     client = None
     try:
@@ -36,20 +36,20 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
             client.close()
 
 
-def random_sample(items, size=10):
-    """Generates a random sample of elements, using the given list of items.
+def random_sample(items: list, size: int = 10) -> list:
+    """Generates a random sample of items from the given list, with repetitions allowed.
+
+    Note:
+        The length of the output can be larger than the lenght of the given list. See the example.
 
     Args:
         items:
             The list of items from which the random sample will be generated.
         size (Optional, default ``10``):
-            The number of elements in the random sample. Defaults to 10.
+            The number of elements in the random sample.
 
     Returns:
         A list containing the random sample of elements.
-
-    Raises:
-        None
 
     Example:
         >>> items = [1, 2, 3, 4, 5]
@@ -57,7 +57,7 @@ def random_sample(items, size=10):
         [2, 4, 1, 5, 3, 4, 2, 1, 3, 5]
     """
     last_index = len(items) - 1
-    # We suppress ruff here as we are not generating anything cryptographic here!
+    # We suppress ruff (S311) here as we are not generating anything cryptographic here!
     indices = [randint(0, last_index) for _ in range(size)]  # noqa: S311
     return [items[i] for i in indices]
 
@@ -66,18 +66,18 @@ class Time:
     """A static class to enclose functionalities for generating random time stamps."""
 
     min_start_time = datetime(2019, 1, 1, 0, 0, 0)
-    """The minimum timestamp."""
+    """The minimum timestamp which is allowed to appear in our data."""
 
     max_end_time = datetime(2024, 1, 1, 0, 0, 0)
-    """The maximum timestamp."""
+    """The maximum timestamp which is allowed to appear in our data."""
 
     delta_time = int((max_end_time - min_start_time).total_seconds())
     """The difference between the maximum and minimum timestamps in seconds."""
 
     @staticmethod
     def random_interval_secs(max_interval_secs: int) -> timedelta:
-        """Generates a random time interval between zero and the given max interval."""
-        # We suppress ruff here as we are not generating anything cryptographic here!
+        """Generates a random time interval between zero and the given max interval in seconds."""
+        # We suppress ruff (S311) here as we are not generating anything cryptographic here!
         return timedelta(seconds=randint(0, max_interval_secs))  # noqa: S311
 
     @staticmethod
@@ -93,13 +93,14 @@ class Time:
     def random_end_time(start_time: datetime, max_interval_secs: int = 300) -> datetime:
         """Generates a random end time.
 
-        The end time is within ``max_interval_secs`` seconds from the given ``start_time``.
+        The end time is within ``max_interval_secs`` seconds from the given ``start_time``. By default, the interval
+        is set to 300 seconds (5 minutes).
         """
         return start_time + Time.random_interval_secs(max_interval_secs)
 
 
 class Document:
-    """A class which defines functionalities to generate documents data which are similar to real data."""
+    """A class which defines functionalities to generate database documents/data which are similar to real data."""
 
     def __init__(self, platform_name: str, sensor: str) -> None:
         """Initializes the document given its platform and sensor names."""
@@ -115,7 +116,7 @@ class Document:
         chosen from 1 to ``max_count`` for each document.
         """
         dataset = []
-        # We suppress ruff here as we are not generating anything cryptographic here!
+        # We suppress ruff (S311) here as we are not generating anything cryptographic here!
         n = randint(1, max_count)  # noqa: S311
         for i in range(n):
             txt = f"{self.platform_name}_{self.sensor}_{self.start_time}_{self.end_time}_{i}"
@@ -138,7 +139,7 @@ class Document:
 
 
 class TestDatabase:
-    """The class which encloses functionalities to prepare and fill the test database with mock data."""
+    """A static class which encloses functionalities to prepare and fill the test database with mock data."""
 
     platform_names = random_sample(["PA", "PB", "PC"])
     """Example platform names."""
@@ -163,21 +164,28 @@ class TestDatabase:
     all_database_names = ["admin", "config", "local", *database_names]
     """All database names including the default ones which are automatically created by MongoDB."""
 
-    documents = []
+    documents: list[dict] = []
     """The list of documents which include mock data."""
 
     @classmethod
-    def generate_documents(cls, random_shuffle: bool = True) -> list:
-        """Generates test documents which for practical purposes resemble real data."""
-        documents = [Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors,
-                                                                            strict=False)]
+    def generate_documents(cls, random_shuffle: bool = True) -> None:
+        """Generates test documents which for practical purposes resemble real data.
+
+        Warning:
+            This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is filled.
+        """
+        cls.documents = [
+            Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)]
         if random_shuffle:
-            shuffle(documents)
-        return documents
+            shuffle(cls.documents)
 
     @classmethod
     def reset(cls):
-        """Resets all the databases/collections."""
+        """Resets all the databases/collections.
+
+        This is done by deleting all documents in the collections and then inserting a single empty ``{}`` document
+        in them.
+        """
         with test_mongodb_context() as client:
             for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
                 db = client[db_name]
@@ -189,13 +197,17 @@ class TestDatabase:
     def write_mock_date(cls):
         """Fills databases/collections with mock data."""
         with test_mongodb_context() as client:
-            cls.documents = cls.generate_documents()
-            collection = client[test_app_config.database.main_database_name][
-                test_app_config.database.main_collection_name]
+            # The following function call has side effects!
+            cls.generate_documents()
+            collection = client[
+                test_app_config.database.main_database_name
+            ][
+                test_app_config.database.main_collection_name
+            ]
             collection.insert_many(cls.documents)
 
     @classmethod
     def prepare(cls):
-        """Prepares the instance by first resetting all databases/collections and filling them with mock data."""
+        """Prepares the MongoDB instance by first resetting the database and then filling it with mock data."""
         cls.reset()
         cls.write_mock_date()
