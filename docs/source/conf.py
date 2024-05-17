@@ -70,7 +70,7 @@ autodoc_default_options = {
     "private-members": True,
     "special-members": True,
     "undoc-members": True,
-    "exclude-members": "__weakref__, __dict__, __module__, __hash__"
+    "exclude-members": "__weakref__, __dict__, __module__, __hash__, __annotations__"
 }
 
 root_doc = "index"

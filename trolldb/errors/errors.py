@@ -30,7 +30,7 @@ def _listify(item: str | list[str]) -> list[str]:
     Example:
         .. code-block:: python
 
-            # The following evaluate to ``True``
+            # The following evaluate to True
             __listify("test") == ["test"]
             __listify(["a", "b"]) = ["a", "b"]
             __listify([]) == []
@@ -59,7 +59,7 @@ class ResponseError(Exception):
     This is a derivative of the ``Exception`` class and therefore can be used directly in ``raise`` statements.
 
     Attributes:
-        __dict (:obj:`OrderedDict[StatusCode, str]`):
+        __dict (``OrderedDict[StatusCode, str]``):
             An ordered dictionary in which the keys are (HTTP) status codes and the values are the corresponding
             messages.
     """
@@ -76,7 +76,8 @@ class ResponseError(Exception):
             error_b = ResponseError({404: "Not Found"})
             errors = error_a | error_b
 
-            # When used in a FastAPI response descriptor, the following string will be generated for ``errors``
+            # When used in a FastAPI response descriptor,
+            # the following string will be generated for errors
             "Bad Request |OR| Not Found"
     """
 
@@ -100,12 +101,13 @@ class ResponseError(Exception):
                 error_b = ResponseError({404: "Not Found"})
                 errors = error_a | error_b
                 errors_a_or_b = ResponseError({400: "Bad Request", 404: "Not Found"})
+                errors_list = ResponseError({404: ["Not Found", "Still Not Found"]})
         """
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
     def __or__(self, other: Self):
-        """Implements the bitwise `or` (``|``) which combines the error objects into a single error response.
+        """Implements the bitwise `or` ``|`` which combines the error objects into a single error response.
 
         Args:
             other:
@@ -114,7 +116,7 @@ class ResponseError(Exception):
         Returns:
             A new error response which includes the combined error response. In case of different (HTTP) status codes,
             the returned response includes the ``{<status-code>: <message>}`` pairs for both ``self`` and the ``other``.
-            In case of the same status codes, the messages will be stored in a list.
+            In case of the same status codes, the messages will be combined into a list.
 
         Example:
             .. code-block:: python
@@ -141,10 +143,10 @@ class ResponseError(Exception):
     def __retrieve_one_from_some(
             self,
             status_code: StatusCode | None = None) -> (StatusCode, str):
-        """Retrieves a single tuple of ``(<status-code>, <message>)`` from the internal dictionary ``self.__dict``.
+        """Retrieves a tuple ``(<status-code>, <message>)`` from the internal dictionary :obj:`ResponseError.__dict`.
 
         Args:
-            status_code (Optional, default: ``None``):
+            status_code (Optional, default ``None``):
                 The status code to retrieve from the internal dictionary. In case of ``None``, the internal dictionary
                 must include only a single entry which will be returned.
 
@@ -226,7 +228,7 @@ class ResponseError(Exception):
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
-        """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`~ResponseError.__dict`.
+        """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`ResponseError.__dict`.
 
         Example:
              .. code-block:: python
