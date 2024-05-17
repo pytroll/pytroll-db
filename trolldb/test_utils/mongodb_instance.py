@@ -9,8 +9,9 @@ from os import mkdir, path
 from shutil import rmtree
 
 from loguru import logger
+from pydantic import validate_call
 
-from trolldb.config.config import DatabaseConfig
+from trolldb.config.config import DatabaseConfig, Timeout
 from trolldb.test_utils.common import test_app_config
 
 
@@ -18,37 +19,49 @@ class TestMongoInstance:
     """A static class to enclose functionalities for running a MongoDB instance."""
 
     log_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_log")
-    """Temp directory for logging messages by the MongoDB instance."""
+    """Temp directory for logging messages by the MongoDB instance.
+
+    Warning:
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+    """
 
     storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
-    """Temp directory for storing database files by the MongoDB instance."""
+    """Temp directory for storing database files by the MongoDB instance.
+
+    Warning:
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+    """
 
     port: int = 28017
-    """The port on which the instance will run."""
+    """The port on which the instance will run.
+
+    Warning:
+        This must be always hard-coded.
+    """
 
     process: subprocess.Popen | None = None
-    """The (sub-)process which will be used to run the MongoDB instance."""
+    """The process which is used to run the MongoDB instance."""
 
     @classmethod
     def __prepare_dir(cls, directory: str):
-        """Auxiliary function to prepare a single directory.
+        """An auxiliary function to prepare a single directory.
 
-        That is making a directory if it does not exist, or removing it if it does and then remaking it.
+        It creates a directory if it does not exist, or removes it first if it exists and then recreates it.
         """
         cls.__remove_dir(directory)
         mkdir(directory)
 
     @classmethod
     def __remove_dir(cls, directory: str):
-        """Auxiliary function to remove temporary directories."""
+        """An auxiliary function to remove a directory and all its content recursively."""
         if path.exists(directory) and path.isdir(directory):
             rmtree(directory)
 
     @classmethod
     def run_subprocess(cls, args: list[str], wait=True):
         """Runs the subprocess in shell given its arguments."""
-        # We suppress ruff here as we are not receiving any args from outside, e.g. port is hard-coded. Therefore,
-        # sanitization of ``args`` is not required.
+        # We suppress ruff (S603) here as we are not receiving any args from outside, e.g. port is hard-coded.
+        # Therefore, sanitization of arguments is not required.
         cls.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
         if wait:
             outs, errs = cls.process.communicate()
@@ -66,8 +79,8 @@ class TestMongoInstance:
     @classmethod
     def prepare_dirs(cls) -> None:
         """Prepares the temp directories."""
-        cls.__prepare_dir(cls.log_dir)
-        cls.__prepare_dir(cls.storage_dir)
+        for d in [cls.log_dir, cls.storage_dir]:
+            cls.__prepare_dir(d)
 
     @classmethod
     def run_instance(cls):
@@ -86,9 +99,10 @@ class TestMongoInstance:
 
 
 @contextmanager
+@validate_call
 def mongodb_instance_server_process_context(
         database_config: DatabaseConfig = test_app_config.database,
-        startup_time=2000):
+        startup_time: Timeout = 2000):
     """A synchronous context manager to run the MongoDB instance in a separate process (non-blocking).
 
      It uses the `subprocess <https://docs.python.org/3/library/subprocess.html>`_ package. The main use case is
@@ -99,8 +113,8 @@ def mongodb_instance_server_process_context(
             The configuration of the database.
 
         startup_time:
-            The overall time that is expected for the MongoDB server instance to run before the database content can be
-            accessed.
+            The overall time in seconds that is expected for the MongoDB server instance to run before the database
+            content can be accessed.
     """
     TestMongoInstance.port = database_config.url.hosts()[0]["port"]
     TestMongoInstance.prepare_dirs()
