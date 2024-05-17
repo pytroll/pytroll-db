@@ -9,6 +9,7 @@ import errno
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Coroutine, TypeVar
 
+from loguru import logger
 from motor.motor_asyncio import (
     AsyncIOMotorClient,
     AsyncIOMotorCollection,
@@ -136,6 +137,8 @@ class MongoDB:
             SystemExit(errno.ENODATA):
                 If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
         """
+        logger.info("Attempt to initialize the MongoDB client ...")
+        logger.info("Checking the database configs ...")
         if cls.__database_config:
             if database_config == cls.__database_config:
                 if cls.__client:
@@ -143,6 +146,7 @@ class MongoDB:
                 Client.InconsistencyError.sys_exit_log(errno.EIO)
             else:
                 Client.ReinitializeConfigError.sys_exit_log(errno.EIO)
+        logger.info("Database configs are OK.")
 
         # This only makes the reference and does not establish an actual connection until the first attempt is made
         # to access the database.
@@ -152,32 +156,41 @@ class MongoDB:
 
         __database_names = []
         try:
-            # Here we attempt to access the database
+            logger.info("Attempt to access list of databases ...")
             __database_names = await cls.__client.list_database_names()
         except (ConnectionFailure, ServerSelectionTimeoutError):
             Client.ConnectionError.sys_exit_log(
                 errno.EIO, {"url": database_config.url.unicode_string()}
             )
+        logger.info("Accessing the list of databases is successful.")
 
         err_extra_information = {"database_name": database_config.main_database_name}
 
+        logger.info("Checking if the main database name exists ...")
         if database_config.main_database_name not in __database_names:
             Databases.NotFoundError.sys_exit_log(errno.ENODATA, err_extra_information)
         cls.__main_database = cls.__client.get_database(database_config.main_database_name)
+        logger.info("The main database name exists.")
 
         err_extra_information |= {"collection_name": database_config.main_collection_name}
 
+        logger.info("Checking if the main collection name exists ...")
         if database_config.main_collection_name not in await cls.__main_database.list_collection_names():
             Collections.NotFoundError.sys_exit_log(errno.ENODATA, err_extra_information)
+        logger.info("The main collection name exists.")
 
         cls.__main_collection = cls.__main_database.get_collection(database_config.main_collection_name)
+        logger.info("MongoDB is successfully initialized.")
 
     @classmethod
     def close(cls) -> None:
         """Closes the motor client."""
+        logger.info("Attempt to close the MongoDB client ...")
         if cls.__client:
             cls.__database_config = None
-            return cls.__client.close()
+            cls.__client.close()
+            logger.info("Closes the MongoDB client successfully.")
+            return
         Client.CloseNotAllowedError.sys_exit_log(errno.EIO)
 
     @classmethod
@@ -285,7 +298,6 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
 
     It can be either used in `PRODUCTION` or in `TESTING` environments.
 
-
     Note:
         Since the :class:`MongoDB` is supposed to be used statically, this context manager does not yield anything!
         One can simply use :class:`MongoDB` inside the context manager.
@@ -298,8 +310,10 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
         ValidationError:
             If the function is not called with arguments of valid type.
     """
+    logger.info("Attempt to open the MongoDB context manager ...")
     try:
         await MongoDB.initialize(database_config)
         yield
     finally:
         MongoDB.close()
+        logger.info("The MongoDB context manager is successfully closed.")

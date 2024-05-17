@@ -126,10 +126,15 @@ def from_yaml(filename: FilePath) -> AppConfig:
         ValidationError:
             If the function is not called with arguments of valid type.
     """
+    logger.info("Attempt to parse the YAML file ...")
     with open(filename, "r") as file:
         config = safe_load(file)
+    logger.info("Parsing YAML file is successful.")
     try:
-        return AppConfig(**config)
+        logger.info("Attempt to validate the parsed YAML file ...")
+        config = AppConfig(**config)
+        logger.info("Validation of the parsed YAML file is successful.")
+        return config
     except ValidationError as e:
         logger.error(e)
         sys.exit(errno.EIO)
@@ -152,8 +157,10 @@ def parse(config: AppConfig | FilePath) -> AppConfig:
         ValidationError:
             If the function is not called with arguments of valid type.
     """
+    logger.info("Attempt to parse the config file or object ...")
     match config:
         case AppConfig():
+            logger.info("Parsing config object successful.")
             return config
         case _:
             return from_yaml(config)

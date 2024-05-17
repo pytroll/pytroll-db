@@ -26,6 +26,7 @@ from multiprocessing import Process
 import uvicorn
 from fastapi import FastAPI, status
 from fastapi.responses import PlainTextResponse
+from loguru import logger
 from pydantic import FilePath, validate_call
 
 from trolldb.api.routes import api_router
@@ -83,6 +84,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
             if __name__ == "__main__":
                 run_server("config.yaml")
     """
+    logger.info("Attempt to run the API server ...")
     config = parse(config)
 
     # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
@@ -91,17 +93,20 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)
-    async def unicorn_exception_handler(_, exc: ResponseError):
+    async def auto_exception_handler(_, exc: ResponseError):
         """Catches all the exceptions raised as a ResponseError, e.g. accessing non-existing databases/collections."""
         status_code, message = exc.get_error_details()
-        return PlainTextResponse(
+        info = dict(
             status_code=status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=message if message else "Generic Error [This is not okay, check why we have the generic error!]",
         )
+        logger.error(f"Response error caught by the API auto exception handler: {info}")
+        return PlainTextResponse(**info)
 
     async def _serve():
         """An auxiliary coroutine to be used in the asynchronous execution of the FastAPI application."""
         async with mongodb_context(config.database):
+            logger.info("Attempt to start the uvicorn server ...")
             await uvicorn.Server(
                 config=uvicorn.Config(
                     host=config.api_server.url.host,
@@ -110,6 +115,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
                 )
             ).serve()
 
+    logger.info("Attempt to run the asyncio loop for the API server ...")
     asyncio.run(_serve())
 
 
@@ -134,13 +140,18 @@ def server_process_context(config: AppConfig | FilePath, startup_time: Timeout =
         ValidationError:
             If the function is not called with arguments of valid type.
     """
+    logger.info("Attempt to run the API server process in a context manager ...")
+
     config = parse(config)
     process = Process(target=run_server, args=(config,))
-    process.start()
+
     try:
+        process.start()
         # time.sleep() expects its argument to be in seconds, hence the division by 1000.
         time.sleep(startup_time / 1000.)
         yield process
     finally:
+        logger.info("Attempt to terminate the API server process in the context manager ...")
         process.terminate()
         process.join()
+        logger.info("The API server process has terminated successfully.")
