@@ -123,7 +123,6 @@ def from_yaml(filename: FilePath) -> AppConfig:
             If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to
             :class:`AppConfig`.
 
-    Raises:
         ValidationError:
             If the function is not called with arguments of valid type.
     """
