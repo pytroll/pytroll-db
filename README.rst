@@ -1,4 +1,3 @@
-
 The database interface of `Pytroll <https://pytroll.github.io/>`_
 
 
@@ -22,12 +21,7 @@ Authors
 
 
 License
-    This program, i.e. **pytroll-db**, is part of `Pytroll <https://pytroll.github.io/>`_.
-
-    **pytroll-db** is free software: you can redistribute it and/or modify
-    it under the terms of the `GNU General Public License <https://www.gnu.org/licenses/gpl-3.0.en.html>`_
-    as published by the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    Consult the `LICENSE` file which is included as a part of this package.
 
 
 Disclaimer
