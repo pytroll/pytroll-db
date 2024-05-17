@@ -189,7 +189,7 @@ class MongoDB:
         if cls.__client:
             cls.__database_config = None
             cls.__client.close()
-            logger.info("Closes the MongoDB client successfully.")
+            logger.info("The MongoDB client is closed successfully.")
             return
         Client.CloseNotAllowedError.sys_exit_log(errno.EIO)
 
