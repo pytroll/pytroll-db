@@ -83,19 +83,20 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:
 
 
 def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
-    """Compares operands given the operator name in a string format.
+    """Compares two operands given the binary operator name in a string format.
 
     Args:
         operator:
-            The name of the comparison operator. It can be any of the following:
-            ["$gte", "$gt", "$lte", "$lt", "$eq"]
+            Any of ``["$gte", "$gt", "$lte", "$lt", "$eq"]``.
+            These match the MongoDB comparison operators described
+            `here <https://www.mongodb.com/docs/v6.2/reference/operator/aggregation/#comparison-expression-operators>`_.
         left:
             The left operand
         right:
             The right operand
 
     Returns:
-        The result of the comparison operation, i.e. <left> <operator> <right>.
+        The result of the comparison operation, i.e. ``<left> <operator> <right>``.
 
     Raises:
          ValueError:
