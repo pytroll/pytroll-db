@@ -66,12 +66,12 @@ class PipelineAttribute:
                 pa_list = PipelineAttribute("letter") == ["A", "B"]
                 pd_list = PipelineBooleanDict({"$or": [{"letter": "A"}, {"letter": "B"}]
                 # The following evaluates to True
-                pa_list = pd_list
+                pa_list == pd_list
 
                 pa_single = PipelineAttribute("letter") == "A"
                 pd_single = PipelineBooleanDict({"letter": "A"})
                 # The following evaluates to True
-                pa_single = pd_single
+                pa_single == pd_single
         """
         if isinstance(other, list):
             return PipelineBooleanDict(**{"$or": [{self.__key: v} for v in other]})
@@ -126,7 +126,7 @@ class Pipelines(list):
                     {"platform_name": "P"}
                 },
                 {"$match":
-                    {"$or": [{"sensor_name": "SA"}, {"sensor_name": "SB"}]}
+                    {"$or": [{"sensor": "SA"}, {"sensor": "SB"}]}
                 }
             ]
 

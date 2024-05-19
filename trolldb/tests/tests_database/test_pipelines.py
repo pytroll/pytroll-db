@@ -1,5 +1,5 @@
 """Tests for the pipelines and applying comparison operations on them."""
-from trolldb.database.piplines import PipelineAttribute, PipelineBooleanDict
+from trolldb.database.piplines import PipelineAttribute, PipelineBooleanDict, Pipelines
 from trolldb.test_utils.common import assert_equal, compare_by_operator_name
 
 
@@ -31,3 +31,22 @@ def test_pipeline_attribute():
                 {"letter": {op: "B"} if op != "$eq" else "B"}
             ]})
         )
+
+
+def test_pipelines():
+    """Tests the elements of Pipelines."""
+    pipelines = Pipelines()
+    pipelines += PipelineAttribute("platform_name") == "P"
+    pipelines += PipelineAttribute("sensor") == ["SA", "SB"]
+
+    pipelines_literal = [
+        {"$match":
+             {"platform_name": "P"}
+         },
+        {"$match":
+             {"$or": [{"sensor": "SA"}, {"sensor": "SB"}]}
+         }
+    ]
+
+    for p1, p2 in zip(pipelines, pipelines_literal, strict=False):
+        assert_equal(p1, p2)
