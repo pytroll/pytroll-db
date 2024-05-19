@@ -80,3 +80,37 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:
 
     if not _ordered(test) == _ordered(expected):
         raise AssertionError(f"{test} and {expected} are not equal. The flag `ordered` is set to `{ordered}`.")
+
+
+def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
+    """Compares operands given the operator name in a string format.
+
+    Args:
+        operator:
+            The name of the comparison operator. It can be any of the following:
+            ["$gte", "$gt", "$lte", "$lt", "$eq"]
+        left:
+            The left operand
+        right:
+            The right operand
+
+    Returns:
+        The result of the comparison operation, i.e. <left> <operator> <right>.
+
+    Raises:
+         ValueError:
+            If the operator name is not valid.
+    """
+    match operator:
+        case "$gte":
+            return left >= right
+        case "$gt":
+            return left > right
+        case "$lte":
+            return left <= right
+        case "$lt":
+            return left < right
+        case "$eq":
+            return left == right
+        case _:
+            raise ValueError(f"Unknown operator: {operator}")

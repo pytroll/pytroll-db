@@ -48,7 +48,7 @@ def test_database_names_negative():
 
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_collections():
-    """Check the presence of existing collections and that the ids of documents therein can be correctly retrieved."""
+    """Checks the presence of existing collections and that the ids of documents therein can be correctly retrieved."""
     with test_mongodb_context() as client:
         for database_name, collection_name in zip(TestDatabase.database_names, TestDatabase.collection_names,
                                                   strict=False):

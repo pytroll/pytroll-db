@@ -84,6 +84,9 @@ class PipelineAttribute:
             The operators herein have similar behaviour to ``==`` in the sense that they make comparison filters and are
             not to be interpreted as comparison assertions.
         """
+        if isinstance(other, list):
+            return PipelineBooleanDict(**{"$or": [{self.__key: {operator: v}} for v in other]})
+
         return PipelineBooleanDict(**{self.__key: {operator: other}} if other else {})
 
     def __ge__(self, other: Any) -> PipelineBooleanDict:
@@ -100,7 +103,7 @@ class PipelineAttribute:
 
     def __lt__(self, other: Any) -> PipelineBooleanDict:
         """Implements the `less than` operator, i.e. ``<``."""
-        return self.__aux_operators(other, "$le")
+        return self.__aux_operators(other, "$lt")
 
 
 class Pipelines(list):
