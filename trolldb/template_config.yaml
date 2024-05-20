@@ -22,3 +22,12 @@ database:
 api_server:
   # Required
   url: "http://localhost:8000"
+
+# Required
+subscriber:
+  # Required
+  nameserver: False
+  # Required
+  addresses: [""]
+  # Required
+  port: 3000

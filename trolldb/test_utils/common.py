@@ -8,7 +8,7 @@ import yaml
 from pydantic import AnyUrl, FilePath
 from urllib3 import BaseHTTPResponse, request
 
-from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig
+from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig, SubscriberConfig
 
 
 def make_test_app_config(subscriber_address: FilePath | None = None) -> AppConfig:
@@ -32,9 +32,9 @@ def make_test_app_config(subscriber_address: FilePath | None = None) -> AppConfi
             url=AnyUrl("mongodb://localhost:28017"),
             timeout=1000
         ),
-        subscriber=dict() if subscriber_address is None else dict(
+        subscriber=SubscriberConfig(
             nameserver=False,
-            addresses=[f"ipc://{subscriber_address}/in.ipc"],
+            addresses=[f"ipc://{subscriber_address}/in.ipc"] if subscriber_address is not None else [""],
             port=3000
         )
     )

@@ -10,7 +10,7 @@ Note:
 
 import errno
 import sys
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -87,11 +87,14 @@ class DatabaseConfig(NamedTuple):
     """
 
 
-SubscriberConfig = dict[Any, Any]
-"""A dictionary to hold all the configurations of the subscriber.
+class SubscriberConfig(TypedDict):
+    """A named tuple to hold all the configurations of the subscriber.
 
-TODO: This has to be moved to the `posttroll` package.
-"""
+    TODO: This has to be moved to the `posttroll` package.
+    """
+    nameserver: bool
+    addresses: list[str]
+    port: int
 
 
 class AppConfig(BaseModel):
