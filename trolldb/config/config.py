@@ -105,15 +105,22 @@ class AppConfig(BaseModel):
 
     def as_dict(self) -> dict:
         """Converts the model to a dictionary, recursively."""
+
         def _aux(obj: Any) -> Any:
+            """An auxiliary function to do the conversion based on the type."""
             match obj:
-                case tuple():
+                # The type `NamedTuple` has a method named `_asdict`
+                case tuple() if "_asdict" in dir(obj):
                     return {k: _aux(v) for k, v in obj._asdict().items()}
                 case BaseModel():
-                    return {k: _aux(v) for k, v in obj.__dict.items()}
+                    return {k: _aux(v) for k, v in obj.__dict__.items()}
                 case dict():
                     return {k: _aux(v) for k, v in obj.items()}
-                case int() | str() | list() | bool():
+                case list():
+                    return [_aux(i) for i in obj]
+                case tuple():
+                    return (_aux(i) for i in obj)
+                case int() | float() | str() | bool():
                     return obj
                 case _:
                     return str(obj)

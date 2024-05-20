@@ -122,7 +122,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
 @contextmanager
 @validate_call
-def server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2000):
+def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2000):
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
