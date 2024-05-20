@@ -47,13 +47,14 @@ async def assert_message(msg, data_filename):
         assert_equal(deletion_result.deleted_count, 1)
 
 
-async def _record_from_somewhere(config_path: FilePath, message: Any, data_filename, record_from_func, f=False):
+async def _record_from_somewhere(
+        config_path: FilePath, message: Any, data_filename, record_from_func, wrap_in_list=False):
     """Test that we can record when passed a config file."""
     config_file = create_config_file(config_path)
     msg = Message.decode(message)
     with running_prepared_database_context():
         with patched_subscriber_recv([message]):
-            await record_from_func(config_file if not f else [str(config_file)])
+            await record_from_func(config_file if not wrap_in_list else [str(config_file)])
             await assert_message(msg, data_filename)
 
 
