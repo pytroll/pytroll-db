@@ -22,6 +22,10 @@ classifiers = [
 [project.urls]
 "Documentation" = "https://pytroll-db.readthedocs.io/en/latest/"
 
+[project.scripts]
+pytroll-db-recorder = "trolldb.cli:record_messages_from_command_line"
+
+
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
