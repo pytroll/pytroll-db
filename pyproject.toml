@@ -23,7 +23,7 @@ classifiers = [
 "Documentation" = "https://pytroll-db.readthedocs.io/en/latest/"
 
 [project.scripts]
-pytroll-db-recorder = "trolldb.cli:record_messages_from_command_line"
+pytroll-db-recorder = "trolldb.cli:run_sync"
 
 
 [build-system]

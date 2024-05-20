@@ -4,21 +4,39 @@ from collections import OrderedDict
 from typing import Any
 from urllib.parse import urljoin
 
-from pydantic import AnyUrl
+import yaml
+from pydantic import AnyUrl, FilePath
 from urllib3 import BaseHTTPResponse, request
 
 from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig
 
-test_app_config = AppConfig(
-    api_server=APIServerConfig(url=AnyUrl("http://localhost:8080")),
-    database=DatabaseConfig(
-        main_database_name="mock_database",
-        main_collection_name="mock_collection",
-        url=AnyUrl("mongodb://localhost:28017"),
-        timeout=1000),
-    subscriber_config=dict()
-)
-"""The app configuration when used in testing."""
+
+def make_test_app_config(subscriber_address: FilePath | None = None) -> AppConfig:
+    """The app configuration when used in testing."""
+    return AppConfig(
+        api_server=APIServerConfig(url=AnyUrl("http://localhost:8080")),
+        database=DatabaseConfig(
+            main_database_name="mock_database",
+            main_collection_name="mock_collection",
+            url=AnyUrl("mongodb://localhost:28017"),
+            timeout=1000),
+        subscriber=dict() if subscriber_address is None else dict(
+            nameserver=False,
+            addresses=[f"ipc://{subscriber_address}/in.ipc"],
+            port=3000
+        )
+    )
+
+
+test_app_config = make_test_app_config()
+
+
+def create_config_file(config_path: FilePath) -> FilePath:
+    """Create a config file for tests."""
+    config_file = config_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.safe_dump(make_test_app_config(config_path).as_dict(), f)
+    return config_file
 
 
 def http_get(route: str = "", root: AnyUrl = test_app_config.api_server.url) -> BaseHTTPResponse:

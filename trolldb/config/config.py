@@ -15,7 +15,7 @@ from typing import Any, NamedTuple
 from bson import ObjectId
 from bson.errors import InvalidId
 from loguru import logger
-from pydantic import AnyUrl, BaseModel, Field, FilePath, MongoDsn, ValidationError, validate_call
+from pydantic import AnyUrl, BaseModel, Field, FilePath, MongoDsn, ValidationError
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 from yaml import safe_load
@@ -101,10 +101,26 @@ class AppConfig(BaseModel):
     """
     api_server: APIServerConfig
     database: DatabaseConfig
-    subscriber_config: SubscriberConfig
+    subscriber: SubscriberConfig
+
+    def as_dict(self) -> dict:
+        """Converts the model to a dictionary, recursively."""
+        def _aux(obj: Any) -> Any:
+            match obj:
+                case tuple():
+                    return {k: _aux(v) for k, v in obj._asdict().items()}
+                case BaseModel():
+                    return {k: _aux(v) for k, v in obj.__dict.items()}
+                case dict():
+                    return {k: _aux(v) for k, v in obj.items()}
+                case int() | str() | list() | bool():
+                    return obj
+                case _:
+                    return str(obj)
+
+        return _aux(self.__dict__)
 
 
-@validate_call
 def from_yaml(filename: FilePath) -> AppConfig:
     """Parses and validates the configurations from a YAML file.
 
@@ -138,29 +154,3 @@ def from_yaml(filename: FilePath) -> AppConfig:
     except ValidationError as e:
         logger.error(e)
         sys.exit(errno.EIO)
-
-
-@validate_call
-def parse(config: AppConfig | FilePath) -> AppConfig:
-    """Tries to return a valid object of type :class:`AppConfig`.
-
-    Args:
-        config:
-            Either an object of type :class:`AppConfig` or :class:`FilePath`.
-
-    Returns:
-      - In case of an object of type :class:`AppConfig` as input, the same object will be returned as-is.
-      - An input object of type ``str`` will be interpreted as a YAML filename, in which case the function returns
-        the result of parsing the file.
-
-    Raises:
-        ValidationError:
-            If the function is not called with arguments of valid type.
-    """
-    logger.info("Attempt to parse the config file or object ...")
-    match config:
-        case AppConfig():
-            logger.info("Parsing config object successful.")
-            return config
-        case _:
-            return from_yaml(config)

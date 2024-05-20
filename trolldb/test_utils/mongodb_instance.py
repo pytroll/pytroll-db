@@ -13,6 +13,7 @@ from pydantic import validate_call
 
 from trolldb.config.config import DatabaseConfig, Timeout
 from trolldb.test_utils.common import test_app_config
+from trolldb.test_utils.mongodb_database import TestDatabase
 
 
 class TestMongoInstance:
@@ -133,3 +134,11 @@ def mongodb_instance_server_process_context(
         yield
     finally:
         TestMongoInstance.shutdown_instance()
+
+
+@contextmanager
+def running_prepared_database_context():
+    """A synchronous context manager to start and prepare a database instance for tests."""
+    with mongodb_instance_server_process_context():
+        TestDatabase.prepare()
+        yield

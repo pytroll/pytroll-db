@@ -30,7 +30,7 @@ from loguru import logger
 from pydantic import FilePath, validate_call
 
 from trolldb.api.routes import api_router
-from trolldb.config.config import AppConfig, Timeout, parse
+from trolldb.config.config import AppConfig, Timeout, from_yaml
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
@@ -61,9 +61,9 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
     Args:
         config:
-            The configuration of the application which includes both the server and database configurations. In case of
-            a :class:`FilePath`, it should be a valid path to an existing config file which will parsed as a ``.YAML``
-            file.
+            The configuration of the application which includes both the server and database configurations. Its type
+            should be a :class:`FilePath`, which is a valid path to an existing config file which will parsed as a
+            ``.YAML`` file.
 
         **kwargs:
             The keyword arguments are the same as those accepted by the
@@ -85,7 +85,8 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
                 run_server("config.yaml")
     """
     logger.info("Attempt to run the API server ...")
-    config = parse(config)
+    if not isinstance(config, AppConfig):
+        config = from_yaml(config)
 
     # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
     app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
@@ -141,8 +142,8 @@ def server_process_context(config: AppConfig | FilePath, startup_time: Timeout =
             If the function is not called with arguments of valid type.
     """
     logger.info("Attempt to run the API server process in a context manager ...")
-
-    config = parse(config)
+    if not isinstance(config, AppConfig):
+        config = from_yaml(config)
     process = Process(target=run_server, args=(config,))
 
     try:
