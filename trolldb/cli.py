@@ -47,5 +47,5 @@ async def record_messages_from_command_line(args=None):
 
 
 def run_sync():
-    """..."""
+    """Runs the interface synchronously."""
     asyncio.run(record_messages_from_command_line())
