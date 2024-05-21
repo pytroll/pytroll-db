@@ -23,7 +23,7 @@ def _run_mongodb_server_instance():
 @pytest.fixture(scope="session")
 def _test_server_fixture(_run_mongodb_server_instance):
     """Encloses all tests (session scope) in a context manager of a running API server (in a separate process)."""
-    with api_server_process_context(test_app_config, startup_time=2000):
+    with api_server_process_context(test_app_config, startup_time=2):
         yield
 
 
