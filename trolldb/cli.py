@@ -3,20 +3,22 @@
 import argparse
 import asyncio
 
+from loguru import logger
 from posttroll.message import Message
 from posttroll.subscriber import create_subscriber_from_dict_config
 from pydantic import FilePath
 
-from trolldb.config.config import AppConfig, from_yaml
+from trolldb.config.config import AppConfig, parse_config_yaml_file
 from trolldb.database.mongodb import MongoDB, mongodb_context
 
 
 async def record_messages(config: AppConfig):
     """Record the metadata of messages into the database."""
     async with mongodb_context(config.database):
-        sub = create_subscriber_from_dict_config(config.subscriber)
-        collection = await MongoDB.get_collection("mock_database", "mock_collection")
-        for m in sub.recv():
+        collection = await MongoDB.get_collection(
+            config.database.main_database_name, config.database.main_collection_name
+        )
+        for m in create_subscriber_from_dict_config(config.subscriber).recv():
             msg = Message.decode(m)
             match msg.type:
                 case "file":
@@ -24,14 +26,14 @@ async def record_messages(config: AppConfig):
                 case "del":
                     deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
                     if deletion_result.deleted_count != 1:
-                        raise ValueError("Multiple deletions!")  # Replace with logging
+                        logger.error("Recorder found multiple deletions!")  # Log some data related to the msg
                 case _:
-                    raise KeyError(f"Don't know what to do with {msg.type} message.")  # Replace with logging
+                    logger.error(f"Don't know what to do with {msg.type} message.")
 
 
 async def record_messages_from_config(config_file: FilePath):
     """Record messages into the database, getting the configuration from a file."""
-    config = from_yaml(config_file)
+    config = parse_config_yaml_file(config_file)
     await record_messages(config)
 
 

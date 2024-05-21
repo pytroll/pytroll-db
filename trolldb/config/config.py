@@ -131,7 +131,7 @@ class AppConfig(BaseModel):
         return _aux(self.__dict__)
 
 
-def from_yaml(filename: FilePath) -> AppConfig:
+def parse_config_yaml_file(filename: FilePath) -> AppConfig:
     """Parses and validates the configurations from a YAML file.
 
     Args:

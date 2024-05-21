@@ -30,7 +30,7 @@ from loguru import logger
 from pydantic import FilePath, validate_call
 
 from trolldb.api.routes import api_router
-from trolldb.config.config import AppConfig, Timeout, from_yaml
+from trolldb.config.config import AppConfig, Timeout, parse_config_yaml_file
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
@@ -86,7 +86,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
     """
     logger.info("Attempt to run the API server ...")
     if not isinstance(config, AppConfig):
-        config = from_yaml(config)
+        config = parse_config_yaml_file(config)
 
     # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
     app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
@@ -143,9 +143,9 @@ def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeo
     """
     logger.info("Attempt to run the API server process in a context manager ...")
     if not isinstance(config, AppConfig):
-        config = from_yaml(config)
-    process = Process(target=run_server, args=(config,))
+        config = parse_config_yaml_file(config)
 
+    process = Process(target=run_server, args=(config,))
     try:
         process.start()
         # time.sleep() expects its argument to be in seconds, hence the division by 1000.
