@@ -23,13 +23,13 @@ def test_root():
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_platforms():
     """Checks that the retrieved platform names match the expected names."""
-    assert_equal(http_get("platforms").json(), TestDatabase.platform_names)
+    assert set(http_get("platforms").json()) == set(TestDatabase.platform_names)
 
 
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_sensors():
     """Checks that the retrieved sensor names match the expected names."""
-    assert_equal(http_get("sensors").json(), TestDatabase.sensors)
+    assert set(http_get("sensors").json()) == set(TestDatabase.sensors)
 
 
 @pytest.mark.usefixtures("_test_server_fixture")

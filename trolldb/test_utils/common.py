@@ -1,6 +1,6 @@
 """Common functionalities for testing, shared between tests and other test utility modules."""
 
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from typing import Any
 from urllib.parse import urljoin
 
@@ -73,8 +73,9 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False, silent: bool =
     """An auxiliary function to assert the equality of two objects using the ``==`` operator.
 
     Examples:
-      - If ``ordered=False`` and the input is a list or a tuple, it will be first converted to a set
-        so that the order of items therein does not affect the assertion outcome.
+      - If ``ordered=False`` and the input is a list or a tuple, it will be first converted to an object of type
+      `counter <https://docs.python.org/3.5/library/collections.html#collections.Counter>`_, so that the order of items
+      therein does not affect the assertion outcome.
       - If ``ordered=True`` and the input is a dictionary, it will be first converted to an ``OrderedDict``.
 
     Note:
@@ -112,7 +113,7 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False, silent: bool =
         """An auxiliary function to convert an object to ordered depending on its type and the ``ordered`` flag."""
         match obj:
             case list() | tuple():
-                return set(obj) if not ordered else obj
+                return Counter(obj) if not ordered else obj
             case dict():
                 return OrderedDict(obj) if ordered else obj
             case _:
