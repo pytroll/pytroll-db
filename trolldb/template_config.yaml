@@ -25,9 +25,4 @@ api_server:
 
 # Required
 subscriber:
-  # Required
-  nameserver: False
-  # Required
-  addresses: [""]
-  # Required
-  port: 3000
+  # As per the configurations of the posttroll
