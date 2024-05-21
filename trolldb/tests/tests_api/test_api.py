@@ -7,10 +7,12 @@ Note:
     against expectations.
 """
 
+from collections import Counter
+
 import pytest
 from fastapi import status
 
-from trolldb.test_utils.common import assert_equal, collections_exists, document_ids_are_correct, http_get
+from trolldb.test_utils.common import collections_exists, document_ids_are_correct, http_get
 from trolldb.test_utils.mongodb_database import TestDatabase, test_mongodb_context
 
 
@@ -35,9 +37,9 @@ def test_sensors():
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_database_names():
     """Checks that the retrieved database names match the expected names."""
-    assert_equal(http_get("databases").json(), TestDatabase.database_names)
-    assert_equal(http_get("databases?exclude_defaults=True").json(), TestDatabase.database_names)
-    assert_equal(http_get("databases?exclude_defaults=False").json(), TestDatabase.all_database_names)
+    assert Counter(http_get("databases").json()) == Counter(TestDatabase.database_names)
+    assert Counter(http_get("databases?exclude_defaults=True").json()) == Counter(TestDatabase.database_names)
+    assert Counter(http_get("databases?exclude_defaults=False").json()) == Counter(TestDatabase.all_database_names)
 
 
 @pytest.mark.usefixtures("_test_server_fixture")

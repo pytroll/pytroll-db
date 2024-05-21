@@ -10,7 +10,7 @@ from pydantic import FilePath
 from trolldb.cli import record_messages, record_messages_from_command_line, record_messages_from_config
 from trolldb.config.config import AppConfig
 from trolldb.database.mongodb import MongoDB, mongodb_context
-from trolldb.test_utils.common import assert_equal, create_config_file, make_test_app_config, test_app_config
+from trolldb.test_utils.common import create_config_file, make_test_app_config, test_app_config
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
@@ -42,10 +42,10 @@ async def assert_message(msg, data_filename):
         collection = await MongoDB.get_collection("mock_database", "mock_collection")
         result = await collection.find_one(dict(scan_mode="EW"))
         result.pop("_id")
-        assert_equal(result, msg.data)
+        assert result == msg.data
 
         deletion_result = await collection.delete_many({"uri": str(data_filename)})
-        assert_equal(deletion_result.deleted_count, 1)
+        assert deletion_result.deleted_count == 1
 
 
 async def _record_from_somewhere(

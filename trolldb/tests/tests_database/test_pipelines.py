@@ -1,6 +1,6 @@
 """Tests for the pipelines and applying comparison operations on them."""
 from trolldb.database.piplines import PipelineAttribute, PipelineBooleanDict, Pipelines
-from trolldb.test_utils.common import assert_equal, compare_by_operator_name
+from trolldb.test_utils.common import compare_by_operator_name
 
 
 def test_pipeline_boolean_dict():
@@ -20,16 +20,16 @@ def test_pipeline_boolean_dict():
 def test_pipeline_attribute():
     """Tests different comparison operators for a pipeline attribute in a list and as a single item."""
     for op in ["$eq", "$gte", "$gt", "$lte", "$lt"]:
-        assert_equal(
-            compare_by_operator_name(op, PipelineAttribute("letter"), "A"),
-            PipelineBooleanDict({"letter": {op: "A"}} if op != "$eq" else {"letter": "A"})
+        assert (
+                compare_by_operator_name(op, PipelineAttribute("letter"), "A") ==
+                PipelineBooleanDict({"letter": {op: "A"}} if op != "$eq" else {"letter": "A"})
         )
-        assert_equal(
-            compare_by_operator_name(op, PipelineAttribute("letter"), ["A", "B"]),
-            PipelineBooleanDict({"$or": [
-                {"letter": {op: "A"} if op != "$eq" else "A"},
-                {"letter": {op: "B"} if op != "$eq" else "B"}
-            ]})
+        assert (
+                compare_by_operator_name(op, PipelineAttribute("letter"), ["A", "B"]) ==
+                PipelineBooleanDict({"$or": [
+                    {"letter": {op: "A"} if op != "$eq" else "A"},
+                    {"letter": {op: "B"} if op != "$eq" else "B"}
+                ]})
         )
 
 
@@ -49,4 +49,4 @@ def test_pipelines():
     ]
 
     for p1, p2 in zip(pipelines, pipelines_literal, strict=False):
-        assert_equal(p1, p2)
+        assert p1 == p2
