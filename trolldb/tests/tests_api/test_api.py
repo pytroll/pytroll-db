@@ -10,14 +10,14 @@ Note:
 import pytest
 from fastapi import status
 
-from trolldb.test_utils.common import assert_equal, http_get
+from trolldb.test_utils.common import assert_equal, collections_exists, document_ids_are_correct, http_get
 from trolldb.test_utils.mongodb_database import TestDatabase, test_mongodb_context
 
 
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_root():
     """Checks that the server is up and running, i.e. the root routes responds with 200."""
-    assert_equal(http_get().status, status.HTTP_200_OK)
+    assert http_get().status == status.HTTP_200_OK
 
 
 @pytest.mark.usefixtures("_test_server_fixture")
@@ -43,7 +43,7 @@ def test_database_names():
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_database_names_negative():
     """Checks that the non-existing databases cannot be found."""
-    assert_equal(http_get("databases/non_existing_database").status, status.HTTP_404_NOT_FOUND)
+    assert http_get("databases/non_existing_database").status == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.usefixtures("_test_server_fixture")
@@ -52,16 +52,13 @@ def test_collections():
     with test_mongodb_context() as client:
         for database_name, collection_name in zip(TestDatabase.database_names, TestDatabase.collection_names,
                                                   strict=False):
-            # Collections exist
-            assert_equal(
+            assert collections_exists(
                 http_get(f"databases/{database_name}").json(),
                 [collection_name]
             )
-
-            # Document ids are correct
-            assert_equal(
+            assert document_ids_are_correct(
                 http_get(f"databases/{database_name}/{collection_name}").json(),
-                {str(doc["_id"]) for doc in client[database_name][collection_name].find({})}
+                [str(doc["_id"]) for doc in client[database_name][collection_name].find({})]
             )
 
 
@@ -69,7 +66,4 @@ def test_collections():
 def test_collections_negative():
     """Checks that the non-existing collections cannot be found."""
     for database_name in TestDatabase.database_names:
-        assert_equal(
-            http_get(f"databases/{database_name}/non_existing_collection").status,
-            status.HTTP_404_NOT_FOUND
-        )
+        assert http_get(f"databases/{database_name}/non_existing_collection").status == status.HTTP_404_NOT_FOUND

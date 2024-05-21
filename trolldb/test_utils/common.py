@@ -67,7 +67,7 @@ def http_get(route: str = "", root: AnyUrl = test_app_config.api_server.url) -> 
     return request("GET", urljoin(root.unicode_string(), route))
 
 
-def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:
+def assert_equal(test: Any, expected: Any, ordered: bool = False, silent: bool = False) -> bool:
     """An auxiliary function to assert the equality of two objects using the ``==`` operator.
 
     Examples:
@@ -97,6 +97,13 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:
             The object to test against.
         ordered (Optional, default ``False``):
             A flag to determine whether the order of items matters in case of a list, a tuple, or a dictionary.
+        silent (Optional, default ``False``):
+            A flag to determine whether the assertion should be silent, i.e. simply return the result as a boolean or
+            it should raise an ``AssertionError``.
+
+    Raises:
+        AssertionError:
+            If the ``test`` and ``expected`` are not equal and ``silent=False``.
     """
 
     def _ordered(obj: Any) -> Any:
@@ -109,8 +116,13 @@ def assert_equal(test: Any, expected: Any, ordered: bool = False) -> None:
             case _:
                 return obj
 
-    if not _ordered(test) == _ordered(expected):
-        raise AssertionError(f"{test} and {expected} are not equal. The flag `ordered` is set to `{ordered}`.")
+    if _ordered(test) == _ordered(expected):
+        return True
+
+    if silent:
+        return False
+
+    raise AssertionError(f"{test} and {expected} are not equal. The flag `ordered` is set to `{ordered}`.")
 
 
 def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
@@ -146,3 +158,13 @@ def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
             return left == right
         case _:
             raise ValueError(f"Unknown operator: {operator}")
+
+
+def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
+    """Checks if the test and expected list of collection names match."""
+    return assert_equal(test_collection_names, expected_collection_name, silent=True)
+
+
+def document_ids_are_correct(test_ids: list[str], expected_ids: list[str]) -> bool:
+    """Checks if the test (retrieved from the API) and expected list of (document) ids match."""
+    return assert_equal(test_ids, expected_ids, silent=True)
