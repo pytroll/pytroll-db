@@ -122,7 +122,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
 @contextmanager
 @validate_call
-def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2000):
+def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2):
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
@@ -148,8 +148,7 @@ def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeo
     process = Process(target=run_server, args=(config,))
     try:
         process.start()
-        # time.sleep() expects its argument to be in seconds, hence the division by 1000.
-        time.sleep(startup_time / 1000.)
+        time.sleep(startup_time)
         yield process
     finally:
         logger.info("Attempt to terminate the API server process in the context manager ...")

@@ -29,7 +29,7 @@ def make_test_app_config(subscriber_address: FilePath | None = None) -> dict:
             main_database_name="mock_database",
             main_collection_name="mock_collection",
             url="mongodb://localhost:28017",
-            timeout=1000
+            timeout=1
         ),
         subscriber=dict(
             nameserver=False,

@@ -19,7 +19,7 @@ from trolldb.test_utils.common import test_app_config
 
 async def test_connection_timeout_negative():
     """Expect to see the connection attempt times out since the MongoDB URL is invalid."""
-    timeout = 3000
+    timeout = 3
     t1 = time.time()
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         async with mongodb_context(
@@ -28,7 +28,7 @@ async def test_connection_timeout_negative():
             pass
     t2 = time.time()
     assert pytest_wrapped_e.value.code == errno.EIO
-    assert t2 - t1 >= timeout / 1000
+    assert t2 - t1 >= timeout
 
 
 @pytest.mark.usefixtures("_run_mongodb_server_instance")
@@ -36,7 +36,7 @@ async def test_main_database_negative():
     """Expect to fail when giving an invalid name for the main database, given a valid collection name."""
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         async with mongodb_context(DatabaseConfig(
-                timeout=1000,
+                timeout=1,
                 url=test_app_config.database.url,
                 main_database_name=" ",
                 main_collection_name=test_app_config.database.main_collection_name)):
@@ -49,7 +49,7 @@ async def test_main_collection_negative():
     """Expect to fail when giving an invalid name for the main collection, given a valid database name."""
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         async with mongodb_context(DatabaseConfig(
-                timeout=1000,
+                timeout=1,
                 url=test_app_config.database.url,
                 main_database_name=test_app_config.database.main_database_name,
                 main_collection_name=" ")):

@@ -29,7 +29,7 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
     """
     client = None
     try:
-        client = MongoClient(database_config.url.unicode_string(), connectTimeoutMS=database_config.timeout)
+        client = MongoClient(database_config.url.unicode_string(), connectTimeoutMS=database_config.timeout * 1000)
         yield client
     finally:
         if client is not None:

@@ -103,7 +103,7 @@ class TestMongoInstance:
 @validate_call
 def mongodb_instance_server_process_context(
         database_config: DatabaseConfig = test_app_config.database,
-        startup_time: Timeout = 2000):
+        startup_time: Timeout = 2):
     """A synchronous context manager to run the MongoDB instance in a separate process (non-blocking).
 
      It uses the `subprocess <https://docs.python.org/3/library/subprocess.html>`_ package. The main use case is
@@ -130,7 +130,7 @@ def mongodb_instance_server_process_context(
 
     try:
         TestMongoInstance.run_instance()
-        time.sleep(startup_time / 1000)
+        time.sleep(startup_time)
         yield
     finally:
         TestMongoInstance.shutdown_instance()

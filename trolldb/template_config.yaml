@@ -6,22 +6,22 @@
 # Required
 database:
   #Required
-  main_database_name: "satellite_database"
+  main_database_name: satellite_database
 
   #Required
-  main_collection_name: "files"
+  main_collection_name: files
 
   #Required
-  url: "mongodb://localhost:27017"
+  url: mongodb://localhost:27017
 
   #Required
-  timeout: 1000  # milliseconds
+  timeout: 1  # seconds
 
 
 # Required
 api_server:
   # Required
-  url: "http://localhost:8000"
+  url: http://localhost:8000
 
 # Required
 subscriber:

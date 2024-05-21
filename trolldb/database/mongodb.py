@@ -152,7 +152,7 @@ class MongoDB:
         # to access the database.
         cls.__client = AsyncIOMotorClient(
             database_config.url.unicode_string(),
-            serverSelectionTimeoutMS=database_config.timeout)
+            serverSelectionTimeoutMS=database_config.timeout * 1000)
 
         __database_names = []
         try:

@@ -20,8 +20,8 @@ from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 from yaml import safe_load
 
-Timeout = Annotated[int, Field(ge=0)]
-"""A type hint for the timeout in milliseconds (non-negative int)."""
+Timeout = Annotated[float, Field(ge=0)]
+"""A type hint for the timeout in seconds (non-negative float)."""
 
 
 def id_must_be_valid(id_like_string: str) -> ObjectId:
@@ -82,8 +82,8 @@ class DatabaseConfig(NamedTuple):
     """The URL of the MongoDB server excluding the port part, e.g. ``"mongodb://localhost:27017"``"""
 
     timeout: Timeout
-    """The timeout in milliseconds (non-negative int), after which an exception is raised if a connection with the
-    MongoDB instance is not established successfully, e.g. ``1000``.
+    """The timeout in seconds (non-negative float), after which an exception is raised if a connection with the
+    MongoDB instance is not established successfully, e.g. ``1.5``.
     """
 
 
