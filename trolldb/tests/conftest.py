@@ -33,10 +33,3 @@ async def mongodb_fixture(_run_mongodb_server_instance):
     TestDatabase.prepare()
     async with mongodb_context(test_app_config.database):
         yield
-
-
-@pytest.fixture()
-def tmp_data_filename(tmp_path):
-    """Create a filename for the messages."""
-    filename = "20191103_153936-s1b-ew-hh.tiff"
-    return tmp_path / filename

@@ -36,6 +36,13 @@ def del_message(tmp_data_filename):
             '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
 
 
+@pytest.fixture()
+def tmp_data_filename(tmp_path):
+    """Create a filename for the messages."""
+    filename = "20191103_153936-s1b-ew-hh.tiff"
+    return tmp_path / filename
+
+
 async def assert_message(msg, data_filename):
     """Documentation to be added."""
     async with mongodb_context(test_app_config.database):
