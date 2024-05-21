@@ -12,8 +12,18 @@ from collections import Counter
 import pytest
 from fastapi import status
 
-from trolldb.test_utils.common import collections_exists, document_ids_are_correct, http_get
+from trolldb.test_utils.common import http_get
 from trolldb.test_utils.mongodb_database import TestDatabase, test_mongodb_context
+
+
+def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
+    """Checks if the test and expected list of collection names match."""
+    return Counter(test_collection_names) == Counter(expected_collection_name)
+
+
+def document_ids_are_correct(test_ids: list[str], expected_ids: list[str]) -> bool:
+    """Checks if the test (retrieved from the API) and expected list of (document) ids match."""
+    return Counter(test_ids) == Counter(expected_ids)
 
 
 @pytest.mark.usefixtures("_test_server_fixture")

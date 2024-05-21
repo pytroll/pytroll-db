@@ -1,6 +1,5 @@
 """Common functionalities for testing, shared between tests and other test utility modules."""
 
-from collections import Counter
 from typing import Any
 from urllib.parse import urljoin
 
@@ -102,13 +101,3 @@ def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
             return left == right
         case _:
             raise ValueError(f"Unknown operator: {operator}")
-
-
-def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
-    """Checks if the test and expected list of collection names match."""
-    return Counter(test_collection_names) == Counter(expected_collection_name)
-
-
-def document_ids_are_correct(test_ids: list[str], expected_ids: list[str]) -> bool:
-    """Checks if the test (retrieved from the API) and expected list of (document) ids match."""
-    return Counter(test_ids) == Counter(expected_ids)
