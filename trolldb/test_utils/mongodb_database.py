@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from random import randint, shuffle
+from random import choices, randint, shuffle
 from typing import Iterator
 
 from pymongo import MongoClient
@@ -34,32 +34,6 @@ def test_mongodb_context(database_config: DatabaseConfig = test_app_config.datab
     finally:
         if client is not None:
             client.close()
-
-
-def random_sample(items: list, size: int = 10) -> list:
-    """Generates a random sample of items from the given list, with repetitions allowed.
-
-    Note:
-        The length of the output can be larger than the lenght of the given list. See the example.
-
-    Args:
-        items:
-            The list of items from which the random sample will be generated.
-        size (Optional, default ``10``):
-            The number of elements in the random sample.
-
-    Returns:
-        A list containing the random sample of elements.
-
-    Example:
-        >>> items = [1, 2, 3, 4, 5]
-        >>> random_sample(items, 10)
-        [2, 4, 1, 5, 3, 4, 2, 1, 3, 5]
-    """
-    last_index = len(items) - 1
-    # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    indices = [randint(0, last_index) for _ in range(size)]  # noqa: S311
-    return [items[i] for i in indices]
 
 
 class Time:
@@ -141,10 +115,12 @@ class Document:
 class TestDatabase:
     """A static class which encloses functionalities to prepare and fill the test database with mock data."""
 
-    platform_names = random_sample(["PA", "PB", "PC"])
+    # We suppress ruff (S311) here as we are not generating anything cryptographic here!
+    platform_names = choices(["PA", "PB", "PC"], k=10)  # noqa: S311
     """Example platform names."""
 
-    sensors = random_sample(["SA", "SB", "SC"])
+    # We suppress ruff (S311) here as we are not generating anything cryptographic here!
+    sensors = choices(["SA", "SB", "SC"], k=10)  # noqa: S311
     """Example sensor names."""
 
     database_names = [test_app_config.database.main_database_name, "another_mock_database"]
