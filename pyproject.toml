@@ -25,7 +25,6 @@ classifiers = [
 [project.scripts]
 pytroll-db-recorder = "trolldb.cli:run_sync"
 
-
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
