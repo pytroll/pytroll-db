@@ -8,10 +8,10 @@ import yaml
 from pydantic import AnyUrl, FilePath
 from urllib3 import BaseHTTPResponse, request
 
-from trolldb.config.config import APIServerConfig, AppConfig, DatabaseConfig, SubscriberConfig
+from trolldb.config.config import AppConfig
 
 
-def make_test_app_config(subscriber_address: FilePath | None = None) -> AppConfig:
+def make_test_app_config(subscriber_address: FilePath | None = None) -> dict:
     """Makes the app configuration when used in testing.
 
     Args:
@@ -20,27 +20,29 @@ def make_test_app_config(subscriber_address: FilePath | None = None) -> AppConfi
             config will be an empty dictionary.
 
     Returns:
-        An object of type :obj:`AppConfig`.
+        A dictionary which resembles an object of type :obj:`AppConfig`.
     """
-    return AppConfig(
-        api_server=APIServerConfig(
-            url=AnyUrl("http://localhost:8080")
+    app_config = dict(
+        api_server=dict(
+            url="http://localhost:8080"
         ),
-        database=DatabaseConfig(
+        database=dict(
             main_database_name="mock_database",
             main_collection_name="mock_collection",
-            url=AnyUrl("mongodb://localhost:28017"),
+            url="mongodb://localhost:28017",
             timeout=1000
         ),
-        subscriber=SubscriberConfig(
+        subscriber=dict(
             nameserver=False,
             addresses=[f"ipc://{subscriber_address}/in.ipc"] if subscriber_address is not None else [""],
             port=3000
         )
     )
 
+    return app_config
 
-test_app_config = make_test_app_config()
+
+test_app_config = AppConfig(**make_test_app_config())
 """The app configs for testing purposes assuming an empty configuration for the subscriber."""
 
 
@@ -48,7 +50,7 @@ def create_config_file(config_path: FilePath) -> FilePath:
     """Creates a config file for tests."""
     config_file = config_path / "config.yaml"
     with open(config_file, "w") as f:
-        yaml.safe_dump(make_test_app_config(config_path).as_dict(), f)
+        yaml.safe_dump(make_test_app_config(config_path), f)
     return config_file
 
 

@@ -8,6 +8,7 @@ from posttroll.testing import patched_subscriber_recv
 from pydantic import FilePath
 
 from trolldb.cli import record_messages, record_messages_from_command_line, record_messages_from_config
+from trolldb.config.config import AppConfig
 from trolldb.database.mongodb import MongoDB, mongodb_context
 from trolldb.test_utils.common import assert_equal, create_config_file, make_test_app_config, test_app_config
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
@@ -81,7 +82,7 @@ async def test_record_cli(tmp_path, file_message, tmp_data_filename):
 
 async def test_record_deletes_message(tmp_path, file_message, del_message):
     """Test that message recording can delete a record in the database."""
-    config = make_test_app_config(tmp_path)
+    config = AppConfig(**make_test_app_config(tmp_path))
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message, del_message]):
             await record_messages(config)

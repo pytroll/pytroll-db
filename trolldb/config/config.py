@@ -10,7 +10,7 @@ Note:
 
 import errno
 import sys
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, NamedTuple
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -87,14 +87,11 @@ class DatabaseConfig(NamedTuple):
     """
 
 
-class SubscriberConfig(TypedDict):
-    """A named tuple to hold all the configurations of the subscriber.
+SubscriberConfig = dict[Any, Any]
+"""A dictionary to hold all the configurations of the subscriber.
 
-    TODO: This has to be moved to the `posttroll` package.
-    """
-    nameserver: bool
-    addresses: list[str]
-    port: int
+TODO: This has to be moved to the `posttroll` package.
+"""
 
 
 class AppConfig(BaseModel):
@@ -105,30 +102,6 @@ class AppConfig(BaseModel):
     api_server: APIServerConfig
     database: DatabaseConfig
     subscriber: SubscriberConfig
-
-    def as_dict(self) -> dict:
-        """Converts the model to a dictionary, recursively."""
-
-        def _aux(obj: Any) -> Any:
-            """An auxiliary function to do the conversion based on the type."""
-            match obj:
-                # The type `NamedTuple` has a method named `_asdict`
-                case tuple() if "_asdict" in dir(obj):
-                    return {k: _aux(v) for k, v in obj._asdict().items()}
-                case BaseModel():
-                    return {k: _aux(v) for k, v in obj.__dict__.items()}
-                case dict():
-                    return {k: _aux(v) for k, v in obj.items()}
-                case list():
-                    return [_aux(i) for i in obj]
-                case tuple():
-                    return (_aux(i) for i in obj)
-                case int() | float() | str() | bool():
-                    return obj
-                case _:
-                    return str(obj)
-
-        return _aux(self.__dict__)
 
 
 def parse_config_yaml_file(filename: FilePath) -> AppConfig:
