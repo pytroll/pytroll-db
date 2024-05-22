@@ -1,6 +1,6 @@
 """Common functionalities for testing, shared between tests and other test utility modules."""
 
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -10,7 +10,7 @@ from urllib3 import BaseHTTPResponse, request
 from trolldb.config.config import AppConfig
 
 
-def make_test_app_config(subscriber_address: FilePath | None = None) -> dict:
+def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
     """Makes the app configuration when used in testing.
 
     Args:

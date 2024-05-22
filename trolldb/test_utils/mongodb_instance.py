@@ -9,7 +9,6 @@ from os import mkdir, path
 from shutil import rmtree
 
 from loguru import logger
-from pydantic import validate_call
 
 from trolldb.config.config import DatabaseConfig, Timeout
 from trolldb.test_utils.common import test_app_config
@@ -100,7 +99,6 @@ class TestMongoInstance:
 
 
 @contextmanager
-@validate_call
 def mongodb_instance_server_process_context(
         database_config: DatabaseConfig = test_app_config.database,
         startup_time: Timeout = 2):
@@ -116,10 +114,6 @@ def mongodb_instance_server_process_context(
         startup_time:
             The overall time in seconds that is expected for the MongoDB server instance to run before the database
             content can be accessed.
-
-    Raises:
-        ValidationError:
-            If the function is not called with arguments of valid type.
     """
     TestMongoInstance.port = database_config.url.hosts()[0]["port"]
     TestMongoInstance.prepare_dirs()

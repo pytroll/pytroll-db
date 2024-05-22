@@ -1,6 +1,6 @@
 """The module with common functions to be used in handling requests related to `databases` and `collections`."""
 
-from typing import Annotated
+from typing import Annotated, Union
 
 from fastapi import Depends, Query, Response
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
@@ -62,8 +62,8 @@ async def check_collection(
 
 
 async def get_distinct_items_in_collection(
-        response_or_collection: Response | AsyncIOMotorCollection,
-        field_name: str) -> Response | list[str]:
+        response_or_collection: Union[Response, AsyncIOMotorCollection],
+        field_name: str) -> Union[Response, list[str]]:
     """An auxiliary function to either return the given response; or return a list of distinct (unique) values.
 
     Given the ``field_name`` it conducts a search in all documents of the given collection. The latter behaviour is

@@ -3,11 +3,6 @@
 This is the main module which is supposed to be imported by the users of the package.
 
 Note:
-    Functions in this module are decorated with
-    `pydantic.validate_call <https://docs.pydantic.dev/latest/api/validate_call/#pydantic.validate_call_decorator.validate_call>`_
-    so that their arguments can be validated using the corresponding type hints, when calling the function at runtime.
-
-Note:
     The following applies to the :obj:`api` package and all its subpackages/modules.
 
     To avoid redundant documentation and inconsistencies, only non-FastAPI components are documented via the docstrings.
@@ -22,6 +17,7 @@ import asyncio
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
+from typing import Union
 
 import uvicorn
 from fastapi import FastAPI, status
@@ -52,7 +48,7 @@ API_INFO = dict(
 
 
 @validate_call
-def run_server(config: AppConfig | FilePath, **kwargs) -> None:
+def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     """Runs the API server with all the routes and connection to the database.
 
     It first creates a FastAPI application and runs it using `uvicorn <https://www.uvicorn.org/>`_ which is
@@ -121,8 +117,7 @@ def run_server(config: AppConfig | FilePath, **kwargs) -> None:
 
 
 @contextmanager
-@validate_call
-def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeout = 2):
+def api_server_process_context(config: Union[AppConfig, FilePath], startup_time: Timeout = 2):
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
@@ -136,10 +131,6 @@ def api_server_process_context(config: AppConfig | FilePath, startup_time: Timeo
             The overall time in seconds that is expected for the server and the database connections to be established
             before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
             large so that the tests will not time out.
-
-    Raises:
-        ValidationError:
-            If the function is not called with arguments of valid type.
     """
     logger.info("Attempt to run the API server process in a context manager ...")
     if not isinstance(config, AppConfig):

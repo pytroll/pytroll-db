@@ -7,7 +7,7 @@ It is based on the following libraries:
 
 import errno
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Coroutine, TypeVar
+from typing import Any, AsyncGenerator, Coroutine, Optional, TypeVar, Union
 
 from loguru import logger
 from motor.motor_asyncio import (
@@ -17,7 +17,7 @@ from motor.motor_asyncio import (
     AsyncIOMotorCursor,
     AsyncIOMotorDatabase,
 )
-from pydantic import BaseModel, validate_call
+from pydantic import BaseModel
 from pymongo.collection import _DocumentType
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
@@ -66,7 +66,7 @@ async def get_id(doc: CoroutineDocument) -> str:
     return str((await doc)["_id"])
 
 
-async def get_ids(docs: AsyncIOMotorCommandCursor | AsyncIOMotorCursor) -> list[str]:
+async def get_ids(docs: Union[AsyncIOMotorCommandCursor, AsyncIOMotorCursor]) -> list[str]:
     """Similar to :func:`~MongoDB.get_id` but for a list of documents.
 
     Args:
@@ -103,8 +103,8 @@ class MongoDB:
         us, we would like to fail early!
     """
 
-    __client: AsyncIOMotorClient | None = None
-    __database_config: DatabaseConfig | None = None
+    __client: Optional[AsyncIOMotorClient] = None
+    __database_config: Optional[DatabaseConfig] = None
     __main_collection: AsyncIOMotorCollection = None
     __main_database: AsyncIOMotorDatabase = None
 
@@ -223,7 +223,7 @@ class MongoDB:
     async def get_collection(
             cls,
             database_name: str,
-            collection_name: str) -> AsyncIOMotorCollection | ResponseError:
+            collection_name: str) -> Union[AsyncIOMotorCollection, ResponseError]:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -266,7 +266,7 @@ class MongoDB:
                 raise Collections.WrongTypeError
 
     @classmethod
-    async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase | ResponseError:
+    async def get_database(cls, database_name: str) -> Union[AsyncIOMotorDatabase, ResponseError]:
         """Gets the database object given its name.
 
         Args:
@@ -292,7 +292,6 @@ class MongoDB:
 
 
 @asynccontextmanager
-@validate_call
 async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
     """An asynchronous context manager to connect to the MongoDB client.
 
@@ -305,10 +304,6 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
     Args:
         database_config:
             The configuration of the database.
-
-    Raises:
-        ValidationError:
-            If the function is not called with arguments of valid type.
     """
     logger.info("Attempt to open the MongoDB context manager ...")
     try:
