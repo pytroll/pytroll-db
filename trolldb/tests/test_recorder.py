@@ -76,7 +76,7 @@ async def test_record_messages(config_file, tmp_path, file_message, tmp_data_fil
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message]):
             await record_messages(config)
-            assert message_in_database_and_delete_count_is_one(msg)
+            assert await message_in_database_and_delete_count_is_one(msg)
 
 
 async def test_record_deletes_message(tmp_path, file_message, del_message):

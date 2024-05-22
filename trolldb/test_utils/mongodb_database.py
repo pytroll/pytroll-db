@@ -3,7 +3,6 @@
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
-from typing import Iterator
 
 from pymongo import MongoClient
 
@@ -12,11 +11,11 @@ from trolldb.test_utils.common import test_app_config
 
 
 @contextmanager
-def test_mongodb_context(database_config: DatabaseConfig = test_app_config.database) -> Iterator[MongoClient]:
+def test_mongodb_context(database_config: DatabaseConfig = test_app_config.database):
     """A context manager for the MongoDB client given test configurations.
 
     Note:
-        This is based on `Pymongo` and not the `motor` async driver. For testing purposes this is sufficient and we
+        This is based on `Pymongo` and not the `motor` async driver. For testing purposes this is sufficient, and we
         do not need async capabilities.
 
     Args:
