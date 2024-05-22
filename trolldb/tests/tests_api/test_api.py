@@ -13,7 +13,7 @@ import pytest
 from fastapi import status
 
 from trolldb.test_utils.common import http_get
-from trolldb.test_utils.mongodb_database import TestDatabase, test_mongodb_context
+from trolldb.test_utils.mongodb_database import TestDatabase, mongodb_for_test_context
 
 
 def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
@@ -61,7 +61,7 @@ def test_database_names_negative():
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_collections():
     """Checks the presence of existing collections and that the ids of documents therein can be correctly retrieved."""
-    with test_mongodb_context() as client:
+    with mongodb_for_test_context() as client:
         for database_name, collection_name in zip(TestDatabase.database_names, TestDatabase.collection_names,
                                                   strict=False):
             assert collections_exists(

@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
+from typing import Iterator
 
 from pymongo import MongoClient
 
@@ -11,7 +12,7 @@ from trolldb.test_utils.common import test_app_config
 
 
 @contextmanager
-def test_mongodb_context(database_config: DatabaseConfig = test_app_config.database):
+def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.database) -> Iterator[MongoClient]:
     """A context manager for the MongoDB client given test configurations.
 
     Note:
@@ -161,7 +162,7 @@ class TestDatabase:
         This is done by deleting all documents in the collections and then inserting a single empty ``{}`` document
         in them.
         """
-        with test_mongodb_context() as client:
+        with mongodb_for_test_context() as client:
             for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
                 db = client[db_name]
                 collection = db[coll_name]
@@ -171,7 +172,7 @@ class TestDatabase:
     @classmethod
     def write_mock_date(cls):
         """Fills databases/collections with mock data."""
-        with test_mongodb_context() as client:
+        with mongodb_for_test_context() as client:
             # The following function call has side effects!
             cls.generate_documents()
             collection = client[
