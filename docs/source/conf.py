@@ -14,6 +14,8 @@ import os
 
 from sphinx.ext import apidoc
 
+from trolldb.version import __version__
+
 autodoc_mock_imports = ["motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml"]
 
 # -- Project information -----------------------------------------------------
@@ -23,7 +25,7 @@ copyright = "2024, Pytroll"
 author = "Pouria Khalaj"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 

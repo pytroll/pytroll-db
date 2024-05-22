@@ -32,7 +32,6 @@ from trolldb.errors.errors import ResponseError
 
 API_INFO = dict(
     title="pytroll-db",
-    version="0.1",
     summary="The database API of Pytroll",
     description=
     "The API allows   you to perform CRUD operations as well as querying the database"
