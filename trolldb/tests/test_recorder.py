@@ -1,16 +1,13 @@
 """Tests for the message recording into database."""
 
-from typing import Any
-
 import pytest
 from posttroll.message import Message
 from posttroll.testing import patched_subscriber_recv
-from pydantic import FilePath
+from pytest_lazy_fixtures import lf
 
 from trolldb.cli import record_messages, record_messages_from_command_line, record_messages_from_config
-from trolldb.config.config import AppConfig
 from trolldb.database.mongodb import MongoDB, mongodb_context
-from trolldb.test_utils.common import create_config_file, make_test_app_config, test_app_config
+from trolldb.test_utils.common import AppConfig, create_config_file, make_test_app_config, test_app_config
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
@@ -43,57 +40,51 @@ def tmp_data_filename(tmp_path):
     return tmp_path / filename
 
 
-async def assert_message(msg, data_filename):
-    """Documentation to be added."""
+@pytest.fixture()
+def config_file(tmp_path):
+    """A fixture to create a config file for the tests."""
+    return create_config_file(tmp_path)
+
+
+async def message_in_database_and_delete_count_is_one(msg) -> bool:
+    """Checks if there is exactly one item in the database which matches the data of the message."""
     async with mongodb_context(test_app_config.database):
         collection = await MongoDB.get_collection("mock_database", "mock_collection")
         result = await collection.find_one(dict(scan_mode="EW"))
         result.pop("_id")
-        assert result == msg.data
-
-        deletion_result = await collection.delete_many({"uri": str(data_filename)})
-        assert deletion_result.deleted_count == 1
+        deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
+        return result == msg.data and deletion_result.deleted_count == 1
 
 
-async def _record_from_somewhere(
-        config_path: FilePath, message: Any, data_filename, record_from_func, wrap_in_list=False):
-    """Test that we can record when passed a config file."""
-    config_file = create_config_file(config_path)
-    msg = Message.decode(message)
+@pytest.mark.parametrize(("function", "args"), [
+    (record_messages_from_config, lf("config_file")),
+    (record_messages_from_command_line, [lf("config_file")])
+])
+async def test_record_from_cli_and_config(tmp_path, file_message, tmp_data_filename, function, args):
+    """Tests that message recording adds a message to the database either via configs from a file or the CLI."""
+    msg = Message.decode(file_message)
     with running_prepared_database_context():
-        with patched_subscriber_recv([message]):
-            await record_from_func(config_file if not wrap_in_list else [str(config_file)])
-            await assert_message(msg, data_filename)
+        with patched_subscriber_recv([file_message]):
+            await function(args)
+            assert await message_in_database_and_delete_count_is_one(msg)
 
 
-async def test_record_adds_message(tmp_path, file_message, tmp_data_filename):
-    """Test that message recording adds a message to the database."""
-    await _record_from_somewhere(
-        tmp_path, file_message, tmp_data_filename, record_messages_from_config
-    )
-
-
-async def test_record_from_config(tmp_path, file_message, tmp_data_filename):
-    """Test that we can record when passed a config file."""
-    await _record_from_somewhere(
-        tmp_path, file_message, tmp_data_filename, record_messages_from_config
-    )
-
-
-async def test_record_cli(tmp_path, file_message, tmp_data_filename):
-    """Test that we can record when passed a config file."""
-    await _record_from_somewhere(
-        tmp_path, file_message, tmp_data_filename, record_messages_from_command_line, True
-    )
+async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename):
+    """Tests that message recording adds a message to the database."""
+    config = AppConfig(**make_test_app_config(tmp_path))
+    msg = Message.decode(file_message)
+    with running_prepared_database_context():
+        with patched_subscriber_recv([file_message]):
+            await record_messages(config)
+            assert message_in_database_and_delete_count_is_one(msg)
 
 
 async def test_record_deletes_message(tmp_path, file_message, del_message):
-    """Test that message recording can delete a record in the database."""
+    """Tests that message recording can delete a record in the database."""
     config = AppConfig(**make_test_app_config(tmp_path))
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message, del_message]):
             await record_messages(config)
-
             async with mongodb_context(config.database):
                 collection = await MongoDB.get_collection("mock_database", "mock_collection")
                 result = await collection.find_one(dict(scan_mode="EW"))

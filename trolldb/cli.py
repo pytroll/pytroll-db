@@ -43,7 +43,7 @@ async def record_messages_from_command_line(args=None):
     parser.add_argument(
         "configuration_file",
         help="Path to the configuration file")
-    cmd_args = parser.parse_args(args)
+    cmd_args = parser.parse_args([str(i) for i in args])
 
     await record_messages_from_config(cmd_args.configuration_file)
 
