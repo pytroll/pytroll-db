@@ -11,13 +11,13 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
-import sys
 
+# import sys
 from sphinx.ext import apidoc
 
-sys.path.insert(0, os.path.abspath("../../"))
-for item in os.walk("../../trolldb"):
-    sys.path.append(item[0])
+# sys.path.insert(0, os.path.abspath("../../"))
+# for item in os.walk("../../trolldb"):
+#     sys.path.append(item[0])
 
 autodoc_mock_imports = ["motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml"]
 
