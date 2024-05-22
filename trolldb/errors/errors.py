@@ -6,7 +6,7 @@ specifically. See :obj:`trolldb.database.errors` as an example on how to achieve
 
 from collections import OrderedDict
 from sys import exit
-from typing import Literal, Self
+from typing import Self
 
 from fastapi import Response
 from fastapi.responses import PlainTextResponse
@@ -230,7 +230,7 @@ class ResponseError(Exception):
         exit(exit_code)
 
     @property
-    def fastapi_descriptor(self) -> dict[StatusCode, dict[Literal["description"], str]]:
+    def fastapi_descriptor(self) -> dict[StatusCode, dict[str, str]]:
         """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`ResponseError.__dict`.
 
         Example:
@@ -247,7 +247,7 @@ class ResponseError(Exception):
             }
         """
         return {
-            status: {Literal["description"]: _stringify(msg, self.descriptor_delimiter)}
+            status: {"description": _stringify(msg, self.descriptor_delimiter)}
             for status, msg in self.__dict.items()
         }
 
