@@ -15,8 +15,6 @@ import sys
 
 from sphinx.ext import apidoc
 
-sys.path.insert(0, os.path.abspath("../../"))
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 for x in os.walk("../../trolldb"):
     sys.path.append(x[0])
 autodoc_mock_imports = ["motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml"]
