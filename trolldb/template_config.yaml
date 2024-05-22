@@ -1,0 +1,28 @@
+# This is just a template.
+# For use in production, rename this file to `config.yaml` so that the actual configurations can be correctly picked up.
+# In addition, adapt the values accordingly.
+# Finally, to improve readability please remove the comments!
+
+# Required
+database:
+  #Required
+  main_database_name: satellite_database
+
+  #Required
+  main_collection_name: files
+
+  #Required
+  url: mongodb://localhost:27017
+
+  #Required
+  timeout: 1  # seconds
+
+
+# Required
+api_server:
+  # Required
+  url: http://localhost:8000
+
+# Required
+subscriber:
+  # As per the configurations of the posttroll
