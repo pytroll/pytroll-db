@@ -112,7 +112,7 @@ class Pipelines(list):
     Each item in the list is a dictionary with its key being the literal string ``"$match"`` and its corresponding value
     being of type :class:`PipelineBooleanDict`. The ``"$match"`` key is what actually triggers the matching operation in
     the MongoDB aggregation pipeline. The condition against which the matching will be performed is given by the value
-    which is a simply a boolean pipeline dictionary which has a hierarchical structure.
+    which is a simply a boolean pipeline dictionary and has a hierarchical structure.
 
     Example:
         .. code-block:: python

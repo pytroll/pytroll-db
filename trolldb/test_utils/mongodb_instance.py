@@ -22,14 +22,16 @@ class TestMongoInstance:
     """Temp directory for logging messages by the MongoDB instance.
 
     Warning:
-        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way
+        every time!
     """
 
     storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
     """Temp directory for storing database files by the MongoDB instance.
 
     Warning:
-        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way
+        every time!
     """
 
     port: int = 28017

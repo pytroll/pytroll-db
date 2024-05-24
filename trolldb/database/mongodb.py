@@ -51,7 +51,7 @@ async def get_id(doc: CoroutineDocument) -> str:
 
     Note:
         The rationale behind this method is as follows. In MongoDB, each document has a unique ID which is of type
-        :class:`~bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
+        :class:`bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
         the need for this method.
 
     Args:
@@ -84,7 +84,7 @@ async def get_ids(docs: Union[AsyncIOMotorCommandCursor, AsyncIOMotorCursor]) ->
 class MongoDB:
     """A wrapper class around the `motor async driver <https://www.mongodb.com/docs/drivers/motor/>`_ for Mongo DB.
 
-    It includes convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()`` method
+    It includes convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()` method
     returns a coroutine which needs to be awaited.
 
     Note:
@@ -117,16 +117,20 @@ class MongoDB:
 
         Args:
             database_config:
-                 A named tuple which includes the database configurations.
+                 An object of type :class:`~trolldb.config.config.DatabaseConfig` which includes the database
+                 configurations.
+
+        Warning:
+            The timeout is given in seconds in the configurations, while the MongoDB uses milliseconds.
 
         Returns:
             On success ``None``.
 
         Raises:
             SystemExit(errno.EIO):
-                If connection is not established (``ConnectionFailure``)
+                If connection is not established, i.e. ``ConnectionFailure``.
             SystemExit(errno.EIO):
-                If the attempt times out (``ServerSelectionTimeoutError``)
+                If the attempt times out, i.e. ``ServerSelectionTimeoutError``.
             SystemExit(errno.EIO):
                 If one attempts reinitializing the class with new (different) database configurations without calling
                 :func:`~close()` first.
@@ -135,7 +139,8 @@ class MongoDB:
                 configurations still exist and are different from the new ones which have been just provided.
 
             SystemExit(errno.ENODATA):
-                If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
+                If either ``database_config.main_database_name`` or ``database_config.main_collection_name`` does not
+                exist.
         """
         logger.info("Attempt to initialize the MongoDB client ...")
         logger.info("Checking the database configs ...")

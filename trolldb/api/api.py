@@ -34,7 +34,7 @@ API_INFO = dict(
     title="pytroll-db",
     summary="The database API of Pytroll",
     description=
-    "The API allows   you to perform CRUD operations as well as querying the database"
+    "The API allows you to perform CRUD operations as well as querying the database"
     "At the moment only MongoDB is supported. It is based on the following Python packages"
     "\n * **PyMongo** (https://github.com/mongodb/mongo-python-driver)"
     "\n * **motor** (https://github.com/mongodb/motor)",
@@ -43,7 +43,7 @@ API_INFO = dict(
         url="https://www.gnu.org/licenses/gpl-3.0.en.html"
     )
 )
-"""These will appear int the auto-generated documentation and are passed to the ``FastAPI`` class as keyword args."""
+"""These will appear in the auto-generated documentation and are passed to the ``FastAPI`` class as keyword args."""
 
 
 @validate_call
@@ -65,8 +65,8 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
             `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
             to it. These keyword arguments will be first concatenated with the configurations of the API server which
             are read from the ``config`` argument. The keyword arguments which are passed explicitly to the function
-            take precedence over ``config``. Finally, ``API_INFO``, which are hard-coded information for the API server,
-            will be concatenated and takes precedence over all.
+            take precedence over ``config``. Finally, :obj:`API_INFO`, which are hard-coded information for the API
+            server, will be concatenated and takes precedence over all.
 
     Raises:
         ValidationError:
@@ -75,7 +75,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     Example:
         .. code-block:: python
 
-            from api.api import run_server
+            from trolldb.api.api import run_server
             if __name__ == "__main__":
                 run_server("config.yaml")
     """

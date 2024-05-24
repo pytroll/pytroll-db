@@ -31,9 +31,9 @@ def _listify(item: str | list[str]) -> list[str]:
         .. code-block:: python
 
             # The following evaluate to True
-            __listify("test") == ["test"]
-            __listify(["a", "b"]) = ["a", "b"]
-            __listify([]) == []
+            _listify("test") == ["test"]
+            _listify(["a", "b"]) = ["a", "b"]
+            _listify([]) == []
     """
     return item if isinstance(item, list) else [item]
 
@@ -76,8 +76,7 @@ class ResponseError(Exception):
             error_b = ResponseError({404: "Not Found"})
             errors = error_a | error_b
 
-            # When used in a FastAPI response descriptor,
-            # the following string will be generated for errors
+            # When used in a FastAPI response descriptor, the following string is generated
             "Bad Request |OR| Not Found"
     """
 
@@ -101,7 +100,7 @@ class ResponseError(Exception):
                 error_b = ResponseError({404: "Not Found"})
                 errors = error_a | error_b
                 errors_a_or_b = ResponseError({400: "Bad Request", 404: "Not Found"})
-                errors_list = ResponseError({404: ["Not Found", "Still Not Found"]})
+                errors_list = ResponseError({404: ["Not Found", "Yet Not Found"]})
         """
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
@@ -188,7 +187,7 @@ class ResponseError(Exception):
 
         Args:
             extra_information (Optional, default ``None``):
-                More information (if any) that wants to be added to the message string.
+                More information (if any) that needs to be added to the message string.
             status_code (Optional, default ``None``):
                 The status code to retrieve. This is useful when there are several error items in the internal
                 dictionary. In case of ``None``, the internal dictionary must include a single entry, otherwise an error
@@ -232,6 +231,11 @@ class ResponseError(Exception):
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[str, str]]:
         """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`ResponseError.__dict`.
+
+        Note:
+            Consult the FastAPI documentation for
+            `additional responses <https://fastapi.tiangolo.com/advanced/additional-responses/>`_ to see why and how
+            descriptors are used.
 
         Example:
              .. code-block:: python

@@ -37,7 +37,7 @@ def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.d
 
 
 class Time:
-    """A static class to enclose functionalities for generating random time stamps."""
+    """A static class to enclose functionalities for generating random timestamps."""
 
     min_start_time = datetime(2019, 1, 1, 0, 0, 0)
     """The minimum timestamp which is allowed to appear in our data."""
@@ -86,8 +86,8 @@ class Document:
     def generate_dataset(self, max_count: int) -> list[dict]:
         """Generates the dataset for a given document.
 
-        This corresponds to the list of files which are stored in each document. The number of datasets is randomly
-        chosen from 1 to ``max_count`` for each document.
+        This corresponds to the list of files which are stored in each document. The number of items in a dataset is
+        randomly chosen from 1 to ``max_count`` for each document.
         """
         dataset = []
         # We suppress ruff (S311) here as we are not generating anything cryptographic here!
@@ -113,27 +113,37 @@ class Document:
 
 
 class TestDatabase:
-    """A static class which encloses functionalities to prepare and fill the test database with mock data."""
+    """A static class which encloses functionalities to prepare and fill the test database with test data."""
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
     platform_names = choices(["PA", "PB", "PC"], k=10)  # noqa: S311
-    """Example platform names."""
+    """Example platform names.
+
+    Warning:
+        The value of this variable changes randomly every time. What you see above is just an example which has been
+        generated as a result of building the documentation!
+    """
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
     sensors = choices(["SA", "SB", "SC"], k=10)  # noqa: S311
-    """Example sensor names."""
+    """Example sensor names.
+
+    Warning:
+        The value of this variable changes randomly every time. What you see above is just an example which has been
+        generated as a result of building the documentation!
+    """
 
     database_names = [test_app_config.database.main_database_name, "another_mock_database"]
     """List of all database names.
 
-    The first element is the main database that will be queried by the API and includes the mock data. The second
+    The first element is the main database that will be queried by the API and includes the test data. The second
     database is for testing scenarios when one attempts to access another existing database or collection.
     """
 
     collection_names = [test_app_config.database.main_collection_name, "another_mock_collection"]
     """List of all collection names.
 
-    The first element is the main collection that will be queried by the API and includes the mock data. The second
+    The first element is the main collection that will be queried by the API and includes the test data. The second
     collection is for testing scenarios when one attempts to access another existing collection.
     """
 
@@ -141,14 +151,14 @@ class TestDatabase:
     """All database names including the default ones which are automatically created by MongoDB."""
 
     documents: list[dict] = []
-    """The list of documents which include mock data."""
+    """The list of documents which include test data."""
 
     @classmethod
     def generate_documents(cls, random_shuffle: bool = True) -> None:
         """Generates test documents which for practical purposes resemble real data.
 
         Warning:
-            This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is filled.
+            This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is reset to new values.
         """
         cls.documents = [
             Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)]
@@ -159,8 +169,8 @@ class TestDatabase:
     def reset(cls):
         """Resets all the databases/collections.
 
-        This is done by deleting all documents in the collections and then inserting a single empty ``{}`` document
-        in them.
+        This is done by deleting all documents in the collections and then inserting a single empty document, i.e.
+        ``{}``, in them.
         """
         with mongodb_for_test_context() as client:
             for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
@@ -171,7 +181,7 @@ class TestDatabase:
 
     @classmethod
     def write_mock_date(cls):
-        """Fills databases/collections with mock data."""
+        """Fills databases/collections with test data."""
         with mongodb_for_test_context() as client:
             # The following function call has side effects!
             cls.generate_documents()
@@ -184,6 +194,6 @@ class TestDatabase:
 
     @classmethod
     def prepare(cls):
-        """Prepares the MongoDB instance by first resetting the database and then filling it with mock data."""
+        """Prepares the MongoDB instance by first resetting the database and filling it with generated test data."""
         cls.reset()
         cls.write_mock_date()

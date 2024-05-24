@@ -12,7 +12,7 @@ from trolldb.errors.errors import ResponseError, ResponsesErrorGroup
 
 
 class Client(ResponsesErrorGroup):
-    """Client error responses, e.g. if something goes wrong with initialization or closing the client."""
+    """Database client error responses, e.g. if something goes wrong with initialization or closing the client."""
     CloseNotAllowedError = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "Calling `close()` on a client which has not been initialized is not allowed!"
@@ -37,12 +37,12 @@ class Client(ResponsesErrorGroup):
 
     ConnectionError = ResponseError({
         status.HTTP_400_BAD_REQUEST:
-            "Could not connect to the database with URL."
+            "Could not connect to the database with the given URL."
     })
 
 
 class Collections(ResponsesErrorGroup):
-    """Collections error responses, e.g. if a requested collection cannot be found."""
+    """Collections error responses, e.g. if the requested collection cannot be found."""
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given collection name inside the specified database."
@@ -50,12 +50,12 @@ class Collections(ResponsesErrorGroup):
 
     WrongTypeError = ResponseError({
         status.HTTP_422_UNPROCESSABLE_ENTITY:
-            "Both the Database and collection name must be `None` if one of them is `None`."
+            "Both the database and collection name must be `None` if either one is `None`."
     })
 
 
 class Databases(ResponsesErrorGroup):
-    """Databases error responses, e.g. if a requested database cannot be found."""
+    """Databases error responses, e.g. if the requested database cannot be found."""
     NotFoundError = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given database name."
@@ -68,7 +68,7 @@ class Databases(ResponsesErrorGroup):
 
 
 class Documents(ResponsesErrorGroup):
-    """Documents error responses, e.g. if a requested document cannot be found."""
+    """Documents error responses, e.g. if the requested document cannot be found."""
     NotFound = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find any document with the given object id."

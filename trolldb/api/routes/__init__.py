@@ -1,4 +1,4 @@
-"""routes package."""
+"""The routes package of the API."""
 
 from .router import api_router
 

@@ -19,7 +19,7 @@ def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
             config will be an empty dictionary.
 
     Returns:
-        A dictionary which resembles an object of type :obj:`AppConfig`.
+        A dictionary which resembles an object of type :obj:`~trolldb.config.config.AppConfig`.
     """
     app_config = dict(
         api_server=dict(

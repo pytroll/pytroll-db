@@ -1,11 +1,6 @@
 """The module which handles parsing and validating the config (YAML) file.
 
 The validation is performed using `Pydantic <https://docs.pydantic.dev/latest/>`_.
-
-Note:
-    Functions in this module are decorated with
-    `pydantic.validate_call <https://docs.pydantic.dev/latest/api/validate_call/#pydantic.validate_call_decorator.validate_call>`_
-    so that their arguments can be validated using the corresponding type hints, when calling the function at runtime.
 """
 
 import errno
@@ -32,7 +27,7 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
             The string to be converted to an ObjectId.
 
     Returns:
-       The ObjectId object if successfully.
+       The ObjectId object if successful.
 
     Raises:
         ValueError:
@@ -46,7 +41,7 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
 
 
 MongoObjectId = Annotated[str, AfterValidator(id_must_be_valid)]
-"""Type hint validator for object IDs."""
+"""The type hint validator for object IDs."""
 
 
 class MongoDocument(BaseModel):
@@ -60,7 +55,7 @@ class APIServerConfig(NamedTuple):
     Note:
         The attributes herein are a subset of the keyword arguments accepted by
         `FastAPI class <https://fastapi.tiangolo.com/reference/fastapi/#fastapi.FastAPI>`_ and are directly passed
-        to the FastAPI class.
+        to the FastAPI class. Consult :func:`trolldb.api.api.run_server` on how these configurations are treated.
     """
 
     url: AnyUrl
@@ -79,7 +74,7 @@ class DatabaseConfig(NamedTuple):
     """
 
     url: MongoDsn
-    """The URL of the MongoDB server excluding the port part, e.g. ``"mongodb://localhost:27017"``"""
+    """The URL of the MongoDB server including the port part, e.g. ``"mongodb://localhost:27017"``"""
 
     timeout: Timeout
     """The timeout in seconds (non-negative float), after which an exception is raised if a connection with the
@@ -95,7 +90,7 @@ TODO: This has to be moved to the `posttroll` package.
 
 
 class AppConfig(BaseModel):
-    """A model to hold all the configurations of the application including both the API server and the database.
+    """A model to hold all the configurations of the application, i.e. the API server, the database, and the subscriber.
 
     This will be used by Pydantic to validate the parsed YAML file.
     """
@@ -121,9 +116,6 @@ def parse_config_yaml_file(filename: FilePath) -> AppConfig:
         ValidationError:
             If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to
             :class:`AppConfig`.
-
-        ValidationError:
-            If the function is not called with arguments of valid type.
     """
     logger.info("Attempt to parse the YAML file ...")
     with open(filename, "r") as file:
