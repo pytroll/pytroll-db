@@ -133,14 +133,14 @@ class TestDatabase:
         generated as a result of building the documentation!
     """
 
-    database_names = [test_app_config.database.main_database_name, "another_mock_database"]
+    database_names = [test_app_config.database.main_database_name, "another_test_database"]
     """List of all database names.
 
     The first element is the main database that will be queried by the API and includes the test data. The second
     database is for testing scenarios when one attempts to access another existing database or collection.
     """
 
-    collection_names = [test_app_config.database.main_collection_name, "another_mock_collection"]
+    collection_names = [test_app_config.database.main_collection_name, "another_test_collection"]
     """List of all collection names.
 
     The first element is the main collection that will be queried by the API and includes the test data. The second
@@ -180,7 +180,7 @@ class TestDatabase:
                 collection.insert_one({})
 
     @classmethod
-    def write_mock_date(cls):
+    def write_test_data(cls):
         """Fills databases/collections with test data."""
         with mongodb_for_test_context() as client:
             # The following function call has side effects!
@@ -196,4 +196,4 @@ class TestDatabase:
     def prepare(cls):
         """Prepares the MongoDB instance by first resetting the database and filling it with generated test data."""
         cls.reset()
-        cls.write_mock_date()
+        cls.write_test_data()

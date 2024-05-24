@@ -26,8 +26,8 @@ def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
             url="http://localhost:8080"
         ),
         database=dict(
-            main_database_name="mock_database",
-            main_collection_name="mock_collection",
+            main_database_name="test_database",
+            main_collection_name="test_collection",
             url="mongodb://localhost:28017",
             timeout=1
         ),

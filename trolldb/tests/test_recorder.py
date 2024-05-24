@@ -60,7 +60,7 @@ def config_file(tmp_path):
 async def message_in_database_and_delete_count_is_one(msg) -> bool:
     """Checks if there is exactly one item in the database which matches the data of the message."""
     async with mongodb_context(test_app_config.database):
-        collection = await MongoDB.get_collection("mock_database", "mock_collection")
+        collection = await MongoDB.get_collection("test_database", "test_collection")
         result = await collection.find_one(dict(scan_mode="EW"))
         result.pop("_id")
         deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
@@ -97,7 +97,7 @@ async def test_record_deletes_message(tmp_path, file_message, del_message):
         with patched_subscriber_recv([file_message, del_message]):
             await record_messages(config)
             async with mongodb_context(config.database):
-                collection = await MongoDB.get_collection("mock_database", "mock_collection")
+                collection = await MongoDB.get_collection("test_database", "test_collection")
                 result = await collection.find_one(dict(scan_mode="EW"))
                 assert result is None
 
