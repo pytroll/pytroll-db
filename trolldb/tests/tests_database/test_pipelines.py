@@ -1,5 +1,5 @@
 """Tests for the pipelines and applying comparison operations on them."""
-from trolldb.database.piplines import PipelineAttribute, PipelineBooleanDict, Pipelines
+from trolldb.database.pipelines import PipelineAttribute, PipelineBooleanDict, Pipelines
 from trolldb.test_utils.common import compare_by_operator_name
 
 

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Query
 from trolldb.api.routes.common import CheckCollectionDependency
 from trolldb.database.errors import database_collection_error_descriptor
 from trolldb.database.mongodb import get_ids
-from trolldb.database.piplines import PipelineAttribute, Pipelines
+from trolldb.database.pipelines import PipelineAttribute, Pipelines
 
 router = APIRouter()
 
