@@ -79,3 +79,9 @@ def test_collections_negative():
     """Checks that the non-existing collections cannot be found."""
     for database_name in TestDatabase.database_names:
         assert http_get(f"databases/{database_name}/non_existing_collection").status == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("_test_server_fixture")
+def test_datetime():
+    """Checks that the datetime route works properly."""
+    assert http_get("datetime").json() == TestDatabase.find_min_max_datetime()

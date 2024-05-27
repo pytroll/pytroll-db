@@ -1,5 +1,4 @@
 """The module which provides testing utilities to make MongoDB databases/collections and fill them with test data."""
-
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
@@ -190,7 +189,49 @@ class TestDatabase:
             ][
                 test_app_config.database.main_collection_name
             ]
+            collection.delete_many({})
             collection.insert_many(cls.documents)
+
+    @classmethod
+    def find_min_max_datetime(cls):
+        """Finds the minimum and the maximum for both the ``start_time`` and the ``end_time``.
+
+        We use `brute force` for this purpose. We set the minimum to a large value (year 2100) and the maximum to a
+        small value (year 1900). We then iterate through all documents and update the extrema.
+
+        Returns:
+            A dictionary whose schema matches the response returned by the ``/datetime`` route of the API.
+        """
+        result = dict(
+            start_time=dict(
+                _min=dict(_id=None, _time="2100-01-01T00:00:00"),
+                _max=dict(_id=None, _time="1900-01-01T00:00:00")
+            ),
+            end_time=dict(
+                _min=dict(_id=None, _time="2100-01-01T00:00:00"),
+                _max=dict(_id=None, _time="1900-01-01T00:00:00"))
+        )
+
+        with mongodb_for_test_context() as client:
+            collection = client[
+                test_app_config.database.main_database_name
+            ][
+                test_app_config.database.main_collection_name
+            ]
+            documents = collection.find({})
+
+            for document in documents:
+                for k in ["start_time", "end_time"]:
+                    dt = document[k].isoformat()
+                    if dt > result[k]["_max"]["_time"]:
+                        result[k]["_max"]["_time"] = dt
+                        result[k]["_max"]["_id"] = str(document["_id"])
+
+                    if dt < result[k]["_min"]["_time"]:
+                        result[k]["_min"]["_time"] = dt
+                        result[k]["_min"]["_id"] = str(document["_id"])
+
+        return result
 
     @classmethod
     def prepare(cls):
