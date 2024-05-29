@@ -1,5 +1,6 @@
 """The module which provides testing utilities to make MongoDB databases/collections and fill them with test data."""
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
 from typing import Iterator
@@ -114,8 +115,11 @@ class Document:
 class TestDatabase:
     """A static class which encloses functionalities to prepare and fill the test database with test data."""
 
+    unique_platform_names: list[str] = ["PA", "PB", "PC"]
+    """The unique platform names that will be used to generate the sample of all platform names."""
+
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    platform_names = choices(["PA", "PB", "PC"], k=10)  # noqa: S311
+    platform_names = choices(["PA", "PB", "PC"], k=20)  # noqa: S311
     """Example platform names.
 
     Warning:
@@ -123,8 +127,11 @@ class TestDatabase:
         generated as a result of building the documentation!
     """
 
+    unique_sensors: list[str] = ["SA", "SB", "SC"]
+    """The unique sensor names that will be used to generate the sample of all sensor names."""
+
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    sensors = choices(["SA", "SB", "SC"], k=10)  # noqa: S311
+    sensors = choices(["SA", "SB", "SC"], k=20)  # noqa: S311
     """Example sensor names.
 
     Warning:
@@ -193,6 +200,23 @@ class TestDatabase:
             collection.insert_many(cls.documents)
 
     @classmethod
+    def get_all_documents_from_database(cls) -> list[dict]:
+        """Retrieves all the documents from the database.
+
+        Returns:
+            A list of all documents from the database. This matches the content of :obj:`~TestDatabase.documents` with
+            the addition of `IDs` which are assigned by the MongoDB.
+        """
+        with mongodb_for_test_context() as client:
+            collection = client[
+                test_app_config.database.main_database_name
+            ][
+                test_app_config.database.main_collection_name
+            ]
+            documents = list(collection.find({}))
+        return documents
+
+    @classmethod
     def find_min_max_datetime(cls):
         """Finds the minimum and the maximum for both the ``start_time`` and the ``end_time``.
 
@@ -212,26 +236,52 @@ class TestDatabase:
                 _max=dict(_id=None, _time="1900-01-01T00:00:00"))
         )
 
-        with mongodb_for_test_context() as client:
-            collection = client[
-                test_app_config.database.main_database_name
-            ][
-                test_app_config.database.main_collection_name
-            ]
-            documents = collection.find({})
+        documents = cls.get_all_documents_from_database()
 
-            for document in documents:
-                for k in ["start_time", "end_time"]:
-                    dt = document[k].isoformat()
-                    if dt > result[k]["_max"]["_time"]:
-                        result[k]["_max"]["_time"] = dt
-                        result[k]["_max"]["_id"] = str(document["_id"])
+        for document in documents:
+            for k in ["start_time", "end_time"]:
+                dt = document[k].isoformat()
+                if dt > result[k]["_max"]["_time"]:
+                    result[k]["_max"]["_time"] = dt
+                    result[k]["_max"]["_id"] = str(document["_id"])
 
-                    if dt < result[k]["_min"]["_time"]:
-                        result[k]["_min"]["_time"] = dt
-                        result[k]["_min"]["_id"] = str(document["_id"])
+                if dt < result[k]["_min"]["_time"]:
+                    result[k]["_min"]["_time"] = dt
+                    result[k]["_min"]["_id"] = str(document["_id"])
 
         return result
+
+    @classmethod
+    def match_query(cls, platform=None, sensor=None, time_min=None, time_max=None):
+        """Matches the given query.
+
+        We first take all the documents and then progressively remove all that do not match the given queries until
+        we end up with those that match. When a query is ``None``, it does not have any effect on the results.
+        """
+        documents = cls.get_all_documents_from_database()
+
+        buffer = deepcopy(documents)
+        for document in documents:
+            should_remove = False
+            if platform:
+                should_remove = document["platform_name"] not in platform
+
+            if sensor and not should_remove:
+                should_remove = document["sensor"] not in sensor
+
+            if time_min and time_max and not should_remove:
+                should_remove = document["end_time"] < time_min or document["start_time"] > time_max
+
+            if time_min and not time_max and not should_remove:
+                should_remove = document["end_time"] < time_min
+
+            if time_max and not time_min and not should_remove:
+                should_remove = document["end_time"] > time_max
+
+            if should_remove and document in buffer:
+                buffer.remove(document)
+
+        return [str(item["_id"]) for item in buffer]
 
     @classmethod
     def prepare(cls):
