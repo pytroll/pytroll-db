@@ -20,15 +20,14 @@ async def record_messages(config: AppConfig):
         )
         for m in create_subscriber_from_dict_config(config.subscriber).recv():
             msg = Message.decode(str(m))
-            match msg.type:
-                case "file":
-                    await collection.insert_one(msg.data)
-                case "del":
-                    deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
-                    if deletion_result.deleted_count != 1:
-                        logger.error("Recorder found multiple deletions!")  # TODO: Log some data related to the msg
-                case _:
-                    logger.debug(f"Don't know what to do with {msg.type} message.")
+            if msg.type in ["file", "dataset"]:
+                await collection.insert_one(msg.data)
+            elif msg.type == "del":
+                deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
+                if deletion_result.deleted_count != 1:
+                    logger.error("Recorder found multiple deletions!")  # TODO: Log some data related to the msg
+            else:
+                logger.debug(f"Don't know what to do with {msg.type} message.")
 
 
 async def record_messages_from_config(config_file: FilePath):
