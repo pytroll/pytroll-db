@@ -23,6 +23,17 @@ def file_message(tmp_data_filename):
 
 
 @pytest.fixture()
+def dataset_message(tmp_data_filename):
+    """Create a string for a file message."""
+    return ('pytroll://segment/raster/L2/SAR dataset a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 '
+            'application/json {"platform_name": "S1B", "scan_mode": "EW", "type": "GRDM", "data_source": "1SDH", '
+            '"start_time": "2019-11-03T15:39:36.543000", "end_time": "2019-11-03T15:40:40.821000", "orbit_number": '
+            '18765, "random_string1": "0235EA", "random_string2": "747D", "dataset": [{"uri": '
+            f'"{str(tmp_data_filename)}", "uid": "20191103_153936-s1b-ew-hh.tiff"}}], '
+            '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
+
+
+@pytest.fixture()
 def del_message(tmp_data_filename):
     """Create a string for a delete message."""
     return ('pytroll://deletion del a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 '
@@ -89,3 +100,14 @@ async def test_record_deletes_message(tmp_path, file_message, del_message):
                 collection = await MongoDB.get_collection("mock_database", "mock_collection")
                 result = await collection.find_one(dict(scan_mode="EW"))
                 assert result is None
+
+async def test_record_dataset_messages(tmp_path, dataset_message):
+    """Test recording a dataset message and deleting the file."""
+    config = AppConfig(**make_test_app_config(tmp_path))
+    with running_prepared_database_context():
+        with patched_subscriber_recv([dataset_message]):
+            await record_messages(config)
+            async with mongodb_context(config.database):
+                collection = await MongoDB.get_collection("mock_database", "mock_collection")
+                result = await collection.find_one(dict(scan_mode="EW"))
+                assert result is not None
