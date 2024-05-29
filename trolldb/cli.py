@@ -22,10 +22,12 @@ async def record_messages(config: AppConfig):
             msg = Message.decode(str(m))
             if msg.type in ["file", "dataset"]:
                 await collection.insert_one(msg.data)
+                logger.info(f"Inserted file with uri: {msg.data["uri"]}")
             elif msg.type == "del":
                 deletion_result = await collection.delete_many({"uri": msg.data["uri"]})
+                logger.info(f"Deleted document with uri: {msg.data["uri"]}")
                 if deletion_result.deleted_count != 1:
-                    logger.error("Recorder found multiple deletions!")  # TODO: Log some data related to the msg
+                    logger.error(f"Recorder found multiple deletions for uri: {msg.data["uri"]}!")
             else:
                 logger.debug(f"Don't know what to do with {msg.type} message.")
 
