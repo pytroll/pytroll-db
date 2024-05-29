@@ -4,10 +4,12 @@ Note:
     For more information on the API server, see the automatically generated documentation by FastAPI.
 """
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Query
 from pymongo.collection import _DocumentType
 
-from trolldb.api.routes.common import CheckCollectionDependency, CheckDataBaseDependency, exclude_defaults_query
+from trolldb.api.routes.common import CheckCollectionDependency, CheckDataBaseDependency
 from trolldb.config.config import MongoObjectId
 from trolldb.database.errors import (
     Databases,
@@ -23,7 +25,12 @@ router = APIRouter()
 @router.get("/",
             response_model=list[str],
             summary="Gets the list of all database names")
-async def database_names(exclude_defaults: bool = exclude_defaults_query) -> list[str]:
+async def database_names(
+        exclude_defaults: Annotated[bool, Query(
+            title="Query parameter",
+            description="A boolean to exclude default databases from a MongoDB instance. Refer to "
+                        "`trolldb.database.mongodb.MongoDB.default_database_names` for more information."
+        )] = True) -> list[str]:
     """Please consult the auto-generated documentation by FastAPI."""
     db_names = await MongoDB.list_database_names()
 

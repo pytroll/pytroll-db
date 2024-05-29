@@ -5,6 +5,7 @@ Note:
 """
 
 import datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Query
 
@@ -22,12 +23,10 @@ router = APIRouter()
             summary="Gets the database UUIDs of the documents that match specifications determined by the query string")
 async def queries(
         collection: CheckCollectionDependency,
-        # We suppress ruff for the following four lines with `Query(default=None)`.
-        # Reason: This is the FastAPI way of defining optional queries and ruff is not happy about it!
-        platform: list[str] = Query(default=None),  # noqa: B008
-        sensor: list[str] = Query(default=None),  # noqa: B008
-        time_min: datetime.datetime = Query(default=None),  # noqa: B008
-        time_max: datetime.datetime = Query(default=None)) -> list[str]:  # noqa: B008
+        platform: Annotated[list[str] | None, Query()] = None,
+        sensor: Annotated[list[str] | None, Query()] = None,
+        time_min: Annotated[datetime.datetime, Query()] = None,
+        time_max: Annotated[datetime.datetime, Query()] = None) -> list[str]:
     """Please consult the auto-generated documentation by FastAPI."""
     pipelines = Pipelines()
 
