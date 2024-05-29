@@ -17,7 +17,7 @@ import asyncio
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
-from typing import Union
+from typing import Any, Generator, NoReturn, Union
 
 import uvicorn
 from fastapi import FastAPI, status
@@ -89,7 +89,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)
-    async def auto_exception_handler(_, exc: ResponseError):
+    async def auto_exception_handler(_, exc: ResponseError) -> PlainTextResponse:
         """Catches all the exceptions raised as a ResponseError, e.g. accessing non-existing databases/collections."""
         status_code, message = exc.get_error_details()
         info = dict(
@@ -99,7 +99,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
         logger.error(f"Response error caught by the API auto exception handler: {info}")
         return PlainTextResponse(**info)
 
-    async def _serve():
+    async def _serve() -> NoReturn:
         """An auxiliary coroutine to be used in the asynchronous execution of the FastAPI application."""
         async with mongodb_context(config.database):
             logger.info("Attempt to start the uvicorn server ...")
@@ -116,7 +116,8 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
 
 
 @contextmanager
-def api_server_process_context(config: Union[AppConfig, FilePath], startup_time: Timeout = 2):
+def api_server_process_context(
+        config: Union[AppConfig, FilePath], startup_time: Timeout = 2) -> Generator[Process, Any, None]:
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case

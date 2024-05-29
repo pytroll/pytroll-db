@@ -10,7 +10,7 @@ from urllib3 import BaseHTTPResponse, request
 from trolldb.config.config import AppConfig
 
 
-def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
+def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict[str, dict]:
     """Makes the app configuration when used in testing.
 
     Args:

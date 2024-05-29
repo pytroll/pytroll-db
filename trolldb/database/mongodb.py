@@ -7,7 +7,7 @@ It is based on the following libraries:
 
 import errno
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Coroutine, Optional, TypeVar, Union
+from typing import Any, AsyncGenerator, ClassVar, Coroutine, Optional, TypeVar, Union
 
 from loguru import logger
 from motor.motor_asyncio import (
@@ -23,7 +23,6 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from trolldb.config.config import DatabaseConfig
 from trolldb.database.errors import Client, Collections, Databases
-from trolldb.errors.errors import ResponseError
 
 T = TypeVar("T")
 CoroutineLike = Coroutine[Any, Any, T]
@@ -103,12 +102,12 @@ class MongoDB:
         us, we would like to fail early!
     """
 
-    __client: Optional[AsyncIOMotorClient] = None
-    __database_config: Optional[DatabaseConfig] = None
-    __main_collection: AsyncIOMotorCollection = None
-    __main_database: AsyncIOMotorDatabase = None
+    __client: ClassVar[Optional[AsyncIOMotorClient]] = None
+    __database_config: ClassVar[Optional[DatabaseConfig]] = None
+    __main_collection: ClassVar[Optional[AsyncIOMotorCollection]] = None
+    __main_database: ClassVar[Optional[AsyncIOMotorDatabase]] = None
 
-    default_database_names = ["admin", "config", "local"]
+    default_database_names: ClassVar[list[str]] = ["admin", "config", "local"]
     """MongoDB creates these databases by default for self usage."""
 
     @classmethod
@@ -228,7 +227,7 @@ class MongoDB:
     async def get_collection(
             cls,
             database_name: str,
-            collection_name: str) -> Union[AsyncIOMotorCollection, ResponseError]:
+            collection_name: str) -> AsyncIOMotorCollection:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -271,7 +270,7 @@ class MongoDB:
                 raise Collections.WrongTypeError
 
     @classmethod
-    async def get_database(cls, database_name: str) -> Union[AsyncIOMotorDatabase, ResponseError]:
+    async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase:
         """Gets the database object given its name.
 
         Args:

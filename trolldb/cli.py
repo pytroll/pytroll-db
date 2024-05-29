@@ -37,7 +37,7 @@ async def delete_uri_from_collection(collection: AsyncIOMotorCollection, uri: st
     return del_result_file.deleted_count + del_result_dataset.deleted_count
 
 
-async def record_messages(config: AppConfig):
+async def record_messages(config: AppConfig) -> None:
     """Record the metadata of messages into the database."""
     async with mongodb_context(config.database):
         collection = await MongoDB.get_collection(
@@ -60,13 +60,13 @@ async def record_messages(config: AppConfig):
                     logger.debug(f"Don't know what to do with {msg.type} message.")
 
 
-async def record_messages_from_config(config_file: FilePath):
+async def record_messages_from_config(config_file: FilePath) -> None:
     """Record messages into the database, getting the configuration from a file."""
     config = parse_config_yaml_file(config_file)
     await record_messages(config)
 
 
-async def record_messages_from_command_line(args=None):
+async def record_messages_from_command_line(args=None) -> None:
     """Record messages into the database, command-line interface."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -77,6 +77,6 @@ async def record_messages_from_command_line(args=None):
     await record_messages_from_config(cmd_args.configuration_file)
 
 
-def run_sync():
+def run_sync() -> None:
     """Runs the interface synchronously."""
     asyncio.run(record_messages_from_command_line())

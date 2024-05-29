@@ -30,11 +30,11 @@ class PipelineBooleanDict(dict):
             pd_or == pd_or_literal
     """
 
-    def __or__(self, other: Self):
+    def __or__(self, other: Self) -> Self:
         """Implements the bitwise or operator, i.e. ``|``."""
         return PipelineBooleanDict({"$or": [self, other]})
 
-    def __and__(self, other: Self):
+    def __and__(self, other: Self) -> Self:
         """Implements the bitwise and operator, i.e. ``&``."""
         return PipelineBooleanDict({"$and": [self, other]})
 

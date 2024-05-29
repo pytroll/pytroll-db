@@ -6,6 +6,8 @@ Note:
     are (expected to be) self-explanatory and require no additional documentation.
 """
 
+from typing import ClassVar
+
 from fastapi import status
 
 from trolldb.errors.errors import ResponseError, ResponsesErrorGroup
@@ -13,29 +15,29 @@ from trolldb.errors.errors import ResponseError, ResponsesErrorGroup
 
 class Client(ResponsesErrorGroup):
     """Database client error responses, e.g. if something goes wrong with initialization or closing the client."""
-    CloseNotAllowedError = ResponseError({
+    CloseNotAllowedError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "Calling `close()` on a client which has not been initialized is not allowed!"
     })
 
-    ReinitializeConfigError = ResponseError({
+    ReinitializeConfigError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "The client is already initialized with a different database configuration!"
     })
 
-    AlreadyOpenError = ResponseError({
+    AlreadyOpenError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_100_CONTINUE:
             "The client has been already initialized with the same configuration."
     })
 
-    InconsistencyError = ResponseError({
+    InconsistencyError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_405_METHOD_NOT_ALLOWED:
             "Something must have been wrong as we are in an inconsistent state. "
             "The internal database configuration is not empty and is the same as what we just "
             "received but the client is `None` or has been already closed!"
     })
 
-    ConnectionError = ResponseError({
+    ConnectionError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_400_BAD_REQUEST:
             "Could not connect to the database with the given URL."
     })
@@ -43,12 +45,12 @@ class Client(ResponsesErrorGroup):
 
 class Collections(ResponsesErrorGroup):
     """Collections error responses, e.g. if the requested collection cannot be found."""
-    NotFoundError = ResponseError({
+    NotFoundError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given collection name inside the specified database."
     })
 
-    WrongTypeError = ResponseError({
+    WrongTypeError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_422_UNPROCESSABLE_ENTITY:
             "Both the database and collection name must be `None` if either one is `None`."
     })
@@ -56,12 +58,12 @@ class Collections(ResponsesErrorGroup):
 
 class Databases(ResponsesErrorGroup):
     """Databases error responses, e.g. if the requested database cannot be found."""
-    NotFoundError = ResponseError({
+    NotFoundError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find the given database name."
     })
 
-    WrongTypeError = ResponseError({
+    WrongTypeError: ClassVar[ResponseError] = ResponseError({
         status.HTTP_422_UNPROCESSABLE_ENTITY:
             "Database name must be either of type `str` or `None.`"
     })
@@ -69,7 +71,7 @@ class Databases(ResponsesErrorGroup):
 
 class Documents(ResponsesErrorGroup):
     """Documents error responses, e.g. if the requested document cannot be found."""
-    NotFound = ResponseError({
+    NotFound: ClassVar[ResponseError] = ResponseError({
         status.HTTP_404_NOT_FOUND:
             "Could not find any document with the given object id."
     })

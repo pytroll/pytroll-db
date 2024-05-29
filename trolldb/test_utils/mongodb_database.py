@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
-from typing import Iterator
+from typing import Any, ClassVar, Generator
 
 from pymongo import MongoClient
 
@@ -12,7 +12,8 @@ from trolldb.test_utils.common import test_app_config
 
 
 @contextmanager
-def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.database) -> Iterator[MongoClient]:
+def mongodb_for_test_context(
+        database_config: DatabaseConfig = test_app_config.database) -> Generator[MongoClient, Any, None]:
     """A context manager for the MongoDB client given test configurations.
 
     Note:
@@ -39,13 +40,13 @@ def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.d
 class Time:
     """A static class to enclose functionalities for generating random timestamps."""
 
-    min_start_time = datetime(2019, 1, 1, 0, 0, 0)
+    min_start_time: ClassVar[datetime] = datetime(2019, 1, 1, 0, 0, 0)
     """The minimum timestamp which is allowed to appear in our data."""
 
-    max_end_time = datetime(2024, 1, 1, 0, 0, 0)
+    max_end_time: ClassVar[datetime] = datetime(2024, 1, 1, 0, 0, 0)
     """The maximum timestamp which is allowed to appear in our data."""
 
-    delta_time = int((max_end_time - min_start_time).total_seconds())
+    delta_time: ClassVar[int] = int((max_end_time - min_start_time).total_seconds())
     """The difference between the maximum and minimum timestamps in seconds."""
 
     @staticmethod
@@ -115,11 +116,11 @@ class Document:
 class TestDatabase:
     """A static class which encloses functionalities to prepare and fill the test database with test data."""
 
-    unique_platform_names: list[str] = ["PA", "PB", "PC"]
+    unique_platform_names: ClassVar[list[str]] = ["PA", "PB", "PC"]
     """The unique platform names that will be used to generate the sample of all platform names."""
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    platform_names = choices(["PA", "PB", "PC"], k=20)  # noqa: S311
+    platform_names: ClassVar[list[str]] = choices(["PA", "PB", "PC"], k=20)  # noqa: S311
     """Example platform names.
 
     Warning:
@@ -127,11 +128,11 @@ class TestDatabase:
         generated as a result of building the documentation!
     """
 
-    unique_sensors: list[str] = ["SA", "SB", "SC"]
+    unique_sensors: ClassVar[list[str]] = ["SA", "SB", "SC"]
     """The unique sensor names that will be used to generate the sample of all sensor names."""
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    sensors = choices(["SA", "SB", "SC"], k=20)  # noqa: S311
+    sensors: ClassVar[list[str]] = choices(["SA", "SB", "SC"], k=20)  # noqa: S311
     """Example sensor names.
 
     Warning:
@@ -139,24 +140,24 @@ class TestDatabase:
         generated as a result of building the documentation!
     """
 
-    database_names = [test_app_config.database.main_database_name, "another_test_database"]
+    database_names: ClassVar[list[str]] = [test_app_config.database.main_database_name, "another_test_database"]
     """List of all database names.
 
     The first element is the main database that will be queried by the API and includes the test data. The second
     database is for testing scenarios when one attempts to access another existing database or collection.
     """
 
-    collection_names = [test_app_config.database.main_collection_name, "another_test_collection"]
+    collection_names: ClassVar[list[str]] = [test_app_config.database.main_collection_name, "another_test_collection"]
     """List of all collection names.
 
     The first element is the main collection that will be queried by the API and includes the test data. The second
     collection is for testing scenarios when one attempts to access another existing collection.
     """
 
-    all_database_names = ["admin", "config", "local", *database_names]
+    all_database_names: ClassVar[list[str]] = ["admin", "config", "local", *database_names]
     """All database names including the default ones which are automatically created by MongoDB."""
 
-    documents: list[dict] = []
+    documents: ClassVar[list[dict]] = []
     """The list of documents which include test data."""
 
     @classmethod
@@ -167,12 +168,13 @@ class TestDatabase:
             This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is reset to new values.
         """
         cls.documents = [
-            Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)]
+            Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)
+        ]
         if random_shuffle:
             shuffle(cls.documents)
 
     @classmethod
-    def reset(cls):
+    def reset(cls) -> None:
         """Resets all the databases/collections.
 
         This is done by deleting all documents in the collections and then inserting a single empty document, i.e.
@@ -186,7 +188,7 @@ class TestDatabase:
                 collection.insert_one({})
 
     @classmethod
-    def write_test_data(cls):
+    def write_test_data(cls) -> None:
         """Fills databases/collections with test data."""
         with mongodb_for_test_context() as client:
             # The following function call has side effects!
@@ -217,7 +219,7 @@ class TestDatabase:
         return documents
 
     @classmethod
-    def find_min_max_datetime(cls):
+    def find_min_max_datetime(cls) -> dict[str, dict]:
         """Finds the minimum and the maximum for both the ``start_time`` and the ``end_time``.
 
         We use `brute force` for this purpose. We set the minimum to a large value (year 2100) and the maximum to a
@@ -252,7 +254,7 @@ class TestDatabase:
         return result
 
     @classmethod
-    def match_query(cls, platform=None, sensor=None, time_min=None, time_max=None):
+    def match_query(cls, platform=None, sensor=None, time_min=None, time_max=None) -> list[str]:
         """Matches the given query.
 
         We first take all the documents and then progressively remove all that do not match the given queries until
@@ -284,7 +286,7 @@ class TestDatabase:
         return [str(item["_id"]) for item in buffer]
 
     @classmethod
-    def prepare(cls):
+    def prepare(cls) -> None:
         """Prepares the MongoDB instance by first resetting the database and filling it with generated test data."""
         cls.reset()
         cls.write_test_data()
