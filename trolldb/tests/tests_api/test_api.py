@@ -38,7 +38,15 @@ def single_query_is_correct(key: str, value: str | datetime) -> bool:
     )
 
 
-def query_results_are_correct(keys: list[str], values_list: list[list[str | datetime]]) -> bool:
+def make_query_string(keys: list[str], values_list: list[list[str] | datetime]) -> str:
+    """Makes a single query string for all the given queries."""
+    query_buffer = []
+    for key, value_list in zip(keys, values_list, strict=True):
+        query_buffer += [f"{key}={value}" for value in value_list]
+    return "&".join(query_buffer)
+
+
+def query_results_are_correct(keys: list[str], values_list: list[list[str] | datetime]) -> bool:
     """Checks if the retrieved result from querying the database via the API matches the expected result.
 
     There can be more than one query `key/value` pair.
@@ -54,11 +62,7 @@ def query_results_are_correct(keys: list[str], values_list: list[list[str | date
     Returns:
         A boolean flag indicating whether the retrieved result matches the expected result.
     """
-    # Make a single query string for all queries
-    query_buffer = []
-    for label, value_list in zip(keys, values_list, strict=True):
-        query_buffer += [f"{label}={value}" for value in value_list]
-    query_string = "&".join(query_buffer)
+    query_string = make_query_string(keys, values_list)
 
     return (
             Counter(http_get(f"queries?{query_string}").json()) ==
@@ -143,7 +147,7 @@ def test_queries_all():
     ("platform", TestDatabase.unique_platform_names),
     ("sensor", TestDatabase.unique_sensors)
 ])
-def test_queries_platform_or_sensor(key, values):
+def test_queries_platform_or_sensor(key: str, values: list[str]):
     """Tests the platform and sensor queries, one at a time.
 
     There is only a single key in the query, but it has multiple corresponding values.
