@@ -1,6 +1,11 @@
 """The module which handles parsing and validating the config (YAML) file.
 
 The validation is performed using `Pydantic <https://docs.pydantic.dev/latest/>`_.
+
+Note:
+    Some functions/methods in this module are decorated with the Pydantic
+    `@validate_call <https://docs.pydantic.dev/latest/api/validate_call/>`_ which checks the arguments during the
+    function calls.
 """
 
 import errno
@@ -10,7 +15,7 @@ from typing import Any, NamedTuple
 from bson import ObjectId
 from bson.errors import InvalidId
 from loguru import logger
-from pydantic import AnyUrl, BaseModel, Field, FilePath, MongoDsn, ValidationError
+from pydantic import AnyUrl, BaseModel, Field, FilePath, MongoDsn, ValidationError, validate_call
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 from yaml import safe_load
@@ -19,6 +24,7 @@ Timeout = Annotated[float, Field(ge=0)]
 """A type hint for the timeout in seconds (non-negative float)."""
 
 
+@validate_call
 def id_must_be_valid(id_like_string: str) -> ObjectId:
     """Checks that the given string can be converted to a valid MongoDB ObjectId.
 
@@ -30,6 +36,9 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
        The ObjectId object if successful.
 
     Raises:
+        ValidationError:
+            If the given argument is not of type ``str``.
+
         ValueError:
             If the given string cannot be converted to a valid ObjectId. This will ultimately turn into a pydantic
             validation error.
@@ -99,6 +108,7 @@ class AppConfig(BaseModel):
     subscriber: SubscriberConfig
 
 
+@validate_call
 def parse_config_yaml_file(filename: FilePath) -> AppConfig:
     """Parses and validates the configurations from a YAML file.
 
@@ -111,7 +121,10 @@ def parse_config_yaml_file(filename: FilePath) -> AppConfig:
 
     Raises:
         ParserError:
-            If the file cannot be properly parsed
+            If the file cannot be properly parsed.
+
+        ValidationError:
+            If the ``filename`` is not of type ``FilePath``.
 
         ValidationError:
             If the successfully parsed file fails the validation, i.e. its schema or the content does not conform to

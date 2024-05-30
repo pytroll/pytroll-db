@@ -3,6 +3,11 @@
 It is based on the following libraries:
   - `PyMongo <https://github.com/mongodb/mongo-python-driver>`_
   - `motor <https://github.com/mongodb/motor>`_.
+
+Note:
+    Some functions/methods in this module are decorated with the Pydantic
+    `@validate_call <https://docs.pydantic.dev/latest/api/validate_call/>`_ which checks the arguments during the
+    function calls.
 """
 
 import errno
@@ -17,7 +22,7 @@ from motor.motor_asyncio import (
     AsyncIOMotorCursor,
     AsyncIOMotorDatabase,
 )
-from pydantic import BaseModel
+from pydantic import validate_call
 from pymongo.collection import _DocumentType
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
@@ -33,16 +38,6 @@ CoroutineDocument = CoroutineLike[_DocumentType | None]
 
 CoroutineStrList = CoroutineLike[list[str]]
 """Coroutine type hint for a list of strings."""
-
-
-class DatabaseName(BaseModel):
-    """Pydantic model for a database name."""
-    name: str | None
-
-
-class CollectionName(BaseModel):
-    """Pydantic model for a collection name."""
-    name: str | None
 
 
 async def get_id(doc: CoroutineDocument) -> str:
@@ -111,6 +106,7 @@ class MongoDB:
     """MongoDB creates these databases by default for self usage."""
 
     @classmethod
+    @validate_call
     async def initialize(cls, database_config: DatabaseConfig):
         """Initializes the motor client. Note that this method has to be awaited!
 
@@ -126,6 +122,9 @@ class MongoDB:
             On success ``None``.
 
         Raises:
+            ValidationError:
+                If the method is not called with arguments of valid type.
+
             SystemExit(errno.EIO):
                 If connection is not established, i.e. ``ConnectionFailure``.
             SystemExit(errno.EIO):
@@ -136,7 +135,6 @@ class MongoDB:
             SystemExit(errno.EIO):
                 If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
                 configurations still exist and are different from the new ones which have been just provided.
-
             SystemExit(errno.ENODATA):
                 If either ``database_config.main_database_name`` or ``database_config.main_collection_name`` does not
                 exist.
@@ -224,10 +222,11 @@ class MongoDB:
         return cls.__main_database
 
     @classmethod
+    @validate_call
     async def get_collection(
             cls,
-            database_name: str,
-            collection_name: str) -> AsyncIOMotorCollection:
+            database_name: str | None,
+            collection_name: str | None) -> AsyncIOMotorCollection:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -242,7 +241,7 @@ class MongoDB:
 
         Raises:
             ValidationError:
-                If input args are invalid according to the pydantic.
+                If the method is not called with arguments of valid type.
 
             KeyError:
                 If the database name exists, but it does not include any collection with the given name.
@@ -254,9 +253,6 @@ class MongoDB:
                 This method relies on :func:`get_database` to check for the existence of the database which can raise
                 exceptions. Check its documentation for more information.
         """
-        database_name = DatabaseName(name=database_name).name
-        collection_name = CollectionName(name=collection_name).name
-
         match database_name, collection_name:
             case None, None:
                 return cls.main_collection()
@@ -270,7 +266,8 @@ class MongoDB:
                 raise Collections.WrongTypeError
 
     @classmethod
-    async def get_database(cls, database_name: str) -> AsyncIOMotorDatabase:
+    @validate_call
+    async def get_database(cls, database_name: str | None) -> AsyncIOMotorDatabase:
         """Gets the database object given its name.
 
         Args:
@@ -281,11 +278,12 @@ class MongoDB:
             The database object.
 
         Raises:
-             KeyError:
+            ValidationError:
+                If the method is not called with arguments of valid type.
+
+            KeyError:
                 If the database name does not exist in the list of database names.
         """
-        database_name = DatabaseName(name=database_name).name
-
         match database_name:
             case None:
                 return cls.main_database()

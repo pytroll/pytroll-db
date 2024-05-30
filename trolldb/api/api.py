@@ -23,7 +23,7 @@ import uvicorn
 from fastapi import FastAPI, status
 from fastapi.responses import PlainTextResponse
 from loguru import logger
-from pydantic import FilePath, validate_call
+from pydantic import FilePath, ValidationError, validate_call
 
 from trolldb.api.routes import api_router
 from trolldb.config.config import AppConfig, Timeout, parse_config_yaml_file
@@ -89,7 +89,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     app.include_router(api_router)
 
     @app.exception_handler(ResponseError)
-    async def auto_exception_handler(_, exc: ResponseError) -> PlainTextResponse:
+    async def auto_handler_response_errors(_, exc: ResponseError) -> PlainTextResponse:
         """Catches all the exceptions raised as a ResponseError, e.g. accessing non-existing databases/collections."""
         status_code, message = exc.get_error_details()
         info = dict(
@@ -98,6 +98,11 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
         )
         logger.error(f"Response error caught by the API auto exception handler: {info}")
         return PlainTextResponse(**info)
+
+    @app.exception_handler(ValidationError)
+    async def auto_handler_pydantic_validation_errors(_, exc: ValidationError) -> PlainTextResponse:
+        """Catches all the exceptions raised as a Pydantic ValidationError."""
+        return PlainTextResponse(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     async def _serve() -> NoReturn:
         """An auxiliary coroutine to be used in the asynchronous execution of the FastAPI application."""
