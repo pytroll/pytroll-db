@@ -254,32 +254,49 @@ class TestDatabase:
         return result
 
     @classmethod
+    def _query_platform_sensor(cls, document, platform=None, sensor=None) -> bool:
+        """An auxiliary method to the :func:`TestDatabase.match_query`."""
+        should_remove = False
+
+        if platform:
+            should_remove = platform and document["platform_name"] not in platform
+
+        if sensor and not should_remove:
+            should_remove = document["sensor"] not in sensor
+
+        return should_remove
+
+    @classmethod
+    def _query_time(cls, document, time_min=None, time_max=None) -> bool:
+        """An auxiliary method to the :func:`TestDatabase.match_query`."""
+        should_remove = False
+
+        if time_min and time_max and not should_remove:
+            should_remove = document["end_time"] < time_min or document["start_time"] > time_max
+
+        if time_min and not time_max and not should_remove:
+            should_remove = document["end_time"] < time_min
+
+        if time_max and not time_min and not should_remove:
+            should_remove = document["end_time"] > time_max
+
+        return should_remove
+
+    @classmethod
     def match_query(cls, platform=None, sensor=None, time_min=None, time_max=None) -> list[str]:
         """Matches the given query.
 
         We first take all the documents and then progressively remove all that do not match the given queries until
         we end up with those that match. When a query is ``None``, it does not have any effect on the results.
+        This method will be used in testing the ``/queries`` route of the API.
         """
         documents = cls.get_all_documents_from_database()
 
         buffer = deepcopy(documents)
         for document in documents:
-            should_remove = False
-            if platform:
-                should_remove = document["platform_name"] not in platform
-
-            if sensor and not should_remove:
-                should_remove = document["sensor"] not in sensor
-
-            if time_min and time_max and not should_remove:
-                should_remove = document["end_time"] < time_min or document["start_time"] > time_max
-
-            if time_min and not time_max and not should_remove:
-                should_remove = document["end_time"] < time_min
-
-            if time_max and not time_min and not should_remove:
-                should_remove = document["end_time"] > time_max
-
+            should_remove = cls._query_platform_sensor(document, platform, sensor)
+            if not should_remove:
+                should_remove = cls._query_time(document, time_min, time_max)
             if should_remove and document in buffer:
                 buffer.remove(document)
 
