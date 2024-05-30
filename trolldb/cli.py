@@ -54,7 +54,7 @@ async def record_messages(config: AppConfig) -> None:
                     logger.info(f"Inserted dataset with {len(msg.data["dataset"])} elements.")
                 case "del":
                     deletion_count = await delete_uri_from_collection(collection, msg.data["uri"])
-                    if deletion_count >= 1:
+                    if deletion_count > 1:
                         logger.error(f"Recorder found multiple deletions for uri: {msg.data["uri"]}!")
                 case _:
                     logger.debug(f"Don't know what to do with {msg.type} message.")

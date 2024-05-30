@@ -102,6 +102,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     @app.exception_handler(ValidationError)
     async def auto_handler_pydantic_validation_errors(_, exc: ValidationError) -> PlainTextResponse:
         """Catches all the exceptions raised as a Pydantic ValidationError."""
+        logger.error(f"Response error caught by the API auto exception handler: {exc}")
         return PlainTextResponse(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     async def _serve() -> NoReturn:
