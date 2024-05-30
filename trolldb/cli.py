@@ -9,7 +9,7 @@ from posttroll.message import Message
 from posttroll.subscriber import create_subscriber_from_dict_config
 from pydantic import FilePath
 
-from trolldb.config.config import AppConfig, parse_config_yaml_file
+from trolldb.config.config import AppConfig, parse_config
 from trolldb.database.mongodb import MongoDB, mongodb_context
 
 
@@ -62,8 +62,7 @@ async def record_messages(config: AppConfig) -> None:
 
 async def record_messages_from_config(config_file: FilePath) -> None:
     """Record messages into the database, getting the configuration from a file."""
-    config = parse_config_yaml_file(config_file)
-    await record_messages(config)
+    await record_messages(parse_config(config_file))
 
 
 async def record_messages_from_command_line(args=None) -> None:
