@@ -51,7 +51,7 @@ async def record_messages(config: AppConfig) -> None:
                     logger.info(f"Inserted file with uri: {msg.data["uri"]}")
                 case "dataset":
                     await collection.insert_one(msg.data)
-                    logger.info(f"Inserted dataset with {len(msg.data["dataset"])} elements.")
+                    logger.info(f"Inserted dataset with {len(msg.data["dataset"])} elements: {msg.data["dataset"]}")
                 case "del":
                     deletion_count = await delete_uri_from_collection(collection, msg.data["uri"])
                     if deletion_count > 1:
