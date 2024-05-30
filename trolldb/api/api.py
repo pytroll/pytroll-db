@@ -14,6 +14,7 @@ Note:
 """
 
 import asyncio
+import sys
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
@@ -26,7 +27,7 @@ from loguru import logger
 from pydantic import FilePath, ValidationError, validate_call
 
 from trolldb.api.routes import api_router
-from trolldb.config.config import AppConfig, Timeout, parse_config_yaml_file
+from trolldb.config.config import AppConfig, Timeout, parse_config
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
@@ -46,6 +47,7 @@ API_INFO = dict(
 """These will appear in the auto-generated documentation and are passed to the ``FastAPI`` class as keyword args."""
 
 
+@logger.catch(onerror=lambda _: sys.exit(1))
 @validate_call
 def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     """Runs the API server with all the routes and connection to the database.
@@ -68,10 +70,6 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
             take precedence over ``config``. Finally, :obj:`API_INFO`, which are hard-coded information for the API
             server, will be concatenated and takes precedence over all.
 
-    Raises:
-        ValidationError:
-            If the function is not called with arguments of valid type.
-
     Example:
         .. code-block:: python
 
@@ -81,7 +79,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
     """
     logger.info("Attempt to run the API server ...")
     if not isinstance(config, AppConfig):
-        config = parse_config_yaml_file(config)
+        config = parse_config(config)
 
     # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
     app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
@@ -140,7 +138,7 @@ def api_server_process_context(
     """
     logger.info("Attempt to run the API server process in a context manager ...")
     if not isinstance(config, AppConfig):
-        config = parse_config_yaml_file(config)
+        config = parse_config(config)
 
     process = Process(target=run_server, args=(config,))
     try:
