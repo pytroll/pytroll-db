@@ -1,9 +1,9 @@
 """The module which provides testing utilities to make MongoDB databases/collections and fill them with test data."""
-
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime, timedelta
 from random import choices, randint, shuffle
-from typing import Iterator
+from typing import Any, ClassVar, Generator
 
 from pymongo import MongoClient
 
@@ -12,7 +12,8 @@ from trolldb.test_utils.common import test_app_config
 
 
 @contextmanager
-def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.database) -> Iterator[MongoClient]:
+def mongodb_for_test_context(
+        database_config: DatabaseConfig = test_app_config.database) -> Generator[MongoClient, Any, None]:
     """A context manager for the MongoDB client given test configurations.
 
     Note:
@@ -37,15 +38,15 @@ def mongodb_for_test_context(database_config: DatabaseConfig = test_app_config.d
 
 
 class Time:
-    """A static class to enclose functionalities for generating random time stamps."""
+    """A static class to enclose functionalities for generating random timestamps."""
 
-    min_start_time = datetime(2019, 1, 1, 0, 0, 0)
+    min_start_time: ClassVar[datetime] = datetime(2019, 1, 1, 0, 0, 0)
     """The minimum timestamp which is allowed to appear in our data."""
 
-    max_end_time = datetime(2024, 1, 1, 0, 0, 0)
+    max_end_time: ClassVar[datetime] = datetime(2024, 1, 1, 0, 0, 0)
     """The maximum timestamp which is allowed to appear in our data."""
 
-    delta_time = int((max_end_time - min_start_time).total_seconds())
+    delta_time: ClassVar[int] = int((max_end_time - min_start_time).total_seconds())
     """The difference between the maximum and minimum timestamps in seconds."""
 
     @staticmethod
@@ -86,8 +87,8 @@ class Document:
     def generate_dataset(self, max_count: int) -> list[dict]:
         """Generates the dataset for a given document.
 
-        This corresponds to the list of files which are stored in each document. The number of datasets is randomly
-        chosen from 1 to ``max_count`` for each document.
+        This corresponds to the list of files which are stored in each document. The number of items in a dataset is
+        randomly chosen from 1 to ``max_count`` for each document.
         """
         dataset = []
         # We suppress ruff (S311) here as we are not generating anything cryptographic here!
@@ -113,54 +114,71 @@ class Document:
 
 
 class TestDatabase:
-    """A static class which encloses functionalities to prepare and fill the test database with mock data."""
+    """A static class which encloses functionalities to prepare and fill the test database with test data."""
+
+    unique_platform_names: ClassVar[list[str]] = ["PA", "PB", "PC"]
+    """The unique platform names that will be used to generate the sample of all platform names."""
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    platform_names = choices(["PA", "PB", "PC"], k=10)  # noqa: S311
-    """Example platform names."""
+    platform_names: ClassVar[list[str]] = choices(["PA", "PB", "PC"], k=20)  # noqa: S311
+    """Example platform names.
+
+    Warning:
+        The value of this variable changes randomly every time. What you see above is just an example which has been
+        generated as a result of building the documentation!
+    """
+
+    unique_sensors: ClassVar[list[str]] = ["SA", "SB", "SC"]
+    """The unique sensor names that will be used to generate the sample of all sensor names."""
 
     # We suppress ruff (S311) here as we are not generating anything cryptographic here!
-    sensors = choices(["SA", "SB", "SC"], k=10)  # noqa: S311
-    """Example sensor names."""
+    sensors: ClassVar[list[str]] = choices(["SA", "SB", "SC"], k=20)  # noqa: S311
+    """Example sensor names.
 
-    database_names = [test_app_config.database.main_database_name, "another_mock_database"]
+    Warning:
+        The value of this variable changes randomly every time. What you see above is just an example which has been
+        generated as a result of building the documentation!
+    """
+
+    database_names: ClassVar[list[str]] = [test_app_config.database.main_database_name, "another_test_database"]
     """List of all database names.
 
-    The first element is the main database that will be queried by the API and includes the mock data. The second
+    The first element is the main database that will be queried by the API and includes the test data. The second
     database is for testing scenarios when one attempts to access another existing database or collection.
     """
 
-    collection_names = [test_app_config.database.main_collection_name, "another_mock_collection"]
+    collection_names: ClassVar[list[str]] = [test_app_config.database.main_collection_name, "another_test_collection"]
     """List of all collection names.
 
-    The first element is the main collection that will be queried by the API and includes the mock data. The second
+    The first element is the main collection that will be queried by the API and includes the test data. The second
     collection is for testing scenarios when one attempts to access another existing collection.
     """
 
-    all_database_names = ["admin", "config", "local", *database_names]
+    all_database_names: ClassVar[list[str]] = ["admin", "config", "local", *database_names]
     """All database names including the default ones which are automatically created by MongoDB."""
 
-    documents: list[dict] = []
-    """The list of documents which include mock data."""
+    documents: ClassVar[list[dict]] = []
+    """The list of documents which include test data."""
 
     @classmethod
     def generate_documents(cls, random_shuffle: bool = True) -> None:
         """Generates test documents which for practical purposes resemble real data.
 
         Warning:
-            This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is filled.
+            This method is not pure! The side effect is that the :obj:`TestDatabase.documents` is reset to new values.
         """
         cls.documents = [
-            Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)]
+            Document(p, s).like_mongodb_document() for p, s in zip(cls.platform_names, cls.sensors, strict=False)
+        ]
         if random_shuffle:
             shuffle(cls.documents)
 
     @classmethod
-    def reset(cls):
+    def reset(cls) -> None:
         """Resets all the databases/collections.
 
-        This is done by deleting all documents in the collections and then inserting a single empty ``{}`` document
-        in them.
+        This is done by deleting all documents in the collections and then inserting a single empty document, i.e.
+        ``{}``, in them.
         """
         with mongodb_for_test_context() as client:
             for db_name, coll_name in zip(cls.database_names, cls.collection_names, strict=False):
@@ -170,8 +188,8 @@ class TestDatabase:
                 collection.insert_one({})
 
     @classmethod
-    def write_mock_date(cls):
-        """Fills databases/collections with mock data."""
+    def write_test_data(cls) -> None:
+        """Fills databases/collections with test data."""
         with mongodb_for_test_context() as client:
             # The following function call has side effects!
             cls.generate_documents()
@@ -180,10 +198,112 @@ class TestDatabase:
             ][
                 test_app_config.database.main_collection_name
             ]
+            collection.delete_many({})
             collection.insert_many(cls.documents)
 
     @classmethod
-    def prepare(cls):
-        """Prepares the MongoDB instance by first resetting the database and then filling it with mock data."""
+    def get_all_documents_from_database(cls) -> list[dict]:
+        """Retrieves all the documents from the database.
+
+        Returns:
+            A list of all documents from the database. This matches the content of :obj:`~TestDatabase.documents` with
+            the addition of `IDs` which are assigned by the MongoDB.
+        """
+        with mongodb_for_test_context() as client:
+            collection = client[
+                test_app_config.database.main_database_name
+            ][
+                test_app_config.database.main_collection_name
+            ]
+            documents = list(collection.find({}))
+        return documents
+
+    @classmethod
+    def find_min_max_datetime(cls) -> dict[str, dict]:
+        """Finds the minimum and the maximum for both the ``start_time`` and the ``end_time``.
+
+        We use `brute force` for this purpose. We set the minimum to a large value (year 2100) and the maximum to a
+        small value (year 1900). We then iterate through all documents and update the extrema.
+
+        Returns:
+            A dictionary whose schema matches the response returned by the ``/datetime`` route of the API.
+        """
+        result = dict(
+            start_time=dict(
+                _min=dict(_id=None, _time="2100-01-01T00:00:00"),
+                _max=dict(_id=None, _time="1900-01-01T00:00:00")
+            ),
+            end_time=dict(
+                _min=dict(_id=None, _time="2100-01-01T00:00:00"),
+                _max=dict(_id=None, _time="1900-01-01T00:00:00"))
+        )
+
+        documents = cls.get_all_documents_from_database()
+
+        for document in documents:
+            for k in ["start_time", "end_time"]:
+                dt = document[k].isoformat()
+                if dt > result[k]["_max"]["_time"]:
+                    result[k]["_max"]["_time"] = dt
+                    result[k]["_max"]["_id"] = str(document["_id"])
+
+                if dt < result[k]["_min"]["_time"]:
+                    result[k]["_min"]["_time"] = dt
+                    result[k]["_min"]["_id"] = str(document["_id"])
+
+        return result
+
+    @classmethod
+    def _query_platform_sensor(cls, document, platform=None, sensor=None) -> bool:
+        """An auxiliary method to the :func:`TestDatabase.match_query`."""
+        should_remove = False
+
+        if platform:
+            should_remove = platform and document["platform_name"] not in platform
+
+        if sensor and not should_remove:
+            should_remove = document["sensor"] not in sensor
+
+        return should_remove
+
+    @classmethod
+    def _query_time(cls, document, time_min=None, time_max=None) -> bool:
+        """An auxiliary method to the :func:`TestDatabase.match_query`."""
+        should_remove = False
+
+        if time_min and time_max and not should_remove:
+            should_remove = document["end_time"] < time_min or document["start_time"] > time_max
+
+        if time_min and not time_max and not should_remove:
+            should_remove = document["end_time"] < time_min
+
+        if time_max and not time_min and not should_remove:
+            should_remove = document["end_time"] > time_max
+
+        return should_remove
+
+    @classmethod
+    def match_query(cls, platform=None, sensor=None, time_min=None, time_max=None) -> list[str]:
+        """Matches the given query.
+
+        We first take all the documents and then progressively remove all that do not match the given queries until
+        we end up with those that match. When a query is ``None``, it does not have any effect on the results.
+        This method will be used in testing the ``/queries`` route of the API.
+        """
+        documents = cls.get_all_documents_from_database()
+
+        buffer = deepcopy(documents)
+        for document in documents:
+            should_remove = cls._query_platform_sensor(document, platform, sensor)
+            if not should_remove:
+                should_remove = cls._query_time(document, time_min, time_max)
+            if should_remove and document in buffer:
+                buffer.remove(document)
+
+        return [str(item["_id"]) for item in buffer]
+
+    @classmethod
+    def prepare(cls) -> None:
+        """Prepares the MongoDB instance by first resetting the database and filling it with generated test data."""
         cls.reset()
-        cls.write_mock_date()
+        cls.write_test_data()

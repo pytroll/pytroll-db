@@ -3,11 +3,16 @@
 It is based on the following libraries:
   - `PyMongo <https://github.com/mongodb/mongo-python-driver>`_
   - `motor <https://github.com/mongodb/motor>`_.
+
+Note:
+    Some functions/methods in this module are decorated with the Pydantic
+    `@validate_call <https://docs.pydantic.dev/latest/api/validate_call/>`_ which checks the arguments during the
+    function calls.
 """
 
 import errno
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Coroutine, Optional, TypeVar, Union
+from typing import Any, AsyncGenerator, ClassVar, Coroutine, Optional, TypeVar, Union
 
 from loguru import logger
 from motor.motor_asyncio import (
@@ -17,13 +22,12 @@ from motor.motor_asyncio import (
     AsyncIOMotorCursor,
     AsyncIOMotorDatabase,
 )
-from pydantic import BaseModel
+from pydantic import validate_call
 from pymongo.collection import _DocumentType
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from trolldb.config.config import DatabaseConfig
 from trolldb.database.errors import Client, Collections, Databases
-from trolldb.errors.errors import ResponseError
 
 T = TypeVar("T")
 CoroutineLike = Coroutine[Any, Any, T]
@@ -36,22 +40,12 @@ CoroutineStrList = CoroutineLike[list[str]]
 """Coroutine type hint for a list of strings."""
 
 
-class DatabaseName(BaseModel):
-    """Pydantic model for a database name."""
-    name: str | None
-
-
-class CollectionName(BaseModel):
-    """Pydantic model for a collection name."""
-    name: str | None
-
-
 async def get_id(doc: CoroutineDocument) -> str:
     """Retrieves the ID of a document as a simple flat string.
 
     Note:
         The rationale behind this method is as follows. In MongoDB, each document has a unique ID which is of type
-        :class:`~bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
+        :class:`bson.objectid.ObjectId`. This is not suitable for purposes when a simple string is needed, hence
         the need for this method.
 
     Args:
@@ -84,7 +78,7 @@ async def get_ids(docs: Union[AsyncIOMotorCommandCursor, AsyncIOMotorCursor]) ->
 class MongoDB:
     """A wrapper class around the `motor async driver <https://www.mongodb.com/docs/drivers/motor/>`_ for Mongo DB.
 
-    It includes convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()`` method
+    It includes convenience methods tailored to our specific needs. As such, the :func:`~MongoDB.initialize()` method
     returns a coroutine which needs to be awaited.
 
     Note:
@@ -103,12 +97,12 @@ class MongoDB:
         us, we would like to fail early!
     """
 
-    __client: Optional[AsyncIOMotorClient] = None
-    __database_config: Optional[DatabaseConfig] = None
-    __main_collection: AsyncIOMotorCollection = None
-    __main_database: AsyncIOMotorDatabase = None
+    __client: ClassVar[Optional[AsyncIOMotorClient]] = None
+    __database_config: ClassVar[Optional[DatabaseConfig]] = None
+    __main_collection: ClassVar[Optional[AsyncIOMotorCollection]] = None
+    __main_database: ClassVar[Optional[AsyncIOMotorDatabase]] = None
 
-    default_database_names = ["admin", "config", "local"]
+    default_database_names: ClassVar[list[str]] = ["admin", "config", "local"]
     """MongoDB creates these databases by default for self usage."""
 
     @classmethod
@@ -117,25 +111,29 @@ class MongoDB:
 
         Args:
             database_config:
-                 A named tuple which includes the database configurations.
+                 An object of type :class:`~trolldb.config.config.DatabaseConfig` which includes the database
+                 configurations.
+
+        Warning:
+            The timeout is given in seconds in the configurations, while the MongoDB uses milliseconds.
 
         Returns:
             On success ``None``.
 
         Raises:
             SystemExit(errno.EIO):
-                If connection is not established (``ConnectionFailure``)
+                If connection is not established, i.e. ``ConnectionFailure``.
             SystemExit(errno.EIO):
-                If the attempt times out (``ServerSelectionTimeoutError``)
+                If the attempt times out, i.e. ``ServerSelectionTimeoutError``.
             SystemExit(errno.EIO):
                 If one attempts reinitializing the class with new (different) database configurations without calling
                 :func:`~close()` first.
             SystemExit(errno.EIO):
                 If the state is not consistent, i.e. the client is closed or ``None`` but the internal database
                 configurations still exist and are different from the new ones which have been just provided.
-
             SystemExit(errno.ENODATA):
-                If either ``database_config.main_database`` or ``database_config.main_collection`` does not exist.
+                If either ``database_config.main_database_name`` or ``database_config.main_collection_name`` does not
+                exist.
         """
         logger.info("Attempt to initialize the MongoDB client ...")
         logger.info("Checking the database configs ...")
@@ -220,10 +218,11 @@ class MongoDB:
         return cls.__main_database
 
     @classmethod
+    @validate_call
     async def get_collection(
             cls,
-            database_name: str,
-            collection_name: str) -> Union[AsyncIOMotorCollection, ResponseError]:
+            database_name: str | None,
+            collection_name: str | None) -> AsyncIOMotorCollection:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -238,7 +237,7 @@ class MongoDB:
 
         Raises:
             ValidationError:
-                If input args are invalid according to the pydantic.
+                If the method is not called with arguments of valid type.
 
             KeyError:
                 If the database name exists, but it does not include any collection with the given name.
@@ -250,9 +249,6 @@ class MongoDB:
                 This method relies on :func:`get_database` to check for the existence of the database which can raise
                 exceptions. Check its documentation for more information.
         """
-        database_name = DatabaseName(name=database_name).name
-        collection_name = CollectionName(name=collection_name).name
-
         match database_name, collection_name:
             case None, None:
                 return cls.main_collection()
@@ -266,7 +262,8 @@ class MongoDB:
                 raise Collections.WrongTypeError
 
     @classmethod
-    async def get_database(cls, database_name: str) -> Union[AsyncIOMotorDatabase, ResponseError]:
+    @validate_call
+    async def get_database(cls, database_name: str | None) -> AsyncIOMotorDatabase:
         """Gets the database object given its name.
 
         Args:
@@ -277,11 +274,12 @@ class MongoDB:
             The database object.
 
         Raises:
-             KeyError:
+            ValidationError:
+                If the method is not called with arguments of valid type.
+
+            KeyError:
                 If the database name does not exist in the list of database names.
         """
-        database_name = DatabaseName(name=database_name).name
-
         match database_name:
             case None:
                 return cls.main_database()

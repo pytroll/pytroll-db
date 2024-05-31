@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+import re
 
 from sphinx.ext import apidoc
 
@@ -62,13 +63,62 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
 
+
+# Specify which special members have to be kept
+special_members_dict = {
+    "Document": {"init"},
+    "ResponseError": {"init", "or"},
+    "PipelineBooleanDict": {"init", "or", "and"},
+    "PipelineAttribute": {"init", "or", "and", "eq", "gt", "ge", "lt", "le"},
+    "Pipelines": {"init", "add", "iadd"}
+}
+
+# Add trailing and leading "__" to all the aforementioned members
+for cls, methods in special_members_dict.items():
+    special_members_dict[cls] = {f"__{method}__" for method in methods}
+
+# Make a set of all allowed special members
+all_special_members = set()
+for methods in special_members_dict.values():
+    all_special_members |= methods
+
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
     "private-members": True,
     "special-members": True,
-    "undoc-members": True,
+    "undoc-members": False,
 }
+
+
+def is_special_member(member_name: str) -> bool:
+    """Checks if the given member is special, i.e. its name has the following format ``__<some-str>__``."""
+    return bool(re.compile(r"^__\w+__$").match(member_name))
+
+
+def skip(app, typ, member_name, obj, flag, options):
+    """The filter function to determine whether to keep the member in the documentation.
+
+    ``True`` means skip the member.
+    """
+    if is_special_member(member_name):
+
+        if member_name not in all_special_members:
+            return True
+
+        obj_name = obj.__qualname__.split(".")[0]
+        if methods_set := special_members_dict.get(obj_name, None):
+            if member_name in methods_set:
+                return False  # Keep the member
+        return True
+
+    return None
+
+
+def setup(app):
+    """Sets up the sphinx app."""
+    app.connect("autodoc-skip-member", skip)
+
 
 root_doc = "index"
 

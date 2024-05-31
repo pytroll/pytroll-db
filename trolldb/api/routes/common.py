@@ -2,18 +2,10 @@
 
 from typing import Annotated, Union
 
-from fastapi import Depends, Query, Response
+from fastapi import Depends, Response
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from trolldb.database.mongodb import MongoDB
-
-exclude_defaults_query = Query(
-    True,
-    title="Query string",
-    description=
-    "A boolean to exclude default databases from a MongoDB instance. Refer to "
-    "`trolldb.database.mongodb.MongoDB.default_database_names` for more information."
-)
 
 
 async def check_database(database_name: str | None = None) -> AsyncIOMotorDatabase:

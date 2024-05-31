@@ -1,4 +1,4 @@
-Welcome to Pytroll documentation!
+Pytroll-db Documentation
 ===========================================
 
 .. toctree::

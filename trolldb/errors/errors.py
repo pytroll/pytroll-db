@@ -6,7 +6,7 @@ specifically. See :obj:`trolldb.database.errors` as an example on how to achieve
 
 from collections import OrderedDict
 from sys import exit
-from typing import Self
+from typing import ClassVar, NoReturn, Self
 
 from fastapi import Response
 from fastapi.responses import PlainTextResponse
@@ -31,9 +31,9 @@ def _listify(item: str | list[str]) -> list[str]:
         .. code-block:: python
 
             # The following evaluate to True
-            __listify("test") == ["test"]
-            __listify(["a", "b"]) = ["a", "b"]
-            __listify([]) == []
+            _listify("test") == ["test"]
+            _listify(["a", "b"]) = ["a", "b"]
+            _listify([]) == []
     """
     return item if isinstance(item, list) else [item]
 
@@ -64,7 +64,7 @@ class ResponseError(Exception):
             messages.
     """
 
-    descriptor_delimiter: str = " |OR| "
+    descriptor_delimiter: ClassVar[str] = " |OR| "
     """A delimiter to divide the message part of several error responses which have been combined into a single one.
 
     This will be shown in textual format for the response descriptors of the Fast API routes.
@@ -76,12 +76,11 @@ class ResponseError(Exception):
             error_b = ResponseError({404: "Not Found"})
             errors = error_a | error_b
 
-            # When used in a FastAPI response descriptor,
-            # the following string will be generated for errors
+            # When used in a FastAPI response descriptor, the following string is generated
             "Bad Request |OR| Not Found"
     """
 
-    DefaultResponseClass: Response = PlainTextResponse
+    DefaultResponseClass: ClassVar[Response] = PlainTextResponse
     """The default type of the response which will be returned when an error occurs.
 
     This must be a valid member (class) of ``fastapi.responses``.
@@ -101,12 +100,12 @@ class ResponseError(Exception):
                 error_b = ResponseError({404: "Not Found"})
                 errors = error_a | error_b
                 errors_a_or_b = ResponseError({400: "Bad Request", 404: "Not Found"})
-                errors_list = ResponseError({404: ["Not Found", "Still Not Found"]})
+                errors_list = ResponseError({404: ["Not Found", "Yet Not Found"]})
         """
         self.__dict: OrderedDict = OrderedDict(args_dict)
         self.extra_information: dict | None = None
 
-    def __or__(self, other: Self):
+    def __or__(self, other: Self) -> Self:
         """Implements the bitwise `or` ``|`` which combines the error objects into a single error response.
 
         Args:
@@ -142,7 +141,7 @@ class ResponseError(Exception):
 
     def __retrieve_one_from_some(
             self,
-            status_code: StatusCode | None = None) -> (StatusCode, str):
+            status_code: StatusCode | None = None) -> tuple[StatusCode, str]:
         """Retrieves a tuple ``(<status-code>, <message>)`` from the internal dictionary :obj:`ResponseError.__dict`.
 
         Args:
@@ -183,12 +182,12 @@ class ResponseError(Exception):
     def get_error_details(
             self,
             extra_information: dict | None = None,
-            status_code: int | None = None) -> (StatusCode, str):
+            status_code: int | None = None) -> tuple[StatusCode, str]:
         """Gets the details of the error response.
 
         Args:
             extra_information (Optional, default ``None``):
-                More information (if any) that wants to be added to the message string.
+                More information (if any) that needs to be added to the message string.
             status_code (Optional, default ``None``):
                 The status code to retrieve. This is useful when there are several error items in the internal
                 dictionary. In case of ``None``, the internal dictionary must include a single entry, otherwise an error
@@ -203,7 +202,7 @@ class ResponseError(Exception):
     def log_as_warning(
             self,
             extra_information: dict | None = None,
-            status_code: int | None = None):
+            status_code: int | None = None) -> None:
         """Same as :func:`~ResponseError.get_error_details` but logs the error as a warning and returns ``None``."""
         msg, _ = self.get_error_details(extra_information, status_code)
         logger.warning(msg)
@@ -212,7 +211,7 @@ class ResponseError(Exception):
             self,
             exit_code: int = -1,
             extra_information: dict | None = None,
-            status_code: int | None = None) -> None:
+            status_code: int | None = None) -> NoReturn:
         """Same as :func:`~ResponseError.get_error_details` but logs the error and calls the ``sys.exit``.
 
         The arguments are the same as :func:`~ResponseError.get_error_details` with the addition of ``exit_code``
@@ -232,6 +231,11 @@ class ResponseError(Exception):
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[str, str]]:
         """Gets the FastAPI descriptor (dictionary) of the error items stored in :obj:`ResponseError.__dict`.
+
+        Note:
+            Consult the FastAPI documentation for
+            `additional responses <https://fastapi.tiangolo.com/advanced/additional-responses/>`_ to see why and how
+            descriptors are used.
 
         Example:
              .. code-block:: python

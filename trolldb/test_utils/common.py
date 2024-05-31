@@ -10,7 +10,7 @@ from urllib3 import BaseHTTPResponse, request
 from trolldb.config.config import AppConfig
 
 
-def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
+def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict[str, dict]:
     """Makes the app configuration when used in testing.
 
     Args:
@@ -19,15 +19,15 @@ def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict:
             config will be an empty dictionary.
 
     Returns:
-        A dictionary which resembles an object of type :obj:`AppConfig`.
+        A dictionary which resembles an object of type :obj:`~trolldb.config.config.AppConfig`.
     """
     app_config = dict(
         api_server=dict(
             url="http://localhost:8080"
         ),
         database=dict(
-            main_database_name="mock_database",
-            main_collection_name="mock_collection",
+            main_database_name="test_database",
+            main_collection_name="test_collection",
             url="mongodb://localhost:28017",
             timeout=1
         ),

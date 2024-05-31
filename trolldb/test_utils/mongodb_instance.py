@@ -7,6 +7,7 @@ import time
 from contextlib import contextmanager
 from os import mkdir, path
 from shutil import rmtree
+from typing import Any, AnyStr, ClassVar, Generator, Optional
 
 from loguru import logger
 
@@ -18,32 +19,34 @@ from trolldb.test_utils.mongodb_database import TestDatabase
 class TestMongoInstance:
     """A static class to enclose functionalities for running a MongoDB instance."""
 
-    log_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_log")
+    log_dir: ClassVar[str] = tempfile.mkdtemp("__pytroll_db_temp_test_log")
     """Temp directory for logging messages by the MongoDB instance.
 
     Warning:
-        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way
+        every time!
     """
 
-    storage_dir: str = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
+    storage_dir: ClassVar[str] = tempfile.mkdtemp("__pytroll_db_temp_test_storage")
     """Temp directory for storing database files by the MongoDB instance.
 
     Warning:
-        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way!
+        The value of this attribute as shown above is just an example and will change in an unpredictable (secure) way
+        every time!
     """
 
-    port: int = 28017
+    port: ClassVar[int] = 28017
     """The port on which the instance will run.
 
     Warning:
         This must be always hard-coded.
     """
 
-    process: subprocess.Popen | None = None
+    process: ClassVar[Optional[subprocess.Popen]] = None
     """The process which is used to run the MongoDB instance."""
 
     @classmethod
-    def __prepare_dir(cls, directory: str):
+    def __prepare_dir(cls, directory: str) -> None:
         """An auxiliary function to prepare a single directory.
 
         It creates a directory if it does not exist, or removes it first if it exists and then recreates it.
@@ -52,13 +55,13 @@ class TestMongoInstance:
         mkdir(directory)
 
     @classmethod
-    def __remove_dir(cls, directory: str):
+    def __remove_dir(cls, directory: str) -> None:
         """An auxiliary function to remove a directory and all its content recursively."""
         if path.exists(directory) and path.isdir(directory):
             rmtree(directory)
 
     @classmethod
-    def run_subprocess(cls, args: list[str], wait=True):
+    def run_subprocess(cls, args: list[str], wait=True) -> tuple[AnyStr, AnyStr] | None:
         """Runs the subprocess in shell given its arguments."""
         # We suppress ruff (S603) here as we are not receiving any args from outside, e.g. port is hard-coded.
         # Therefore, sanitization of arguments is not required.
@@ -83,14 +86,14 @@ class TestMongoInstance:
             cls.__prepare_dir(d)
 
     @classmethod
-    def run_instance(cls):
+    def run_instance(cls) -> None:
         """Runs the MongoDB instance and does not wait for it, i.e. the process runs in the background."""
         cls.run_subprocess(
             ["mongod", "--dbpath", cls.storage_dir, "--logpath", f"{cls.log_dir}/mongod.log", "--port", f"{cls.port}"]
             , wait=False)
 
     @classmethod
-    def shutdown_instance(cls):
+    def shutdown_instance(cls) -> None:
         """Shuts down the MongoDB instance by terminating its process."""
         cls.process.terminate()
         cls.process.wait()
@@ -101,7 +104,7 @@ class TestMongoInstance:
 @contextmanager
 def mongodb_instance_server_process_context(
         database_config: DatabaseConfig = test_app_config.database,
-        startup_time: Timeout = 2):
+        startup_time: Timeout = 2) -> Generator[Any, Any, None]:
     """A synchronous context manager to run the MongoDB instance in a separate process (non-blocking).
 
      It uses the `subprocess <https://docs.python.org/3/library/subprocess.html>`_ package. The main use case is
@@ -131,7 +134,7 @@ def mongodb_instance_server_process_context(
 
 
 @contextmanager
-def running_prepared_database_context():
+def running_prepared_database_context() -> Generator[Any, Any, None]:
     """A synchronous context manager to start and prepare a database instance for tests."""
     with mongodb_instance_server_process_context():
         TestDatabase.prepare()
