@@ -96,7 +96,7 @@ def test_queries_all():
     """Tests that the queries route returns all documents when no actual queries are given."""
     assert document_ids_are_correct(
         http_get("queries").json(),
-        [str(doc["_id"]) for doc in TestDatabase.get_all_documents_from_database()]
+        TestDatabase.get_document_ids_from_database()
     )
 
 

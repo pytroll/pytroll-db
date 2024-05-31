@@ -8,13 +8,16 @@ Note:
 
 import errno
 import time
+from collections import Counter
 
 import pytest
+from bson import ObjectId
 from pydantic import AnyUrl
 from pymongo.errors import InvalidOperation
 
-from trolldb.database.mongodb import DatabaseConfig, MongoDB, mongodb_context
+from trolldb.database.mongodb import DatabaseConfig, MongoDB, get_id, get_ids, mongodb_context
 from trolldb.test_utils.common import test_app_config
+from trolldb.test_utils.mongodb_database import TestDatabase
 
 
 async def test_connection_timeout_negative():
@@ -89,3 +92,16 @@ async def test_main_database(mongodb_fixture):
     assert MongoDB.main_database() is not None
     assert MongoDB.main_database().name == test_app_config.database.main_database_name
     assert MongoDB.main_database() == await MongoDB.get_database(test_app_config.database.main_database_name)
+
+
+async def test_get_id(mongodb_fixture):
+    """Tests :func:`trolldb.database.mongodb.get_id` using all documents (one at a time)."""
+    for _id in TestDatabase.get_document_ids_from_database():
+        doc = MongoDB.main_collection().find_one({"_id": ObjectId(_id)})
+        assert await get_id(doc) == _id
+
+
+async def test_get_ids(mongodb_fixture):
+    """Tests :func:`trolldb.database.mongodb.get_ids` using all documents in one pass."""
+    docs = MongoDB.main_collection().find({})
+    assert Counter(await get_ids(docs)) == Counter(TestDatabase.get_document_ids_from_database())
