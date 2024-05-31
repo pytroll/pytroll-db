@@ -10,7 +10,6 @@ Note:
 
 import errno
 import sys
-from os import PathLike
 from typing import Any, NamedTuple
 
 from bson import ObjectId
@@ -19,7 +18,7 @@ from loguru import logger
 from pydantic import AnyUrl, BaseModel, MongoDsn, PositiveFloat, ValidationError, validate_call
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
-from yaml import parser, safe_load
+from yaml import safe_load
 
 Timeout = PositiveFloat
 """A type hint for the timeout in seconds (non-negative float)."""
@@ -110,29 +109,21 @@ class AppConfig(BaseModel):
 
 
 @logger.catch(onerror=lambda _: sys.exit(1))
-def parse_config(file: int | str | bytes | PathLike[str] | PathLike[bytes]) -> AppConfig:
+def parse_config(file) -> AppConfig:
     """Parses and validates the configurations from a YAML file (descriptor).
 
     Args:
         file:
-            A path-like object (``str`` or ``bytes``) or an integer file descriptor. This will be directly passed to the
-            ``open()`` function. For example, it can be the filename (absolute or relative) of a valid YAML file which
-            holds the configurations.
+            A `path-like object <https://docs.python.org/3/glossary.html#term-path-like-object>`_ or an integer file
+            descriptor. This will be directly passed to the ``open()`` function. For example, it can be the filename
+            (absolute or relative) of a valid YAML file which holds the configurations.
 
     Returns:
         An instance of :class:`AppConfig`.
     """
-    try:
-        logger.info("Attempt to parse the YAML file ...")
-        with open(file, "r") as f:
-            config = safe_load(f)
-    except parser.ParserError as e:
-        logger.error(f"The file could not be parsed: {e}")
-        sys.exit(errno.EIO)
-    except (OSError, FileNotFoundError) as e:
-        logger.error(f"The file (descriptor) could not be found or opened: {e}")
-        sys.exit(errno.EIO)
-
+    logger.info("Attempt to parse the YAML file ...")
+    with open(file, "r") as f:
+        config = safe_load(f)
     logger.info("Parsing YAML file is successful.")
 
     try:
