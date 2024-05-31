@@ -18,16 +18,16 @@ import sys
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
-from typing import Any, Generator, NoReturn, Union
+from typing import Any, Generator, NoReturn
 
 import uvicorn
 from fastapi import FastAPI, status
 from fastapi.responses import PlainTextResponse
 from loguru import logger
-from pydantic import FilePath, ValidationError, validate_call
+from pydantic import ValidationError
 
 from trolldb.api.routes import api_router
-from trolldb.config.config import AppConfig, Timeout, parse_config
+from trolldb.config.config import AppConfig, Timeout
 from trolldb.database.mongodb import mongodb_context
 from trolldb.errors.errors import ResponseError
 
@@ -48,8 +48,7 @@ API_INFO = dict(
 
 
 @logger.catch(onerror=lambda _: sys.exit(1))
-@validate_call
-def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
+def run_server(config: AppConfig, **kwargs) -> None:
     """Runs the API server with all the routes and connection to the database.
 
     It first creates a FastAPI application and runs it using `uvicorn <https://www.uvicorn.org/>`_ which is
@@ -58,9 +57,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
 
     Args:
         config:
-            The configuration of the application which includes both the server and database configurations. Its type
-            should be a :class:`FilePath`, which is a valid path to an existing config file which will parsed as a
-            ``.YAML`` file.
+            The configuration of the application which includes both the server and database configurations.
 
         **kwargs:
             The keyword arguments are the same as those accepted by the
@@ -74,12 +71,12 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
         .. code-block:: python
 
             from trolldb.api.api import run_server
+            from trolldb.config.config import parse_config
+
             if __name__ == "__main__":
-                run_server("config.yaml")
+                run_server(parse_config("config.yaml"))
     """
     logger.info("Attempt to run the API server ...")
-    if not isinstance(config, AppConfig):
-        config = parse_config(config)
 
     # Concatenate the keyword arguments for the API server in the order of precedence (lower to higher).
     app = FastAPI(**(config.api_server._asdict() | kwargs | API_INFO))
@@ -120,8 +117,7 @@ def run_server(config: Union[AppConfig, FilePath], **kwargs) -> None:
 
 
 @contextmanager
-def api_server_process_context(
-        config: Union[AppConfig, FilePath], startup_time: Timeout = 2) -> Generator[Process, Any, None]:
+def api_server_process_context(config: AppConfig, startup_time: Timeout = 2) -> Generator[Process, Any, None]:
     """A synchronous context manager to run the API server in a separate process (non-blocking).
 
     It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
@@ -137,9 +133,6 @@ def api_server_process_context(
             large so that the tests will not time out.
     """
     logger.info("Attempt to run the API server process in a context manager ...")
-    if not isinstance(config, AppConfig):
-        config = parse_config(config)
-
     process = Process(target=run_server, args=(config,))
     try:
         process.start()
