@@ -1,3 +1,16 @@
+## Version 0.3.0 (2024/05/31)
+
+
+### Pull Requests Merged
+
+#### Features added
+
+* [PR 8](https://github.com/pytroll/pytroll-db/pull/8) - Add support for "dataset" messages
+* [PR 6](https://github.com/pytroll/pytroll-db/pull/6) - Enhance code quality
+
+In this release 2 pull requests were closed.
+
+
 ## Version 0.2.0 (2024/05/24)
 
 
