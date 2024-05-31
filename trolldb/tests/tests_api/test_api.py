@@ -20,58 +20,6 @@ main_database_name = test_app_config.database.main_database_name
 main_collection_name = test_app_config.database.main_collection_name
 
 
-def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
-    """Checks if the test and expected list of collection names match."""
-    return Counter(test_collection_names) == Counter(expected_collection_name)
-
-
-def document_ids_are_correct(test_ids: list[str], expected_ids: list[str]) -> bool:
-    """Checks if the test (retrieved from the API) and expected list of (document) ids match."""
-    return Counter(test_ids) == Counter(expected_ids)
-
-
-def single_query_is_correct(key: str, value: str | datetime) -> bool:
-    """Checks if the given single query, denoted by ``key`` matches correctly against the ``value``."""
-    return (
-            Counter(http_get(f"queries?{key}={value}").json()) ==
-            Counter(TestDatabase.match_query(**{key: value}))
-    )
-
-
-def make_query_string(keys: list[str], values_list: list[list[str] | datetime]) -> str:
-    """Makes a single query string for all the given queries."""
-    query_buffer = []
-    for key, value_list in zip(keys, values_list, strict=True):
-        query_buffer += [f"{key}={value}" for value in value_list]
-    return "&".join(query_buffer)
-
-
-def query_results_are_correct(keys: list[str], values_list: list[list[str] | datetime]) -> bool:
-    """Checks if the retrieved result from querying the database via the API matches the expected result.
-
-    There can be more than one query `key/value` pair.
-
-    Args:
-        keys:
-            A list of all query keys, e.g. ``keys=["platform", "sensor"]``
-
-        values_list:
-            A list in which each element is a list of values itself. The `nth` element corresponds to the `nth` key in
-            the ``keys``.
-
-    Returns:
-        A boolean flag indicating whether the retrieved result matches the expected result.
-    """
-    query_string = make_query_string(keys, values_list)
-
-    return (
-            Counter(http_get(f"queries?{query_string}").json()) ==
-            Counter(TestDatabase.match_query(
-                **{label: value_list for label, value_list in zip(keys, values_list, strict=True)}
-            ))
-    )
-
-
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_root():
     """Checks that the server is up and running, i.e. the root routes responds with 200."""
@@ -120,6 +68,16 @@ def test_collections():
             )
 
 
+def collections_exists(test_collection_names: list[str], expected_collection_name: list[str]) -> bool:
+    """Checks if the test and expected list of collection names match."""
+    return Counter(test_collection_names) == Counter(expected_collection_name)
+
+
+def document_ids_are_correct(test_ids: list[str], expected_ids: list[str]) -> bool:
+    """Checks if the test (retrieved from the API) and expected list of (document) ids match."""
+    return Counter(test_ids) == Counter(expected_ids)
+
+
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_collections_negative():
     """Checks that the non-existing collections cannot be found."""
@@ -159,6 +117,40 @@ def test_queries_platform_or_sensor(key: str, values: list[str]):
         )
 
 
+def make_query_string(keys: list[str], values_list: list[list[str] | datetime]) -> str:
+    """Makes a single query string for all the given queries."""
+    query_buffer = []
+    for key, value_list in zip(keys, values_list, strict=True):
+        query_buffer += [f"{key}={value}" for value in value_list]
+    return "&".join(query_buffer)
+
+
+def query_results_are_correct(keys: list[str], values_list: list[list[str] | datetime]) -> bool:
+    """Checks if the retrieved result from querying the database via the API matches the expected result.
+
+    There can be more than one query `key/value` pair.
+
+    Args:
+        keys:
+            A list of all query keys, e.g. ``keys=["platform", "sensor"]``
+
+        values_list:
+            A list in which each element is a list of values itself. The `nth` element corresponds to the `nth` key in
+            the ``keys``.
+
+    Returns:
+        A boolean flag indicating whether the retrieved result matches the expected result.
+    """
+    query_string = make_query_string(keys, values_list)
+
+    return (
+            Counter(http_get(f"queries?{query_string}").json()) ==
+            Counter(TestDatabase.match_query(
+                **{label: value_list for label, value_list in zip(keys, values_list, strict=True)}
+            ))
+    )
+
+
 @pytest.mark.usefixtures("_test_server_fixture")
 def test_queries_mix_platform_sensor():
     """Tests a mix of platform and sensor queries."""
@@ -184,4 +176,12 @@ def test_queries_time():
     assert single_query_is_correct(
         "time_max",
         time_max
+    )
+
+
+def single_query_is_correct(key: str, value: str | datetime) -> bool:
+    """Checks if the given single query, denoted by ``key`` matches correctly against the ``value``."""
+    return (
+            Counter(http_get(f"queries?{key}={value}").json()) ==
+            Counter(TestDatabase.match_query(**{key: value}))
     )

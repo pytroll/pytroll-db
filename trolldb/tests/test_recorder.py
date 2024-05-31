@@ -62,6 +62,19 @@ def config_file(tmp_path):
     return create_config_file(tmp_path)
 
 
+@pytest.mark.parametrize(("function", "args"), [
+    (record_messages_from_config, lf("config_file")),
+    (record_messages_from_command_line, [lf("config_file")])
+])
+async def test_record_from_cli_and_config(tmp_path, file_message, tmp_data_filename, function, args):
+    """Tests that message recording adds a message to the database either via configs from a file or the CLI."""
+    msg = Message.decode(file_message)
+    with running_prepared_database_context():
+        with patched_subscriber_recv([file_message]):
+            await function(args)
+            assert await message_in_database_and_delete_count_is_one(msg)
+
+
 async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
     """Checks if there is exactly one item in the database which matches the data of the message."""
     async with mongodb_context(test_app_config.database):
@@ -74,19 +87,6 @@ async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
         deletion_count = await delete_uri_from_collection(collection, uri)
 
         return result == msg.data and deletion_count == 1
-
-
-@pytest.mark.parametrize(("function", "args"), [
-    (record_messages_from_config, lf("config_file")),
-    (record_messages_from_command_line, [lf("config_file")])
-])
-async def test_record_from_cli_and_config(tmp_path, file_message, tmp_data_filename, function, args):
-    """Tests that message recording adds a message to the database either via configs from a file or the CLI."""
-    msg = Message.decode(file_message)
-    with running_prepared_database_context():
-        with patched_subscriber_recv([file_message]):
-            await function(args)
-            assert await message_in_database_and_delete_count_is_one(msg)
 
 
 async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename):
