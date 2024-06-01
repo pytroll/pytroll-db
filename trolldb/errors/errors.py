@@ -204,7 +204,7 @@ class ResponseError(Exception):
             extra_information: dict | None = None,
             status_code: int | None = None) -> None:
         """Same as :func:`~ResponseError.get_error_details` but logs the error as a warning and returns ``None``."""
-        msg, _ = self.get_error_details(extra_information, status_code)
+        _, msg = self.get_error_details(extra_information, status_code)
         logger.warning(msg)
 
     def sys_exit_log(
@@ -224,7 +224,7 @@ class ResponseError(Exception):
         Returns:
             Does not return anything, but logs the error and exits the program.
         """
-        msg, _ = self.get_error_details(extra_information, status_code)
+        _, msg = self.get_error_details(extra_information, status_code)
         logger.error(msg)
         exit(exit_code)
 
