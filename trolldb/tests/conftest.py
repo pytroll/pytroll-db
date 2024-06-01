@@ -5,12 +5,33 @@ This module provides fixtures for running a Mongo DB instance in test mode and f
 
 import pytest
 import pytest_asyncio
+from _pytest.logging import LogCaptureFixture
+from loguru import logger
 
 from trolldb.api.api import api_server_process_context
 from trolldb.database.mongodb import mongodb_context
 from trolldb.test_utils.common import test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
+
+
+@pytest.fixture()
+def caplog(caplog: LogCaptureFixture):
+    """This overrides the actual pytest ``caplog`` fixture.
+
+    Reason:
+        We are using ``loguru`` instead of the Python built-in logging package. More information at:
+        https://loguru.readthedocs.io/en/latest/resources/migration.html#replacing-caplog-fixture-from-pytest-library
+    """
+    handler_id = logger.add(
+        caplog.handler,
+        format="{message}",
+        level=0,
+        filter=lambda record: record["level"].no >= caplog.handler.level,
+        enqueue=True,  # Set to 'True' if your test is spawning child processes.
+    )
+    yield caplog
+    logger.remove(handler_id)
 
 
 @pytest.fixture(scope="session")
