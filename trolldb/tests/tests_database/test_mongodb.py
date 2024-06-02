@@ -134,10 +134,31 @@ async def test_main_collection():
 
 @pytest.mark.usefixtures("mongodb_fixture")
 async def test_main_database():
-    """Same as test_main_collection but for the main database."""
+    """Same as ``test_main_collection()`` but for the main database."""
     assert MongoDB.main_database() is not None
     assert MongoDB.main_database().name == test_app_config.database.main_database_name
     assert MongoDB.main_database() == await MongoDB.get_database(test_app_config.database.main_database_name)
+
+
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_get_database(caplog):
+    """Tests the ``get_database()`` method given different inputs."""
+    assert await MongoDB.get_database(None) == MongoDB.main_database()
+    assert await MongoDB.get_database() == MongoDB.main_database()
+    assert await MongoDB.get_database(test_app_config.database.main_database_name) == MongoDB.main_database()
+
+
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_get_collection(caplog):
+    """Same as ``test_get_database()`` but for the ``get_collection()``."""
+    assert await MongoDB.get_collection(None, None) == MongoDB.main_collection()
+    assert await MongoDB.get_collection() == MongoDB.main_collection()
+
+    collection = await MongoDB.get_collection(
+        test_app_config.database.main_database_name,
+        test_app_config.database.main_collection_name
+    )
+    assert collection == MongoDB.main_collection()
 
 
 @pytest.mark.usefixtures("mongodb_fixture")
