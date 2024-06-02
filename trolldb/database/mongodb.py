@@ -195,8 +195,9 @@ class MongoDB:
         """Closes the motor client."""
         logger.info("Attempt to close the MongoDB client ...")
         if cls.__client:
-            cls.__database_config = None
             cls.__client.close()
+            cls.__client = None
+            cls.__database_config = None
             logger.info("The MongoDB client is closed successfully.")
             return
         Client.CloseNotAllowedError.sys_exit_log(errno.EIO)
