@@ -232,8 +232,8 @@ class MongoDB:
     @validate_call
     async def get_collection(
             cls,
-            database_name: str | None,
-            collection_name: str | None) -> AsyncIOMotorCollection:
+            database_name: str | None = None,
+            collection_name: str | None = None) -> AsyncIOMotorCollection:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -274,7 +274,7 @@ class MongoDB:
 
     @classmethod
     @validate_call
-    async def get_database(cls, database_name: str | None) -> AsyncIOMotorDatabase:
+    async def get_database(cls, database_name: str | None = None) -> AsyncIOMotorDatabase:
         """Gets the database object given its name.
 
         Args:
