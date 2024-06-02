@@ -13,9 +13,8 @@ from collections import Counter
 import pytest
 from bson import ObjectId
 from pydantic import AnyUrl, ValidationError
-from pymongo.errors import InvalidOperation
 
-from trolldb.database.errors import Client
+from trolldb.database.errors import Client, Collections, Databases
 from trolldb.database.mongodb import DatabaseConfig, MongoDB, get_id, get_ids, mongodb_context
 from trolldb.errors.errors import ResponseError
 from trolldb.test_utils.common import make_test_app_config_as_dict, test_app_config
@@ -42,43 +41,6 @@ async def test_connection_timeout_negative(caplog):
     assert t2 - t1 >= invalid_config.timeout
 
 
-@pytest.mark.parametrize("invalid_config", [
-    dict(main_database_name=test_app_config.database.main_database_name, main_collection_name=" "),
-    dict(main_database_name=" ", main_collection_name=test_app_config.database.main_collection_name)
-])
-@pytest.mark.usefixtures("_run_mongodb_server_instance")
-async def test_main_database_and_collection_negative(invalid_config):
-    """Tests that we fail when the name of the main database/collection is invalid, given a valid name for the other."""
-    config = dict(timeout=1, url=test_app_config.database.url) | invalid_config
-    with pytest.raises(SystemExit) as exc:
-        async with mongodb_context(DatabaseConfig(**config)):
-            pass
-    assert exc.value.code == errno.ENODATA
-
-
-@pytest.mark.usefixtures("_run_mongodb_server_instance")
-async def test_reinitialize_different_config_negative(caplog):
-    """Tests that we fail when trying to reinitialize with a different configuration."""
-    different_config = DatabaseConfig(**(make_test_app_config_as_dict()["database"] | {"timeout": 0.1}))
-    with pytest.raises(SystemExit) as exc:
-        async with mongodb_context(test_app_config.database):
-            await MongoDB.initialize(different_config)
-
-    assert exc.value.code == errno.EIO
-    assert check_log(caplog, "ERROR", Client.ReinitializeConfigError)
-
-
-@pytest.mark.parametrize("config_with_wrong_type", [
-    1, "1", 1.0, {}, None, [], (), make_test_app_config_as_dict()
-])
-@pytest.mark.usefixtures("_run_mongodb_server_instance")
-async def test_invalid_config_type(caplog, config_with_wrong_type):
-    """Tests that we fail when trying to initialize with a configuration of wrong type."""
-    with pytest.raises(ValidationError):
-        async with mongodb_context(config_with_wrong_type):
-            pass
-
-
 def check_log(caplog, level: str, response_error: ResponseError) -> bool:
     """An auxiliary function to check the log message."""
     for rec in caplog.records:
@@ -87,28 +49,75 @@ def check_log(caplog, level: str, response_error: ResponseError) -> bool:
     return False
 
 
+@pytest.mark.parametrize(("error", "invalid_config"), [(
+        Collections.NotFoundError,
+        dict(main_database_name=test_app_config.database.main_database_name, main_collection_name=" ")),
+    (
+            Databases.NotFoundError,
+            dict(main_database_name=" ", main_collection_name=test_app_config.database.main_collection_name))
+])
 @pytest.mark.usefixtures("_run_mongodb_server_instance")
+async def test_main_database_and_collection_negative(caplog, error, invalid_config):
+    """Tests that we fail when the name of the main database/collection is invalid, given a valid name for the other."""
+    config = dict(timeout=1, url=test_app_config.database.url) | invalid_config
+    with pytest.raises(SystemExit) as exc:
+        async with mongodb_context(DatabaseConfig(**config)):
+            pass
+    assert exc.value.code == errno.ENODATA
+    assert check_log(caplog, "ERROR", error)
+
+
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_reinitialize_different_config_negative(caplog):
+    """Tests that we fail when trying to reinitialize with a different configuration."""
+    different_config = DatabaseConfig(**(make_test_app_config_as_dict()["database"] | {"timeout": 0.1}))
+    with pytest.raises(SystemExit) as exc:
+        await MongoDB.initialize(different_config)
+    assert exc.value.code == errno.EIO
+    assert check_log(caplog, "ERROR", Client.ReinitializeConfigError)
+
+
+@pytest.mark.parametrize("config_with_wrong_type", [
+    1, "1", 1.0, {}, None, [], (), make_test_app_config_as_dict()
+])
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_invalid_config_type(caplog, config_with_wrong_type):
+    """Tests that we fail when trying to initialize with a configuration of wrong type."""
+    with pytest.raises(ValidationError):
+        async with mongodb_context(config_with_wrong_type):
+            pass
+
+
+@pytest.mark.usefixtures("mongodb_fixture")
 async def test_reinitialize_same_config_warning(caplog):
     """Tests the log (warning) when trying to reinitialize with the same configuration."""
-    async with mongodb_context(test_app_config.database):
-        await MongoDB.initialize(test_app_config.database)
-
+    await MongoDB.initialize(test_app_config.database)
     assert check_log(caplog, "WARNING", Client.AlreadyOpenError)
 
 
-async def test_get_client(mongodb_fixture):
-    """This is our way of testing that MongoDB.client() returns the valid client object.
+async def test_close_client_negative(caplog):
+    """Tests that we fail to close a MongoDB client which has not been initialized."""
+    with pytest.raises(SystemExit) as exc:
+        MongoDB.close()
+    assert exc.value.code == errno.EIO
+    assert check_log(caplog, "ERROR", Client.CloseNotAllowedError)
+
+
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_client_close():
+    """This is our way of testing :func:`trolldb.database.mongodb.MongoDB.close()`.
 
     Expect:
         - The `close` method can be called on the client and leads to the closure of the client
         - Further attempts to access the database after closing the client fails.
     """
     MongoDB.close()
-    with pytest.raises(InvalidOperation):
+    with pytest.raises(AttributeError):
         await MongoDB.list_database_names()
 
 
-async def test_main_collection(mongodb_fixture):
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_main_collection():
     """Tests the properties of the main collection.
 
     Expect:
@@ -123,21 +132,24 @@ async def test_main_collection(mongodb_fixture):
                test_app_config.database.main_collection_name]
 
 
-async def test_main_database(mongodb_fixture):
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_main_database():
     """Same as test_main_collection but for the main database."""
     assert MongoDB.main_database() is not None
     assert MongoDB.main_database().name == test_app_config.database.main_database_name
     assert MongoDB.main_database() == await MongoDB.get_database(test_app_config.database.main_database_name)
 
 
-async def test_get_id(mongodb_fixture):
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_get_id():
     """Tests :func:`trolldb.database.mongodb.get_id` using all documents (one at a time)."""
     for _id in TestDatabase.get_document_ids_from_database():
         doc = MongoDB.main_collection().find_one({"_id": ObjectId(_id)})
         assert await get_id(doc) == _id
 
 
-async def test_get_ids(mongodb_fixture):
+@pytest.mark.usefixtures("mongodb_fixture")
+async def test_get_ids():
     """Tests :func:`trolldb.database.mongodb.get_ids` using all documents in one pass."""
     docs = MongoDB.main_collection().find({})
     assert Counter(await get_ids(docs)) == Counter(TestDatabase.get_document_ids_from_database())
