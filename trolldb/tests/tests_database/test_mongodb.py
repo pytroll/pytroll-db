@@ -12,52 +12,88 @@ from collections import Counter
 
 import pytest
 from bson import ObjectId
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 from pymongo.errors import InvalidOperation
 
+from trolldb.database.errors import Client
 from trolldb.database.mongodb import DatabaseConfig, MongoDB, get_id, get_ids, mongodb_context
-from trolldb.test_utils.common import test_app_config
+from trolldb.errors.errors import ResponseError
+from trolldb.test_utils.common import make_test_app_config_as_dict, test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase
 
 
-async def test_connection_timeout_negative():
-    """Expect to see the connection attempt times out since the MongoDB URL is invalid."""
-    timeout = 3
+async def test_connection_timeout_negative(caplog):
+    """Tests that the connection attempt times out after the expected time, since the MongoDB URL is invalid."""
+    invalid_config = DatabaseConfig(
+        url=AnyUrl("mongodb://invalid_url_that_does_not_exist:8000"),
+        timeout=3,
+        main_database_name=test_app_config.database.main_database_name,
+        main_collection_name=test_app_config.database.main_collection_name,
+    )
+
     t1 = time.time()
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        async with mongodb_context(
-                DatabaseConfig(url=AnyUrl("mongodb://invalid_url_that_does_not_exist:8000"),
-                               timeout=timeout, main_database_name=" ", main_collection_name=" ")):
+    with pytest.raises(SystemExit) as exc:
+        async with mongodb_context(invalid_config):
             pass
     t2 = time.time()
-    assert pytest_wrapped_e.value.code == errno.EIO
-    assert t2 - t1 >= timeout
+
+    assert exc.value.code == errno.EIO
+    assert check_log(caplog, "ERROR", Client.ConnectionError)
+    assert t2 - t1 >= invalid_config.timeout
+
+
+@pytest.mark.parametrize("invalid_config", [
+    dict(main_database_name=test_app_config.database.main_database_name, main_collection_name=" "),
+    dict(main_database_name=" ", main_collection_name=test_app_config.database.main_collection_name)
+])
+@pytest.mark.usefixtures("_run_mongodb_server_instance")
+async def test_main_database_and_collection_negative(invalid_config):
+    """Tests that we fail when the name of the main database/collection is invalid, given a valid name for the other."""
+    config = dict(timeout=1, url=test_app_config.database.url) | invalid_config
+    with pytest.raises(SystemExit) as exc:
+        async with mongodb_context(DatabaseConfig(**config)):
+            pass
+    assert exc.value.code == errno.ENODATA
 
 
 @pytest.mark.usefixtures("_run_mongodb_server_instance")
-async def test_main_database_negative():
-    """Expect to fail when giving an invalid name for the main database, given a valid collection name."""
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        async with mongodb_context(DatabaseConfig(
-                timeout=1,
-                url=test_app_config.database.url,
-                main_database_name=" ",
-                main_collection_name=test_app_config.database.main_collection_name)):
+async def test_reinitialize_different_config_negative(caplog):
+    """Tests that we fail when trying to reinitialize with a different configuration."""
+    different_config = DatabaseConfig(**(make_test_app_config_as_dict()["database"] | {"timeout": 0.1}))
+    with pytest.raises(SystemExit) as exc:
+        async with mongodb_context(test_app_config.database):
+            await MongoDB.initialize(different_config)
+
+    assert exc.value.code == errno.EIO
+    assert check_log(caplog, "ERROR", Client.ReinitializeConfigError)
+
+
+@pytest.mark.parametrize("config_with_wrong_type", [
+    1, "1", 1.0, {}, None, [], (), make_test_app_config_as_dict()
+])
+@pytest.mark.usefixtures("_run_mongodb_server_instance")
+async def test_invalid_config_type(caplog, config_with_wrong_type):
+    """Tests that we fail when trying to initialize with a configuration of wrong type."""
+    with pytest.raises(ValidationError):
+        async with mongodb_context(config_with_wrong_type):
             pass
-    assert pytest_wrapped_e.value.code == errno.ENODATA
+
+
+def check_log(caplog, level: str, response_error: ResponseError) -> bool:
+    """An auxiliary function to check the log message."""
+    for rec in caplog.records:
+        if rec.levelname == level and (response_error.get_error_details()[1] in rec.message):
+            return True
+    return False
 
 
 @pytest.mark.usefixtures("_run_mongodb_server_instance")
-async def test_main_collection_negative():
-    """Expect to fail when giving an invalid name for the main collection, given a valid database name."""
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        async with mongodb_context(DatabaseConfig(
-                timeout=1,
-                url=test_app_config.database.url,
-                main_database_name=test_app_config.database.main_database_name,
-                main_collection_name=" ")):
-            pass
-    assert pytest_wrapped_e.value.code == errno.ENODATA
+async def test_reinitialize_same_config_warning(caplog):
+    """Tests the log (warning) when trying to reinitialize with the same configuration."""
+    async with mongodb_context(test_app_config.database):
+        await MongoDB.initialize(test_app_config.database)
+
+    assert check_log(caplog, "WARNING", Client.AlreadyOpenError)
 
 
 async def test_get_client(mongodb_fixture):
