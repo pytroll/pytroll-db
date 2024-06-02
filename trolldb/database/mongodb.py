@@ -178,6 +178,7 @@ class MongoDB:
         logger.info("The main collection name exists.")
 
         cls.__main_collection = cls.__main_database.get_collection(database_config.main_collection_name)
+        cls.__database_config = database_config
         logger.info("MongoDB is successfully initialized.")
 
     @classmethod
