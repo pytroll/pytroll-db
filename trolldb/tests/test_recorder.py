@@ -12,7 +12,7 @@ from trolldb.cli import (
     record_messages_from_config,
 )
 from trolldb.database.mongodb import MongoDB, mongodb_context
-from trolldb.test_utils.common import AppConfig, create_config_file, make_test_app_config, test_app_config
+from trolldb.test_utils.common import AppConfig, create_config_file, make_test_app_config_as_dict, test_app_config
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
@@ -91,7 +91,7 @@ async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
 
 async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename):
     """Tests that message recording adds a message to the database."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     msg = Message.decode(file_message)
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message]):
@@ -101,7 +101,7 @@ async def test_record_messages(config_file, tmp_path, file_message, tmp_data_fil
 
 async def test_record_deletes_message(tmp_path, file_message, del_message):
     """Tests that message recording can delete a record in the database."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message, del_message]):
             await record_messages(config)
@@ -113,7 +113,7 @@ async def test_record_deletes_message(tmp_path, file_message, del_message):
 
 async def test_record_dataset_messages(tmp_path, dataset_message):
     """Tests recording a dataset message and deleting the file."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     msg = Message.decode(dataset_message)
     with running_prepared_database_context():
         with patched_subscriber_recv([dataset_message]):

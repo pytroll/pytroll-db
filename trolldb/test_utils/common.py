@@ -10,8 +10,8 @@ from urllib3 import BaseHTTPResponse, request
 from trolldb.config.config import AppConfig
 
 
-def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict[str, dict]:
-    """Makes the app configuration when used in testing.
+def make_test_app_config_as_dict(subscriber_address: Optional[FilePath] = None) -> dict[str, dict]:
+    """Makes the app configuration (as a dictionary) when used in testing.
 
     Args:
         subscriber_address:
@@ -19,7 +19,12 @@ def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict[
             config will be an empty dictionary.
 
     Returns:
-        A dictionary which resembles an object of type :obj:`~trolldb.config.config.AppConfig`.
+        A dictionary with a structure similar to that of an :obj:`~trolldb.config.config.AppConfig` object.
+
+    Warning:
+        The return value of this function is a dictionary and not accepted as a valid input argument for
+        :func:`trolldb.database.mongodb.MongoDB.initialize`. As a result, one must cast it to the valid type by e.g.
+        ``AppConfig(**make_test_app_config_as_dict())``.
     """
     app_config = dict(
         api_server=dict(
@@ -41,7 +46,7 @@ def make_test_app_config(subscriber_address: Optional[FilePath] = None) -> dict[
     return app_config
 
 
-test_app_config = AppConfig(**make_test_app_config())
+test_app_config = AppConfig(**make_test_app_config_as_dict())
 """The app configs for testing purposes assuming an empty configuration for the subscriber."""
 
 
@@ -49,7 +54,7 @@ def create_config_file(config_path: FilePath) -> FilePath:
     """Creates a config file for tests."""
     config_file = config_path / "config.yaml"
     with open(config_file, "w") as f:
-        yaml.safe_dump(make_test_app_config(config_path), f)
+        yaml.safe_dump(make_test_app_config_as_dict(config_path), f)
     return config_file
 
 
