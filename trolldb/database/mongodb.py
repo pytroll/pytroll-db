@@ -106,6 +106,7 @@ class MongoDB:
     """MongoDB creates these databases by default for self usage."""
 
     @classmethod
+    @validate_call
     async def initialize(cls, database_config: DatabaseConfig):
         """Initializes the motor client. Note that this method has to be awaited!
 
@@ -121,6 +122,9 @@ class MongoDB:
             On success ``None``.
 
         Raises:
+            ValidationError:
+                If the method is not called with arguments of valid type.
+
             SystemExit(errno.EIO):
                 If connection is not established, i.e. ``ConnectionFailure``.
             SystemExit(errno.EIO):
