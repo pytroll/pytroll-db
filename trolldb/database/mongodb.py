@@ -182,6 +182,11 @@ class MongoDB:
         logger.info("MongoDB is successfully initialized.")
 
     @classmethod
+    def is_initialized(cls) -> bool:
+        """Checks if the motor client is initialized."""
+        return cls.__client is not None
+
+    @classmethod
     def close(cls) -> None:
         """Closes the motor client."""
         logger.info("Attempt to close the MongoDB client ...")
@@ -309,5 +314,8 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
         await MongoDB.initialize(database_config)
         yield
     finally:
-        MongoDB.close()
+        if MongoDB.is_initialized():
+            MongoDB.close()
+        else:
+            logger.info("The MongoDB client was not initialized!")
         logger.info("The MongoDB context manager is successfully closed.")
