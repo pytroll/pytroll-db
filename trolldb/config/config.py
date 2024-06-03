@@ -53,11 +53,6 @@ MongoObjectId = Annotated[str, AfterValidator(id_must_be_valid)]
 """The type hint validator for object IDs."""
 
 
-class MongoDocument(BaseModel):
-    """Pydantic model for a MongoDB document."""
-    _id: MongoObjectId
-
-
 class APIServerConfig(NamedTuple):
     """A named tuple to hold all the configurations of the API server (excluding the database).
 
