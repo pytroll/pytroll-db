@@ -46,7 +46,7 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
     try:
         return ObjectId(id_like_string)
     except InvalidId as e:
-        raise ValueError from e
+        raise ValueError(f"{id_like_string} is not a valid value for an ID.") from e
 
 
 MongoObjectId = Annotated[str, AfterValidator(id_must_be_valid)]
