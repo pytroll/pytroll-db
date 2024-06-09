@@ -53,10 +53,10 @@ async def test_sensors(server_client):
 
 async def test_database_names(server_client):
     """Checks that the retrieved database names match the expected names."""
-    assert Counter((await server_client.get("/databases/")).json()) == Counter(TestDatabase.database_names)
-    assert Counter((await server_client.get("/databases/?exclude_defaults=True")).json()) == Counter(
+    assert Counter((await server_client.get("/databases")).json()) == Counter(TestDatabase.database_names)
+    assert Counter((await server_client.get("/databases?exclude_defaults=True")).json()) == Counter(
         TestDatabase.database_names)
-    assert Counter((await server_client.get("/databases/?exclude_defaults=False")).json()) == Counter(
+    assert Counter((await server_client.get("/databases?exclude_defaults=False")).json()) == Counter(
         TestDatabase.all_database_names)
 
 

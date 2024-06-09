@@ -22,7 +22,7 @@ from trolldb.database.mongodb import MongoDB, get_ids
 router = APIRouter()
 
 
-@router.get("/",
+@router.get("",
             response_model=list[str],
             summary="Gets the list of all database names")
 async def database_names(
