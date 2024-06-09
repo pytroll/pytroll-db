@@ -8,7 +8,6 @@ import pytest_asyncio
 from _pytest.logging import LogCaptureFixture
 from loguru import logger
 
-from trolldb.api.api import api_server_process_context
 from trolldb.database.mongodb import mongodb_context
 from trolldb.test_utils.common import test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase
@@ -38,13 +37,6 @@ def caplog(caplog: LogCaptureFixture):
 def _run_mongodb_server_instance():
     """Encloses all tests (session scope) in a context manager of a running MongoDB instance (in a separate process)."""
     with running_prepared_database_context():
-        yield
-
-
-@pytest.fixture(scope="session")
-def _test_server_fixture(_run_mongodb_server_instance):
-    """Encloses all tests (session scope) in a context manager of a running API server (in a separate process)."""
-    with api_server_process_context(test_app_config, startup_time=2):
         yield
 
 

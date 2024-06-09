@@ -15,16 +15,13 @@ Note:
 
 import asyncio
 import sys
-import time
-from contextlib import contextmanager
-from multiprocessing import Process
-from typing import Any, Generator, NoReturn
+from typing import NoReturn
 
 import uvicorn
 from loguru import logger
 
 from trolldb.api.fastapi_app import fastapi_app
-from trolldb.config.config import AppConfig, Timeout
+from trolldb.config.config import AppConfig
 from trolldb.database.mongodb import mongodb_context
 
 
@@ -65,32 +62,3 @@ def run_server(app_config: AppConfig) -> None:
 
     logger.info("Attempt to run the asyncio loop for the API server ...")
     asyncio.run(_serve())
-
-
-@contextmanager
-def api_server_process_context(config: AppConfig, startup_time: Timeout = 2) -> Generator[Process, Any, None]:
-    """A synchronous context manager to run the API server in a separate process (non-blocking).
-
-    It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
-    is envisaged to be in `TESTING` environments.
-
-    Args:
-        config:
-            Same as ``config`` argument for :func:`run_server`.
-
-        startup_time:
-            The overall time in seconds that is expected for the server and the database connections to be established
-            before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
-            large so that the tests will not time out.
-    """
-    logger.info("Attempt to run the API server process in a context manager ...")
-    process = Process(target=run_server, args=(config,))
-    try:
-        process.start()
-        time.sleep(startup_time)
-        yield process
-    finally:
-        logger.info("Attempt to terminate the API server process in the context manager ...")
-        process.terminate()
-        process.join()
-        logger.info("The API server process has terminated successfully.")
