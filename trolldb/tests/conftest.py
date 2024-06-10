@@ -3,6 +3,8 @@
 This module provides fixtures for running a Mongo DB instance in test mode and filling the database with test data.
 """
 
+from typing import Callable
+
 import pytest
 import pytest_asyncio
 from _pytest.logging import LogCaptureFixture
@@ -46,3 +48,21 @@ async def mongodb_fixture(_run_mongodb_server_instance):
     TestDatabase.prepare()
     async with mongodb_context(test_app_config.database):
         yield
+
+
+@pytest.fixture()
+def check_log(caplog) -> Callable:
+    """A fixture to check the logs. It relies on the ``caplog`` fixture.
+
+    Returns:
+        A function which can be called to check the log level and message.
+    """
+
+    def _aux(level: str, message: str) -> bool:
+        """An auxiliary function to check the log level and message."""
+        for rec in caplog.records:
+            if rec.levelname == level and (message in rec.message):
+                return True
+        return False
+
+    return _aux
