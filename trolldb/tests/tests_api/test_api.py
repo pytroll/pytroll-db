@@ -11,10 +11,11 @@ from datetime import datetime
 
 import pytest
 import pytest_asyncio
-from fastapi import status
+from fastapi import Response, status
 from httpx import ASGITransport, AsyncClient
 
 from trolldb.api.fastapi_app import fastapi_app
+from trolldb.api.routes.common import get_distinct_items_in_collection
 from trolldb.database.mongodb import mongodb_context
 from trolldb.test_utils.common import api_server_process_context, http_get, test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase, mongodb_for_test_context
@@ -200,6 +201,14 @@ async def single_query_is_correct(server_client: AsyncClient, key: str, value: s
             Counter((await server_client.get(f"queries?{key}={value}")).json()) ==
             Counter(TestDatabase.match_query(**{key: value}))
     )
+
+
+async def test_get_distinct_items_in_collection():
+    """Tests that the function returns the same response in case of a response as input."""
+    res_actual = Response(status_code=status.HTTP_418_IM_A_TEAPOT, content="Test Response")
+    res_retrieved = await get_distinct_items_in_collection(res_actual, "")
+    assert res_retrieved.status_code == res_actual.status_code
+    assert res_retrieved.body == b"Test Response"
 
 
 def test_run_server():
