@@ -16,6 +16,7 @@ from httpx import ASGITransport, AsyncClient
 
 from trolldb.api.fastapi_app import fastapi_app
 from trolldb.api.routes.common import get_distinct_items_in_collection
+from trolldb.database.errors import Documents
 from trolldb.database.mongodb import mongodb_context
 from trolldb.test_utils.common import api_server_process_context, http_get, test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase, mongodb_for_test_context
@@ -209,6 +210,33 @@ async def test_get_distinct_items_in_collection():
     res_retrieved = await get_distinct_items_in_collection(res_actual, "")
     assert res_retrieved.status_code == res_actual.status_code
     assert res_retrieved.body == b"Test Response"
+
+
+async def test_document_by_id(server_client):
+    """Tests that one can query the documents by their IDs."""
+    for _id, doc in zip(TestDatabase.get_document_ids_from_database(), TestDatabase.documents, strict=False):
+        doc["_id"] = _id
+        doc["end_time"] = doc["end_time"].isoformat()
+        doc["start_time"] = doc["start_time"].isoformat()
+        assert (await server_client.get(f"databases/{main_database_name}/{main_collection_name}/{_id}")).json() == doc
+
+
+async def test_document_by_id_negative(server_client):
+    """Tests that we do not allow invalid IDs."""
+    for _id in ["1", "1" * 25]:
+        res = await server_client.get(f"databases/{main_database_name}/{main_collection_name}/{_id}")
+        assert (res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY)
+        assert "Value error" in res.json()["detail"][0]["msg"]
+
+
+async def test_document_by_id_not_found(server_client):
+    """Tests that we fail to retrieve non-existing document IDs."""
+    _id = "1" * 24
+    status_code, msg = Documents.NotFound.get_error_details()
+
+    res = await server_client.get(f"databases/{main_database_name}/{main_collection_name}/{_id}")
+    assert (res.status_code == status_code)
+    assert (res.text == msg)
 
 
 def test_run_server():
