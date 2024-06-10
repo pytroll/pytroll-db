@@ -50,6 +50,13 @@ def del_message(tmp_data_filename):
 
 
 @pytest.fixture()
+def unknown_message(tmp_data_filename):
+    """Create a string for an unknown message."""
+    return ("pytroll://deletion some_unknown_key a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 "
+            "application/json {}")
+
+
+@pytest.fixture()
 def tmp_data_filename(tmp_path):
     """Create a filename for the messages."""
     filename = "20191103_153936-s1b-ew-hh.tiff"
@@ -119,3 +126,13 @@ async def test_record_dataset_messages(tmp_path, dataset_message):
         with patched_subscriber_recv([dataset_message]):
             await record_messages(config)
             assert await message_in_database_and_delete_count_is_one(msg)
+
+
+async def test_unknown_messages(check_log, tmp_path, unknown_message):
+    """Tests that we identify the message as being unknown, and we log that."""
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
+    with running_prepared_database_context():
+        with patched_subscriber_recv([unknown_message]):
+            await record_messages(config)
+
+    assert check_log("DEBUG", "Don't know what to do with some_unknown_key message")
