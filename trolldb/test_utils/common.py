@@ -1,13 +1,17 @@
 """Common functionalities for testing, shared between tests and other test utility modules."""
 
-from typing import Any, Optional
+import time
+from contextlib import contextmanager
+from multiprocessing import Process
+from typing import Any, Generator, Optional
 from urllib.parse import urljoin
 
 import yaml
 from pydantic import AnyUrl, FilePath
 from urllib3 import BaseHTTPResponse, request
 
-from trolldb.config.config import AppConfig
+from trolldb.api.api import run_server
+from trolldb.config.config import AppConfig, Timeout
 
 
 def make_test_app_config_as_dict(subscriber_address: Optional[FilePath] = None) -> dict[str, dict]:
@@ -106,3 +110,30 @@ def compare_by_operator_name(operator: str, left: Any, right: Any) -> Any:
             return left == right
         case _:
             raise ValueError(f"Unknown operator: {operator}")
+
+
+@contextmanager
+def api_server_process_context(
+        config: AppConfig = test_app_config, startup_time: Timeout = 2) -> Generator[Process, Any, None]:
+    """A synchronous context manager to run the API server in a separate process (non-blocking).
+
+    It uses the `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ package. The main use case
+    is envisaged to be in `TESTING` environments.
+
+    Args:
+        config:
+            Same as ``config`` argument for :func:`run_server`.
+
+        startup_time:
+            The overall time in seconds that is expected for the server and the database connections to be established
+            before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
+            large so that the tests will not time out.
+    """
+    process = Process(target=run_server, args=(config,))
+    try:
+        process.start()
+        time.sleep(startup_time)
+        yield process
+    finally:
+        process.terminate()
+        process.join()

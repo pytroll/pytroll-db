@@ -16,7 +16,7 @@ from httpx import ASGITransport, AsyncClient
 
 from trolldb.api.fastapi_app import fastapi_app
 from trolldb.database.mongodb import mongodb_context
-from trolldb.test_utils.common import test_app_config
+from trolldb.test_utils.common import api_server_process_context, http_get, test_app_config
 from trolldb.test_utils.mongodb_database import TestDatabase, mongodb_for_test_context
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
@@ -200,3 +200,10 @@ async def single_query_is_correct(server_client: AsyncClient, key: str, value: s
             Counter((await server_client.get(f"queries?{key}={value}")).json()) ==
             Counter(TestDatabase.match_query(**{key: value}))
     )
+
+
+def test_run_server():
+    """Tests the ``run_server`` function by starting a running API server + MongoDB and a request to the '/' route."""
+    with running_prepared_database_context():
+        with api_server_process_context():
+            assert http_get("/").status == status.HTTP_200_OK
