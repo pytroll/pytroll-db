@@ -42,20 +42,25 @@ def id_must_be_valid(id_like_string: str) -> ObjectId:
         ValueError:
             If the given string cannot be converted to a valid ObjectId. This will ultimately turn into a pydantic
             validation error.
+
+    Note:
+        The reason that we change the type of the raised error is the following. As per the requirements of Pydantic,
+        one can either raise a ``ValueError`` or ``AssertionError`` in a custom validator. Here we have defined a custom
+        validator for a MongoDB object ID. When it fails it raises ``InvalidId`` which is not a valid exception to
+        signify validation failure in Pydantic, hence the need to catch the error and raise a different one.
+
+        Reference:
+            https://docs.pydantic.dev/latest/concepts/validators/#handling-errors-in-validators
+
     """
     try:
         return ObjectId(id_like_string)
     except InvalidId as e:
-        raise ValueError from e
+        raise ValueError(f"{id_like_string} is not a valid value for an ID.") from e
 
 
 MongoObjectId = Annotated[str, AfterValidator(id_must_be_valid)]
 """The type hint validator for object IDs."""
-
-
-class MongoDocument(BaseModel):
-    """Pydantic model for a MongoDB document."""
-    _id: MongoObjectId
 
 
 class APIServerConfig(NamedTuple):

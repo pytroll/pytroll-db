@@ -202,7 +202,7 @@ class TestDatabase:
             collection.insert_many(cls.documents)
 
     @classmethod
-    def get_all_documents_from_database(cls) -> list[dict]:
+    def get_documents_from_database(cls) -> list[dict]:
         """Retrieves all the documents from the database.
 
         Returns:
@@ -217,6 +217,11 @@ class TestDatabase:
             ]
             documents = list(collection.find({}))
         return documents
+
+    @classmethod
+    def get_document_ids_from_database(cls) -> list[str]:
+        """Retrieves all the document IDs from the database."""
+        return [str(doc["_id"]) for doc in cls.get_documents_from_database()]
 
     @classmethod
     def find_min_max_datetime(cls) -> dict[str, dict]:
@@ -238,7 +243,7 @@ class TestDatabase:
                 _max=dict(_id=None, _time="1900-01-01T00:00:00"))
         )
 
-        documents = cls.get_all_documents_from_database()
+        documents = cls.get_documents_from_database()
 
         for document in documents:
             for k in ["start_time", "end_time"]:
@@ -290,7 +295,7 @@ class TestDatabase:
         we end up with those that match. When a query is ``None``, it does not have any effect on the results.
         This method will be used in testing the ``/queries`` route of the API.
         """
-        documents = cls.get_all_documents_from_database()
+        documents = cls.get_documents_from_database()
 
         buffer = deepcopy(documents)
         for document in documents:

@@ -106,6 +106,7 @@ class MongoDB:
     """MongoDB creates these databases by default for self usage."""
 
     @classmethod
+    @validate_call
     async def initialize(cls, database_config: DatabaseConfig):
         """Initializes the motor client. Note that this method has to be awaited!
 
@@ -121,6 +122,9 @@ class MongoDB:
             On success ``None``.
 
         Raises:
+            ValidationError:
+                If the method is not called with arguments of valid type.
+
             SystemExit(errno.EIO):
                 If connection is not established, i.e. ``ConnectionFailure``.
             SystemExit(errno.EIO):
@@ -178,15 +182,22 @@ class MongoDB:
         logger.info("The main collection name exists.")
 
         cls.__main_collection = cls.__main_database.get_collection(database_config.main_collection_name)
+        cls.__database_config = database_config
         logger.info("MongoDB is successfully initialized.")
+
+    @classmethod
+    def is_initialized(cls) -> bool:
+        """Checks if the motor client is initialized."""
+        return cls.__client is not None
 
     @classmethod
     def close(cls) -> None:
         """Closes the motor client."""
         logger.info("Attempt to close the MongoDB client ...")
         if cls.__client:
-            cls.__database_config = None
             cls.__client.close()
+            cls.__client = None
+            cls.__database_config = None
             logger.info("The MongoDB client is closed successfully.")
             return
         Client.CloseNotAllowedError.sys_exit_log(errno.EIO)
@@ -221,8 +232,8 @@ class MongoDB:
     @validate_call
     async def get_collection(
             cls,
-            database_name: str | None,
-            collection_name: str | None) -> AsyncIOMotorCollection:
+            database_name: str | None = None,
+            collection_name: str | None = None) -> AsyncIOMotorCollection:
         """Gets the collection object given its name and the database name in which it resides.
 
         Args:
@@ -263,7 +274,7 @@ class MongoDB:
 
     @classmethod
     @validate_call
-    async def get_database(cls, database_name: str | None) -> AsyncIOMotorDatabase:
+    async def get_database(cls, database_name: str | None = None) -> AsyncIOMotorDatabase:
         """Gets the database object given its name.
 
         Args:
@@ -308,5 +319,8 @@ async def mongodb_context(database_config: DatabaseConfig) -> AsyncGenerator:
         await MongoDB.initialize(database_config)
         yield
     finally:
-        MongoDB.close()
+        if MongoDB.is_initialized():
+            MongoDB.close()
+        else:
+            logger.info("The MongoDB client was not initialized!")
         logger.info("The MongoDB context manager is successfully closed.")

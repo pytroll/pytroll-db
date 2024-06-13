@@ -12,7 +12,7 @@ from trolldb.cli import (
     record_messages_from_config,
 )
 from trolldb.database.mongodb import MongoDB, mongodb_context
-from trolldb.test_utils.common import AppConfig, create_config_file, make_test_app_config, test_app_config
+from trolldb.test_utils.common import AppConfig, create_config_file, make_test_app_config_as_dict, test_app_config
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
@@ -47,6 +47,13 @@ def del_message(tmp_data_filename):
             '18765, "random_string1": "0235EA", "random_string2": "747D", "uri": '
             f'"{str(tmp_data_filename)}", "uid": "20191103_153936-s1b-ew-hh.tiff", '
             '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
+
+
+@pytest.fixture()
+def unknown_message(tmp_data_filename):
+    """Create a string for an unknown message."""
+    return ("pytroll://deletion some_unknown_key a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 "
+            "application/json {}")
 
 
 @pytest.fixture()
@@ -91,7 +98,7 @@ async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
 
 async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename):
     """Tests that message recording adds a message to the database."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     msg = Message.decode(file_message)
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message]):
@@ -101,7 +108,7 @@ async def test_record_messages(config_file, tmp_path, file_message, tmp_data_fil
 
 async def test_record_deletes_message(tmp_path, file_message, del_message):
     """Tests that message recording can delete a record in the database."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message, del_message]):
             await record_messages(config)
@@ -113,9 +120,19 @@ async def test_record_deletes_message(tmp_path, file_message, del_message):
 
 async def test_record_dataset_messages(tmp_path, dataset_message):
     """Tests recording a dataset message and deleting the file."""
-    config = AppConfig(**make_test_app_config(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
     msg = Message.decode(dataset_message)
     with running_prepared_database_context():
         with patched_subscriber_recv([dataset_message]):
             await record_messages(config)
             assert await message_in_database_and_delete_count_is_one(msg)
+
+
+async def test_unknown_messages(check_log, tmp_path, unknown_message):
+    """Tests that we identify the message as being unknown, and we log that."""
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
+    with running_prepared_database_context():
+        with patched_subscriber_recv([unknown_message]):
+            await record_messages(config)
+
+    assert check_log("DEBUG", "Don't know what to do with some_unknown_key message")
