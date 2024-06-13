@@ -58,11 +58,11 @@ def check_log(caplog) -> Callable:
         A function which can be called to check the log level and message.
     """
 
-    def _aux(level: str, message: str) -> bool:
+    def check_log_message_at_level(level: str, message: str) -> bool:
         """An auxiliary function to check the log level and message."""
         for rec in caplog.records:
             if rec.levelname == level and (message in rec.message):
                 return True
         return False
 
-    return _aux
+    return check_log_message_at_level
