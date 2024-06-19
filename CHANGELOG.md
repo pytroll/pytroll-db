@@ -1,3 +1,15 @@
+## Version 0.3.1 (2024/06/19)
+
+
+### Pull Requests Merged
+
+#### Features added
+
+* [PR 9](https://github.com/pytroll/pytroll-db/pull/9) - Improve code coverage by adding more tests
+
+In this release 1 pull request was closed.
+
+
 ## Version 0.3.0 (2024/05/31)
 
 
