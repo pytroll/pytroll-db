@@ -16,7 +16,7 @@ from trolldb.test_utils.mongodb_database import TestDatabase
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
-@pytest.fixture()
+@pytest.fixture
 def caplog(caplog: LogCaptureFixture):
     """This overrides the actual pytest ``caplog`` fixture.
 
@@ -50,7 +50,7 @@ async def mongodb_fixture(_run_mongodb_server_instance):
         yield
 
 
-@pytest.fixture()
+@pytest.fixture
 def check_log(caplog) -> Callable:
     """A fixture to check the logs. It relies on the ``caplog`` fixture.
 
