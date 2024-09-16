@@ -16,7 +16,7 @@ from trolldb.test_utils.common import AppConfig, create_config_file, make_test_a
 from trolldb.test_utils.mongodb_instance import running_prepared_database_context
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_message(tmp_data_filename):
     """Create a string for a file message."""
     return ('pytroll://segment/raster/L2/SAR file a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 '
@@ -27,7 +27,7 @@ def file_message(tmp_data_filename):
             '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset_message(tmp_data_filename):
     """Create a string for a file message."""
     return ('pytroll://segment/raster/L2/SAR dataset a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 '
@@ -38,7 +38,7 @@ def dataset_message(tmp_data_filename):
             '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
 
 
-@pytest.fixture()
+@pytest.fixture
 def del_message(tmp_data_filename):
     """Create a string for a delete message."""
     return ('pytroll://deletion del a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 '
@@ -49,21 +49,21 @@ def del_message(tmp_data_filename):
             '"polarization": "hh", "sensor": "sar-c", "format": "GeoTIFF", "pass_direction": "ASCENDING"}')
 
 
-@pytest.fixture()
+@pytest.fixture
 def unknown_message(tmp_data_filename):
     """Create a string for an unknown message."""
     return ("pytroll://deletion some_unknown_key a001673@c20969.ad.smhi.se 2019-11-05T13:00:10.366023 v1.01 "
             "application/json {}")
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_data_filename(tmp_path):
     """Create a filename for the messages."""
     filename = "20191103_153936-s1b-ew-hh.tiff"
     return tmp_path / filename
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_file(tmp_path):
     """A fixture to create a config file for the tests."""
     return create_config_file(tmp_path)
