@@ -23,8 +23,8 @@ from motor.motor_asyncio import (
     AsyncIOMotorDatabase,
 )
 from pydantic import validate_call
-from pymongo.collection import _DocumentType
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+from pymongo.typings import _DocumentType
 
 from trolldb.config.config import DatabaseConfig
 from trolldb.database.errors import Client, Collections, Databases
