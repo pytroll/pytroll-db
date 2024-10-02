@@ -7,7 +7,7 @@ Note:
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from pymongo.collection import _DocumentType
+from pymongo.typings import _DocumentType
 
 from trolldb.api.routes.common import CheckCollectionDependency, CheckDataBaseDependency
 from trolldb.config.config import MongoObjectId
