@@ -4,8 +4,8 @@ This module only includes the generic utilities using which each module should d
 specifically. See :obj:`trolldb.database.errors` as an example on how to achieve this.
 """
 
-from collections import OrderedDict
 import sys
+from collections import OrderedDict
 from typing import ClassVar, NoReturn, Self
 
 from fastapi import Response
