@@ -4,8 +4,8 @@ This module only includes the generic utilities using which each module should d
 specifically. See :obj:`trolldb.database.errors` as an example on how to achieve this.
 """
 
+import sys
 from collections import OrderedDict
-from sys import exit
 from typing import ClassVar, NoReturn, Self
 
 from fastapi import Response
@@ -226,7 +226,7 @@ class ResponseError(Exception):
         """
         _, msg = self.get_error_details(extra_information, status_code)
         logger.error(msg)
-        exit(exit_code)
+        sys.exit(exit_code)
 
     @property
     def fastapi_descriptor(self) -> dict[StatusCode, dict[str, str]]:

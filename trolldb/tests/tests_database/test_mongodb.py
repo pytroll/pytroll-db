@@ -12,7 +12,7 @@ from collections import Counter
 
 import pytest
 from bson import ObjectId
-from pydantic import AnyUrl, ValidationError
+from pydantic import MongoDsn, ValidationError
 
 from trolldb.database.errors import Client, Collections, Databases
 from trolldb.database.mongodb import DatabaseConfig, MongoDB, get_id, get_ids, mongodb_context
@@ -23,7 +23,7 @@ from trolldb.test_utils.mongodb_database import TestDatabase
 async def test_connection_timeout_negative(check_log):
     """Tests that the connection attempt times out after the expected time, since the MongoDB URL is invalid."""
     invalid_config = DatabaseConfig(
-        url=AnyUrl("mongodb://invalid_url_that_does_not_exist:8000"),
+        url=MongoDsn("mongodb://invalid_url_that_does_not_exist:8000"),
         timeout=3,
         main_database_name=test_app_config.database.main_database_name,
         main_collection_name=test_app_config.database.main_collection_name,
