@@ -1,3 +1,15 @@
+## Version 0.3.3 (2025/03/27)
+
+
+### Pull Requests Merged
+
+#### Features added
+
+* [PR 36](https://github.com/pytroll/pytroll-db/pull/36) - Update `deploy-sdist.yaml`
+
+In this release 1 pull request was closed.
+
+
 ## Version 0.3.2 (2025/03/27)
 
 
