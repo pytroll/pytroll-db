@@ -7,6 +7,7 @@ from pytest_lazy_fixtures import lf
 
 from trolldb.cli import (
     delete_uri_from_collection,
+    prepend_uri,
     record_messages,
     record_messages_from_command_line,
     record_messages_from_config,
@@ -88,6 +89,7 @@ async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
         collection = await MongoDB.get_collection("test_database", "test_collection")
         result = await collection.find_one(dict(scan_mode="EW"))
         result.pop("_id")
+        prepend_uri(msg)
         uri = msg.data.get("uri")
         if not uri:
             uri = msg.data["dataset"][0]["uri"]
