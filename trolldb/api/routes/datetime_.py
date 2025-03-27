@@ -5,7 +5,12 @@ Note:
 """
 
 from datetime import datetime
-from typing import Any, Coroutine, TypedDict
+from typing import Any, Coroutine
+
+try:
+    from typing import TypedDict
+except ImportError:  # Python version < 3.12
+    from typing_extensions import TypedDict
 
 from fastapi import APIRouter
 from pydantic import BaseModel
