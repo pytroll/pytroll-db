@@ -10,7 +10,7 @@ authors = [
     { name = "Kristian Rune Larsen", email = "krl@dmi.dk" }
 ]
 readme = "README.rst"
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
