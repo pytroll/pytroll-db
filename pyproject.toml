@@ -1,14 +1,17 @@
 [project]
 name = "pytroll-db"
 dynamic = ["version"]
-description = "The database API of Pytroll."
+description = "The database API of Pytroll"
 authors = [
-    { name = "Pouria Khalaj", email = "pouria.khalaj@smhi.se" }
+    { name = "Pouria Khalaj", email = "pouria.khalaj@smhi.se" },
+    { name = "Martin Raspaud", email = "martin.raspaud@smhi.se" },
+    { name = "Adam Dybbroe", email = "Adam.Dybbroe@smhi.se" },
+    { name = "Esben S. Nielsen", email = "esn@dmi.dk" },
+    { name = "Kristian Rune Larsen", email = "krl@dmi.dk" }
 ]
-dependencies = ["pymongo", "posttroll", "motor", "pydantic", "fastapi", "uvicorn", "loguru", "pyyaml", "urllib3"]
 readme = "README.rst"
-requires-python = ">= 3.12"
-license = {file = "LICENSE"}
+requires-python = ">= 3.11"
+license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -18,6 +21,24 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Database"
 ]
+
+dependencies = [
+    "fastapi",
+    "loguru",
+    "motor",
+    "posttroll",
+    "pydantic",
+    "pymongo",
+    "pyyaml",
+    "urllib3",
+    "uvicorn"
+]
+
+[project.optional-dependencies]
+doc = ["sphinx", "sphinx_rtd_theme"]
+hooks = ["pre-commit", "ruff"]
+tests = ["httpx", "pytest", "pytest-asyncio", "pytest-cov", "pytest-lazy-fixtures"]
+dev = ["pytroll-db[doc,hooks,tests]"]
 
 [project.urls]
 "Documentation" = "https://pytroll-db.readthedocs.io/en/latest/"
@@ -40,7 +61,6 @@ source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "trolldb/version.py"
-
 
 [tool.ruff]
 line-length = 120
