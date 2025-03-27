@@ -1,3 +1,15 @@
+## Version 0.3.2 (2025/03/27)
+
+
+### Pull Requests Merged
+
+#### Bugs fixed
+
+* [PR 17](https://github.com/pytroll/pytroll-db/pull/17) - Install `httpx` as a testing dependency in `ci.yml`
+
+In this release 1 pull request was closed.
+
+
 ## Version 0.3.1 (2024/06/19)
 
 
