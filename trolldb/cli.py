@@ -52,7 +52,8 @@ async def record_messages(config: AppConfig) -> None:
         )
         for m in create_subscriber_from_dict_config(config.subscriber).recv():
             msg = Message.decode(str(m))
-            prepend_uri(msg)
+            if config.prepend_uris:
+                prepend_uri(msg)
             match msg.type:
                 case "file":
                     await collection.insert_one(msg.data)
