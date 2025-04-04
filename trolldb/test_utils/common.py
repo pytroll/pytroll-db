@@ -129,8 +129,7 @@ def api_server_process_context(
             before actual requests can be sent to the server. For testing purposes ensure that this is sufficiently
             large so that the tests will not time out.
     """
-    ctx = get_context("spawn")
-
+    ctx = get_context()
     process = ctx.Process(target=run_server, args=(config,))
     try:
         process.start()
