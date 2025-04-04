@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+from urllib.parse import urlunparse
 
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -11,6 +12,12 @@ from pydantic import FilePath
 
 from trolldb.config.config import AppConfig, parse_config
 from trolldb.database.mongodb import MongoDB, mongodb_context
+
+
+def prepend_uri(msg, protocol="ssh"):
+    """Add the protocol and the host to the beginning of the URI."""
+    if msg.data.get("uri"):
+        msg.data["uri"] = urlunparse((protocol, msg.host, msg.data["uri"], "", "", ""))
 
 
 async def delete_uri_from_collection(collection: AsyncIOMotorCollection, uri: str) -> int:
@@ -45,6 +52,8 @@ async def record_messages(config: AppConfig) -> None:
         )
         for m in create_subscriber_from_dict_config(config.subscriber).recv():
             msg = Message.decode(str(m))
+            if config.prepend_uris:
+                prepend_uri(msg)
             match msg.type:
                 case "file":
                     await collection.insert_one(msg.data)

@@ -7,6 +7,7 @@ from pytest_lazy_fixtures import lf
 
 from trolldb.cli import (
     delete_uri_from_collection,
+    prepend_uri,
     record_messages,
     record_messages_from_command_line,
     record_messages_from_config,
@@ -96,10 +97,16 @@ async def message_in_database_and_delete_count_is_one(msg: Message) -> bool:
         return result == msg.data and deletion_count == 1
 
 
-async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename):
+@pytest.mark.parametrize("prepend_uris", [
+    True,
+    False,
+])
+async def test_record_messages(config_file, tmp_path, file_message, tmp_data_filename, prepend_uris):
     """Tests that message recording adds a message to the database."""
-    config = AppConfig(**make_test_app_config_as_dict(tmp_path))
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path), prepend_uris=prepend_uris)
     msg = Message.decode(file_message)
+    if prepend_uris:
+        prepend_uri(msg)
     with running_prepared_database_context():
         with patched_subscriber_recv([file_message]):
             await record_messages(config)
@@ -136,3 +143,21 @@ async def test_unknown_messages(check_log, tmp_path, unknown_message):
             await record_messages(config)
 
     assert check_log("DEBUG", "Don't know what to do with some_unknown_key message")
+
+
+def test_prepend_uri(file_message):
+    """Test that we are adding the ssh protocol and the hostname to the URI."""
+    msg = Message.decode(file_message)
+    uri_original = msg.data.get("uri")
+    prepend_uri(msg)
+    assert msg.data["uri"] == f"ssh://{msg.host}{uri_original}"
+
+
+@pytest.mark.parametrize("prepend_uris", [
+    True,
+    False,
+])
+def test_prepend_uri_config(config_file, tmp_path, prepend_uris):
+    """Test that config for prepend_uri is correct."""
+    config = AppConfig(**make_test_app_config_as_dict(tmp_path), prepend_uris=prepend_uris)
+    assert config.prepend_uris == prepend_uris

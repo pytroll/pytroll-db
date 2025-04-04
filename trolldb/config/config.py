@@ -111,6 +111,7 @@ class AppConfig(BaseModel):
     api_server: APIServerConfig
     database: DatabaseConfig
     subscriber: SubscriberConfig
+    prepend_uris: bool = False
 
 
 @logger.catch(onerror=lambda _: sys.exit(1))
